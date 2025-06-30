@@ -258,14 +258,11 @@
                    autofocus
                    maxlength="20"
                    autocomplete="off"
-                   onkeydown="if (event.keyCode == 13) document.getElementById('go').click()"
                    style="text-align: center;"
-                   value= "<?php echo urldecode($_GET['name']); ?>"
-
                    />
-                    <span class="input-group-btn">
-                        <button id="go" class="btn btn-info" type="submit">Go!</button>
-                    </span>
+                <span class="input-group-btn">
+                    <button id="go" class="btn btn-info" type="submit">Go!</button>
+                </span>
         </div>
     </div>
     <div class="centered row">
@@ -289,22 +286,18 @@
 <script type='application/javascript' src="js/periodicnames.js"></script>
 <script type='application/javascript' src="js/solveAndAnimate.js"></script>
 <script>
-    (function (i, s, o, g, r, a, m) {
-        i['GoogleAnalyticsObject'] = r;
-        i[r] = i[r] || function () {
-            (i[r].q = i[r].q || []).push(arguments)
-        }, i[r].l = 1 * new Date();
-        a = s.createElement(o),
-                m = s.getElementsByTagName(o)[0];
-        a.async = 1;
-        a.src = g;
-        m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-    ga('create', 'UA-58779238-1', 'auto');
-    ga('send', 'pageview');
-
-
+    // Pre-fill the input from the URL parameter (if present)
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const nameParam = urlParams.get('name');
+        if (nameParam) {
+            document.getElementById('name').value = decodeURIComponent(nameParam);
+        }
+        // Add Enter key handler
+        document.getElementById('name').addEventListener('keydown', function(event) {
+            if (event.keyCode == 13) document.getElementById('go').click();
+        });
+    });
 </script>
 </body>
-</html>
+</html> 
