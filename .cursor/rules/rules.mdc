@@ -1,0 +1,75 @@
+# Periodic Names Project Rules
+
+## Project Overview
+- **Project Name**: Periodic Names (periodicnames.com)
+- **GitHub Repo**: https://github.com/srrmlwn/periodicnames.git
+- **Goal**: Create a fun website where users enter their name and see it broken down into periodic table elements
+
+## Core Functionality
+- User enters name → Website matches it to periodic table elements
+- Prioritize real elements over fake ones
+- Minimize number of fake elements used
+- Case insensitive input
+- Show element names primarily, atomic numbers in smaller font
+
+## Technical Stack
+- **Frontend**: React 18 + TypeScript + Tailwind CSS + Framer Motion
+- **Build Tool**: Vite
+- **Deployment**: Vercel
+- **Domain**: periodicnames.com
+
+## Key Design Requirements
+- Modern, clean UI with flat design
+- Responsive periodic table with element tiles
+- Fake elements styled differently (different color)
+- Smooth animations on name transformation
+- Interactive periodic table with highlighting
+
+## Project Structure
+```
+periodicnames/
+├── src/
+│   ├── components/ (Header, NameInput, PeriodicTable, ElementTile, ResultDisplay, ShareButton)
+│   ├── hooks/ (useElementMatcher, useAnimation)
+│   ├── data/ (elements.ts, fakeElements.ts)
+│   ├── utils/ (elementMatcher.ts, elementStyler.ts)
+│   └── types/ (index.ts)
+```
+
+## Development Phases
+1. **Phase 1**: Core setup & basic functionality (2-3 days)
+2. **Phase 2**: Visual design & periodic table (2-3 days)
+3. **Phase 3**: Animations & polish (1-2 days)
+4. **Phase 4**: Optional enhancements (future)
+
+## Important Rules
+- **NO GIT OPERATIONS**: Do not perform any git operations (commit, push, pull, etc.) without asking the user first
+- Keep things simple - don't over-engineer features
+- Focus on core functionality first
+- Test frequently with real names
+- Prioritize user experience over fancy features
+
+## Current Status
+- ✅ Project planning complete (idea.md, tech-architecture.md, task-list.md)
+- ✅ Git repository initialized locally
+- 🔄 Ready to start Phase 1 implementation
+
+## Key Files
+- `idea.md` - Project requirements and refinement questions
+- `tech-architecture.md` - Technical specifications and component structure
+- `task-list.md` - Implementation phases and tasks
+
+## Algorithm Strategy
+- Greedy matching: try longest possible real element symbols first
+- Fallback to shorter real elements when needed
+- Use fake elements only as last resort
+- Return combination with fewest total elements
+
+## Element Styling
+- Square tiles with rounded corners (border-radius: 8px)
+- Subtle drop shadow for separation
+- Light gradient backgrounds
+- Bold sans-serif fonts for symbols
+- Responsive design for mobile
+alwaysApply: true
+---
