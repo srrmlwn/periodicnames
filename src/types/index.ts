@@ -5,6 +5,7 @@ export interface NameResult {
   originalName: string;
   elements: Element[];
   fakeElements: FakeElement[];
+  orderedElements: (Element | FakeElement)[];
   totalElements: number;
   realElementsCount: number;
 }
