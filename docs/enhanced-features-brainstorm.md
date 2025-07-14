@@ -1,9 +1,10 @@
 # Enhanced Features Brainstorm - Periodic Names
 
 ## Overview
-Building upon the successful MVP, we're adding two major feature sets:
-1. **Print-on-Demand Integration** for physical products (Phase 1)
-2. **Multiple Color Schemes** for the periodic table and elements (Phase 2)
+Building upon the successful MVP, we're adding three major feature sets:
+1. **Social Media Sharing** for user acquisition and virality (Phase 1)
+2. **Print-on-Demand Integration** for physical products (Phase 2)
+3. **Multiple Color Schemes** for the periodic table and elements (Phase 3)
 
 ## Core Design Principles (Carried Forward)
 - **Minimalist UX**: Clean, distraction-free interfaces
