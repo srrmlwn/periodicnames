@@ -5,13 +5,13 @@
 /* Custom animations for element highlighting */
 @keyframes elementGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.4);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
 }
 
@@ -38,12 +38,15 @@
 @keyframes elementGlowPulse {
   0% {
     filter: brightness(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
   }
   50% {
-    filter: brightness(1.2);
+    filter: brightness(1.3);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3);
   }
   100% {
     filter: brightness(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
 }
 

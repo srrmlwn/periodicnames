@@ -43,7 +43,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg element-fade-in">
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="flex flex-wrap gap-0.5 justify-center">
         {result.orderedElements.map((element, index) => {
           const isRealElement = 'isReal' in element && element.isReal;
           const isSpace = 'symbol' in element && element.symbol === ' ';
@@ -58,7 +58,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
-                <span className="text-gray-400 text-xs">•</span>
+                <span className="text-slate-400 text-xs">•</span>
               </div>
             );
           }
@@ -85,8 +85,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
       {/* Success message with animation */}
       {showSuccessMessage && (
         <div className="mt-6 text-center">
-          <div className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium element-fade-in">
-            ✨ Name successfully spelled with {result.orderedElements.filter(e => 'isReal' in e && e.isReal).length} real elements!
+          <div className="inline-block px-4 py-2 bg-lime-100 text-lime-800 border border-lime-600 rounded-full text-sm font-medium element-fade-in">
+          🥳 Name successfully spelled with {result.orderedElements.filter(e => 'isReal' in e && e.isReal).length} real elements!
           </div>
         </div>
       )}
