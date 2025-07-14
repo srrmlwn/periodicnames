@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
+import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from '../utils/colorSchemes';
 
 interface ElementTileProps {
   element?: Element;
@@ -48,21 +49,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      alkali: 'bg-red-500 border-red-600 text-white',
-      alkaline: 'bg-orange-500 border-orange-600 text-white',
-      transition: 'bg-blue-500 border-blue-600 text-white',
-      postTransition: 'bg-emerald-500 border-emerald-600 text-white',
-      metalloid: 'bg-purple-500 border-purple-600 text-white',
-      nonmetal: 'bg-cyan-500 border-cyan-600 text-white',
-      noble: 'bg-pink-500 border-pink-600 text-white',
-      lanthanide: 'bg-indigo-500 border-indigo-600 text-white',
-      actinide: 'bg-slate-500 border-slate-600 text-white',
-    };
-    return colors[category as keyof typeof colors] || 'bg-slate-500 border-slate-600 text-white';
-  };
-
   const getGlowColor = (category: string) => {
     const glowColors = {
       alkali: 'shadow-red-400/80',
@@ -102,11 +88,20 @@ const ElementTile: React.FC<ElementTileProps> = ({
       hover:scale-150 transition-all duration-300 ease-out
     `;
 
+  // Use centralized color scheme
   const fakeClasses = isFake 
     ? 'bg-amber-400 border-dashed border-amber-500 text-amber-900' 
-    : getCategoryColor(element?.category || '');
+    : 'text-white'; // Background and border will be set via inline styles
 
   const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
+
+  // Get colors from centralized scheme
+  const backgroundColor = isFake 
+    ? getFakeElementColor() 
+    : getCategoryColor(element?.category || '');
+  const borderColor = isFake 
+    ? getFakeElementBorderColor() 
+    : getCategoryBorderColor(element?.category || '');
 
   return (
     <div 
@@ -114,6 +109,8 @@ const ElementTile: React.FC<ElementTileProps> = ({
       onClick={handleClick}
       title={`${displayElement.name} (${displayElement.symbol})`}
       style={{
+        backgroundColor,
+        borderColor,
         animationDelay: `${animationDelay}ms`,
         transitionDelay: `${animationDelay}ms`
       }}
