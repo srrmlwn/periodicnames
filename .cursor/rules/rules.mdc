@@ -13,34 +13,61 @@
 - Show element names primarily, atomic numbers in smaller font
 
 ## Technical Stack
-- **Frontend**: React 18 + TypeScript + Tailwind CSS + Framer Motion
+- **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite
 - **Build Tool**: Vite
 - **Deployment**: Vercel
 - **Domain**: periodicnames.com
 
 ## Key Design Requirements
-- Modern, clean UI with flat design
+- Modern, clean UI with flat design using flatuicolors.com palette
 - Responsive periodic table with element tiles
-- Fake elements styled differently (different color)
-- Smooth animations on name transformation
-- Interactive periodic table with highlighting
+- Fake elements styled differently (dashed borders, amber color)
+- Smooth animations with 300ms transitions
+- Interactive periodic table with highlighting and glow effects
+- Minimalist UX with distraction-free interfaces
 
 ## Project Structure
 ```
 periodicnames/
 ├── src/
-│   ├── components/ (Header, NameInput, PeriodicTable, ElementTile, ResultDisplay, ShareButton)
-│   ├── hooks/ (useElementMatcher, useAnimation)
+│   ├── components/ (Header, NameInput, PeriodicTable, ElementTile, ResultDisplay)
+│   ├── hooks/
 │   ├── data/ (elements.ts, fakeElements.ts)
-│   ├── utils/ (elementMatcher.ts, elementStyler.ts)
+│   ├── utils/ (elementMatcher.ts)
 │   └── types/ (index.ts)
+├── docs/
+│   ├── archived-task-list-v1.md - Original MVP task list
+│   ├── idea.md - Project requirements and refinement questions
+│   ├── tech-architecture.md - Technical specifications and component structure
+│   └── enhanced-features-brainstorm.md - Print-on-demand and color schemes planning
+└── README.md - Project overview and setup instructions
 ```
 
-## Development Phases
-1. **Phase 1**: Core setup & basic functionality (2-3 days)
-2. **Phase 2**: Visual design & periodic table (2-3 days)
-3. **Phase 3**: Animations & polish (1-2 days)
-4. **Phase 4**: Optional enhancements (future)
+## Current Status
+- ✅ **MVP Complete**: All phases 1-4 completed successfully
+- ✅ **Deployed**: Live on Vercel with custom domain
+- ✅ **Core Features**: Name input, element matching, periodic table, animations
+- ✅ **UI Polish**: Enhanced glow effects, modern input design, consistent spacing
+- 🔄 **Planning Enhanced Features**: Print-on-demand integration and color schemes
+
+## Enhanced Features (In Planning)
+1. **Print-on-Demand Integration** (Phase 1)
+   - Posters, T-shirts, Mugs, Stickers
+   - Printful API integration
+   - Custom design generation
+   - Shopping cart and checkout
+
+2. **Multiple Color Schemes** (Phase 2)
+   - Classic Chemistry (current)
+   - Neon Cyberpunk, Pastel Dream, Monochrome Elegant, Sunset Warmth
+   - CSS custom properties for dynamic switching
+   - Smooth 300ms transitions
+
+## Development Phases (Completed)
+1. **Phase 1**: Core setup & basic functionality ✅
+2. **Phase 2**: Visual design & periodic table ✅
+3. **Phase 3**: Animations & polish ✅
+4. **Phase 4**: UI/UX refinements ✅
 
 ## Important Rules
 - **NO GIT OPERATIONS**: Do not perform any git operations (commit, push, pull, etc.) without asking the user first
@@ -48,28 +75,45 @@ periodicnames/
 - Focus on core functionality first
 - Test frequently with real names
 - Prioritize user experience over fancy features
-
-## Current Status
-- ✅ Project planning complete (idea.md, tech-architecture.md, task-list.md)
-- ✅ Git repository initialized locally
-- 🔄 Ready to start Phase 1 implementation
+- Maintain minimalist UX and consistent 300ms animations
+- Use flat UI colors from flatuicolors.com palette
 
 ## Key Files
-- `idea.md` - Project requirements and refinement questions
-- `tech-architecture.md` - Technical specifications and component structure
-- `task-list.md` - Implementation phases and tasks
+- `docs/idea.md` - Project requirements and refinement questions
+- `docs/tech-architecture.md` - Technical specifications and component structure
+- `docs/archived-task-list-v1.md` - Original MVP implementation phases
+- `docs/enhanced-features-brainstorm.md` - Print-on-demand and color schemes planning
+- `README.md` - Project overview and setup instructions
 
 ## Algorithm Strategy
 - Greedy matching: try longest possible real element symbols first
 - Fallback to shorter real elements when needed
 - Use fake elements only as last resort
 - Return combination with fewest total elements
+- Case insensitive matching for better user experience
 
 ## Element Styling
 - Square tiles with rounded corners (border-radius: 8px)
 - Subtle drop shadow for separation
-- Light gradient backgrounds
+- Category-based colors with vibrant flat UI palette
 - Bold sans-serif fonts for symbols
 - Responsive design for mobile
+- Enhanced glow effects for highlighted elements
+- White text for atomic numbers and masses for better contrast
+
+## Animation Guidelines
+- **Consistent Timing**: 300ms transitions across all elements
+- **Purposeful Animations**: Only animate when it enhances UX
+- **Smooth Easing**: cubic-bezier(0.4, 0, 0.2, 1)
+- **Glow Effects**: 1.5-2 second cycles for visual prominence
+- **Staggered Reveals**: 100ms delays for sequential animations
+
+## Accessibility Standards
+- High contrast ratios for all color schemes
+- Keyboard navigation support
+- Screen reader compatibility
+- Color blind support with patterns
+- WCAG 2.1 AA compliance
+
 alwaysApply: true
 ---
