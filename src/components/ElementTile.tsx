@@ -6,7 +6,6 @@ interface ElementTileProps {
   element?: Element;
   fakeElement?: FakeElement;
   isHighlighted?: boolean;
-  isExpanded?: boolean;
   onClick?: () => void;
   animationDelay?: number;
 }
@@ -15,7 +14,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
   element, 
   fakeElement, 
   isHighlighted = false, 
-  isExpanded = false,
   onClick,
   animationDelay = 0
 }) => {

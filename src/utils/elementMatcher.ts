@@ -1,11 +1,8 @@
-import { getElementBySymbol, getAllElements } from '../data/elements';
-import { getFakeElementBySymbol, getAllFakeElements } from '../data/fakeElements';
-import type { Element } from '../data/elements';
-import type { FakeElement } from '../data/fakeElements';
+import { getAllElements } from '../data/elements';
+import { getAllFakeElements } from '../data/fakeElements';
 import type { NameResult } from '../types';
 
-export function matchName(name: string): NameResult {
-  const normalizedName = name.toUpperCase();
+export function matchNameToElements(name: string): NameResult {
   const realElements = getAllElements();
   const fakeElements = getAllFakeElements();
   
@@ -18,7 +15,7 @@ export function matchName(name: string): NameResult {
     realElementsCount: 0
   };
   
-  let remainingName = normalizedName;
+  let remainingName = name.toUpperCase();
   
   // Try to match with real elements first (greedy approach)
   while (remainingName.length > 0) {
@@ -37,7 +34,7 @@ export function matchName(name: string): NameResult {
     // Try longest possible real element symbols first
     for (let length = Math.min(remainingName.length, 3); length >= 1; length--) {
       const candidate = remainingName.substring(0, length);
-      const element = getElementBySymbol(candidate);
+      const element = realElements.find(el => el.symbol.toUpperCase() === candidate);
       
       if (element) {
         result.elements.push(element);
@@ -52,7 +49,7 @@ export function matchName(name: string): NameResult {
     // If no real element found, try fake elements
     if (!matched) {
       const firstChar = remainingName[0];
-      const fakeElement = getFakeElementBySymbol(firstChar);
+      const fakeElement = fakeElements.find(el => el.symbol === firstChar);
       
       if (fakeElement) {
         result.fakeElements.push(fakeElement);
@@ -75,7 +72,7 @@ export function testElementMatching() {
   const testNames = ['Sriram', 'Carlos', 'Moses'];
   
   testNames.forEach(name => {
-    const result = matchName(name);
+    const result = matchNameToElements(name);
     console.log(`${name}:`, result);
   });
 } 

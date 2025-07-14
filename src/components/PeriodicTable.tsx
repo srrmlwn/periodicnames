@@ -1,7 +1,6 @@
 import React from 'react';
 import ElementTile from './ElementTile';
 import { getAllElements } from '../data/elements';
-import type { Element } from '../data/elements';
 
 interface PeriodicTableProps {
   highlightedElements: string[];
@@ -25,7 +24,6 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
 
   // Create proper periodic table layout with correct spacing
   const renderPeriodicTable = () => {
-    const rows = [];
     
     // Row 1: H and He (positions 1 and 18)
     const row1 = new Array(18).fill(null);

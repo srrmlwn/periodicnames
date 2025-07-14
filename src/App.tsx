@@ -3,7 +3,7 @@ import Header from './components/Header';
 import NameInput from './components/NameInput';
 import ResultDisplay from './components/ResultDisplay';
 import PeriodicTable from './components/PeriodicTable';
-import { matchName } from './utils/elementMatcher';
+import { matchNameToElements } from './utils/elementMatcher';
 import type { NameResult } from './types';
 
 function App() {
@@ -19,15 +19,15 @@ function App() {
     
     // Simulate a small delay for better UX
     setTimeout(() => {
-      const nameResult = matchName(name);
+      const nameResult = matchNameToElements(name);
       setResult(nameResult);
       setIsVisible(true);
       setIsLoading(false);
       
       // Highlight the elements used in the result
       const usedElements = [
-        ...nameResult.elements.map(e => e.symbol),
-        ...nameResult.fakeElements.map(e => e.symbol)
+        ...nameResult.elements.map((e: { symbol: string }) => e.symbol),
+        ...nameResult.fakeElements.map((e: { symbol: string }) => e.symbol)
       ];
       setHighlightedElements(usedElements);
     }, 500);

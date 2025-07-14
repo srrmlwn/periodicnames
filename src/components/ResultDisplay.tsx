@@ -11,13 +11,11 @@ interface ResultDisplayProps {
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   const [animatedElements, setAnimatedElements] = useState<number[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Trigger animations when result changes
   useEffect(() => {
     if (isVisible && result) {
-      setIsAnimating(true);
       setAnimatedElements([]);
       setShowSuccessMessage(false);
       
@@ -34,7 +32,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
         setShowSuccessMessage(true);
       }, totalAnimationTime + 200); // Extra 200ms buffer
     } else {
-      setIsAnimating(false);
       setAnimatedElements([]);
       setShowSuccessMessage(false);
     }
