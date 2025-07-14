@@ -16,6 +16,11 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
     return highlightedElements.includes(symbol);
   };
 
+  // Calculate animation delay based on position in highlighted elements array
+  const getAnimationDelay = (symbol: string) => {
+    const index = highlightedElements.indexOf(symbol);
+    return index >= 0 ? index * 50 : 0; // 50ms stagger between elements
+  };
 
 
   // Create proper periodic table layout with correct spacing
@@ -188,6 +193,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
               <ElementTile
                 element={element}
                 isHighlighted={isHighlighted(element.symbol)}
+                animationDelay={getAnimationDelay(element.symbol)}
               />
             ) : (
               <div className="w-14 h-14"></div> // Empty space
