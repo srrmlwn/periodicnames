@@ -21,7 +21,6 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
     return index >= 0 ? index * 50 : 0; // 50ms stagger between elements
   };
 
-
   // Create proper periodic table layout with correct spacing
   const renderPeriodicTable = () => {
     
@@ -186,7 +185,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
     return allRows.map((row, rowIndex) => (
       <div key={rowIndex} className="flex gap-0.5 mb-0.5">
         {row.map((element, colIndex) => (
-          <div key={colIndex} className="w-14 h-14">
+          <div key={colIndex} className="w-10 h-10">
             {element ? (
               <ElementTile
                 element={element}
@@ -194,7 +193,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
                 animationDelay={getAnimationDelay(element.symbol)}
               />
             ) : (
-              <div className="w-14 h-14"></div> // Empty space
+              <div className="w-10 h-10"></div> // Empty space
             )}
           </div>
         ))}
@@ -203,9 +202,9 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({
   };
 
   return (
-    <div className="w-full p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 overflow-x-auto flex justify-center">
-        <div className="flex flex-col gap-1 min-w-max p-4">
+    <div className="w-full p-2">
+      <div className="bg-white rounded-lg shadow-lg p-4 overflow-x-auto flex justify-center">
+        <div className="flex flex-col gap-0.5 min-w-max p-2">
           {renderPeriodicTable()}
         </div>
       </div>

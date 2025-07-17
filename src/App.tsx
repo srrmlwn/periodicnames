@@ -33,17 +33,19 @@ function App() {
     }, 500);
   };
 
-
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4">
       <div className="container mx-auto px-4">
         <Header />
-        <NameInput onSubmit={handleNameSubmit} isLoading={isLoading} />
+        <div className="mb-4">
+          <PeriodicTable 
+            highlightedElements={highlightedElements}
+          />
+        </div>
+        <div className="mb-4">
+          <NameInput onSubmit={handleNameSubmit} isLoading={isLoading} />
+        </div>
         <ResultDisplay result={result} isVisible={isVisible} />
-        <PeriodicTable 
-          highlightedElements={highlightedElements}
-        />
       </div>
     </div>
   );

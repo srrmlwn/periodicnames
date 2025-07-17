@@ -65,9 +65,9 @@ const ElementTile: React.FC<ElementTileProps> = ({
   };
 
   const baseClasses = `
-    w-14 h-14 rounded-lg border-2 shadow-sm
+    w-10 h-10 rounded-md border border-2 shadow-sm
     flex flex-col items-center justify-center
-    cursor-pointer font-bold text-sm relative overflow-hidden
+    cursor-pointer font-bold text-xs relative overflow-hidden
     transition-all duration-300 ease-out hover-lift
   `;
 
@@ -80,12 +80,12 @@ const ElementTile: React.FC<ElementTileProps> = ({
       ${isAnimating ? 'element-fade-in' : ''}
       hover:shadow-lg hover:z-30 active:scale-95 
       group-hover:ring-1 group-hover:ring-blue-300 group-hover:ring-opacity-30 
-      hover:scale-150 transition-all duration-300 ease-out
+      hover:scale-125 transition-all duration-300 ease-out
     `
     : `
       hover:shadow-lg hover:z-30 active:scale-95 
       group-hover:ring-1 group-hover:ring-blue-300 group-hover:ring-opacity-30 
-      hover:scale-150 transition-all duration-300 ease-out
+      hover:scale-125 transition-all duration-300 ease-out
     `;
 
   // Use centralized color scheme
@@ -116,13 +116,13 @@ const ElementTile: React.FC<ElementTileProps> = ({
       }}
     >
       {/* Atomic number in top left */}
-      <div className="absolute top-0 left-1 text-[6px] text-white/80 font-normal">
+      <div className="absolute top-0 left-0.5 text-[5px] text-white/80 font-normal">
         {element?.atomicNumber || '?'}
       </div>
       
       {/* Atomic weight in top right - show on hover or when highlighted */}
       {element?.atomicMass && (
-        <div className={`absolute top-0 right-1 text-[6px] text-white/70 font-normal transition-opacity duration-300 ${
+        <div className={`absolute top-0 right-0.5 text-[5px] text-white/70 font-normal transition-opacity duration-300 ${
           isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}>
           {element.atomicMass}
@@ -130,12 +130,12 @@ const ElementTile: React.FC<ElementTileProps> = ({
       )}
       
       {/* Element symbol in center */}
-      <div className="text-lg font-bold">
+      <div className="text-sm font-bold leading-none">
         {displayElement.symbol}
       </div>
       
       {/* Element name at bottom - always truncated with ellipsis */}
-      <div className={`absolute bottom-1 left-1 right-1 text-[10px] text-center leading-tight font-normal transition-all duration-300 ${
+      <div className={`absolute bottom-0.5 left-0.5 right-0.5 text-[6px] text-center leading-tight font-normal transition-all duration-300 ${
         isHighlighted ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
       }`}>
         <span className="block truncate">
@@ -145,13 +145,13 @@ const ElementTile: React.FC<ElementTileProps> = ({
       
       {/* Enhanced glow ring for highlighted elements */}
       {isHighlighted && showGlow && (
-        <div className={`absolute inset-0 rounded-lg border-2 border-white opacity-60 element-glow`} 
+        <div className={`absolute inset-0 rounded-md border border-white opacity-60 element-glow`} 
              style={{ animationDelay: `${animationDelay + 100}ms` }} />
       )}
       
       {/* Additional pulse effect for active matches */}
       {isHighlighted && showPulse && (
-        <div className={`absolute inset-0 rounded-lg bg-white opacity-20 element-glow-pulse`} 
+        <div className={`absolute inset-0 rounded-md bg-white opacity-20 element-glow-pulse`} 
              style={{ animationDelay: `${animationDelay + 300}ms` }} />
       )}
     </div>

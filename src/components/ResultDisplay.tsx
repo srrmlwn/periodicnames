@@ -79,7 +79,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   const layout = createElementLayout(result);
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg element-fade-in">
+    <div className="max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg element-fade-in">
       <div className="flex flex-wrap gap-0.5 justify-center">
         {layout.items.map((item, index) => {
           const isAnimated = animatedElements.includes(index);
@@ -88,7 +88,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
             return (
               <div 
                 key={`element-${index}`} 
-                className={`w-4 h-14 flex items-center justify-center transition-all duration-300 ${
+                className={`w-4 h-12 flex items-center justify-center transition-all duration-300 ${
                   isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
@@ -101,7 +101,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
           return (
             <div 
               key={`element-${index}`} 
-              className={`w-14 h-14 transition-all duration-500 ease-out hover:z-30 ${
+              className={`w-12 h-12 transition-all duration-500 ease-out hover:z-30 ${
                 isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
               }`}
               style={{ transitionDelay: `${index * 100}ms` }}
@@ -119,8 +119,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
       {/* Success message with animation */}
       {showSuccessMessage && (
-        <div className="mt-6 text-center">
-          <div className="inline-block px-4 py-2 bg-lime-100 text-lime-800 border border-lime-600 rounded-full text-sm font-medium element-fade-in">
+        <div className="mt-4 text-center">
+          <div className="inline-block px-3 py-1 bg-lime-100 text-lime-800 border border-lime-600 rounded-full text-xs font-medium element-fade-in">
           🥳 Name successfully spelled with {layout.realElementsCount} real elements!
           </div>
         </div>
@@ -128,7 +128,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
       
       {/* Share buttons */}
       {showSuccessMessage && (
-        <div className="mt-6 flex justify-center space-x-4">
+        <div className="mt-4 flex justify-center space-x-3">
           <ShareButton
             platform="x"
             onClick={() => handleShare('x')}
