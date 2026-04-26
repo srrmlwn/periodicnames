@@ -23,20 +23,14 @@ const ElementTile: React.FC<ElementTileProps> = ({
   const isFake = !!fakeElement;
   const displayElement = element || fakeElement;
 
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [showGlow, setShowGlow] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [hasWobbled, setHasWobbled] = useState(false);
 
   useEffect(() => {
     if (isHighlighted) {
-      setIsAnimating(true);
-      setTimeout(() => setShowGlow(true), animationDelay);
       setTimeout(() => setShowPulse(true), animationDelay + 200);
     } else {
-      setShowGlow(false);
       setShowPulse(false);
-      setIsAnimating(false);
     }
   }, [isHighlighted, animationDelay]);
 
@@ -54,21 +48,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
     if (onClick) onClick();
   };
 
-  const getGlowColor = (category: string) => {
-    const glowColors = {
-      alkali: 'shadow-red-400/80',
-      alkaline: 'shadow-orange-400/80',
-      transition: 'shadow-blue-400/80',
-      postTransition: 'shadow-emerald-400/80',
-      metalloid: 'shadow-purple-400/80',
-      nonmetal: 'shadow-cyan-400/80',
-      noble: 'shadow-pink-400/80',
-      lanthanide: 'shadow-indigo-400/80',
-      actinide: 'shadow-slate-400/80',
-    };
-    return glowColors[category as keyof typeof glowColors] || 'shadow-slate-400/80';
-  };
-
   const baseClasses = `
     w-full h-full rounded-md border-2 shadow-sm
     flex flex-col items-center justify-center
@@ -78,11 +57,9 @@ const ElementTile: React.FC<ElementTileProps> = ({
 
   const animationClasses = isHighlighted
     ? `
-      z-20 scale-110 ring-2 ring-white ring-offset-1
-      ${showGlow ? getGlowColor(element?.category || '') : ''}
+      z-20 scale-125 element-highlighted
       ${showPulse ? 'element-pulse' : ''}
-      ${isAnimating ? 'element-fade-in' : ''}
-      hover:scale-125 hover:z-30 active:scale-95
+      hover:scale-135 hover:z-30 active:scale-95
       transition-all duration-300 ease-out
     `
     : `
@@ -91,7 +68,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
     `;
 
   const fakeClasses = isFake
-    ? `border-dashed text-amber-900 fake-shimmer ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
+    ? `text-amber-900 fake-shimmer ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
     : 'text-white';
 
   const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
@@ -138,11 +115,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
           {displayElement.name}
         </span>
       </div>
-
-      {isHighlighted && showGlow && (
-        <div className="absolute inset-0 rounded-md border border-white opacity-60 element-glow"
-          style={{ animationDelay: `${animationDelay + 100}ms` }} />
-      )}
 
       {isHighlighted && showPulse && (
         <div className="absolute inset-0 rounded-md bg-white opacity-20 element-glow-pulse"

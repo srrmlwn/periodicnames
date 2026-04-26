@@ -52,7 +52,7 @@ function App() {
 
         {/* Periodic Table - hidden only during processing */}
         <div className={`transition-all duration-500 ease-in-out mb-4 ${
-          animationPhase === 'processing' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          animationPhase === 'processing' ? 'opacity-50' : 'opacity-100'
         }`}>
           <PeriodicTable highlightedElements={highlightedElements} />
         </div>

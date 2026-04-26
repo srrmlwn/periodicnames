@@ -13,7 +13,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) =>
 
   const getAnimationDelay = (symbol: string) => {
     const index = highlightedElements.indexOf(symbol);
-    return index >= 0 ? index * 50 : 0;
+    return index >= 0 ? index * 200 : 0;
   };
 
   const renderPeriodicTable = () => {
@@ -179,7 +179,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) =>
   return (
     <div className="w-full p-2">
       <div className="bg-white rounded-lg shadow-lg p-4 overflow-x-auto">
-        <div className="flex flex-col gap-0.5 min-w-max mx-auto p-2">
+        <div className="flex flex-col gap-0.5 w-fit mx-auto p-2">
           {renderPeriodicTable()}
         </div>
       </div>

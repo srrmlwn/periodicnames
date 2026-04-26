@@ -138,6 +138,16 @@
   animation: elementGlow 2s ease-in-out infinite;
 }
 
+.element-highlighted {
+  box-shadow: 0 0 0 3px #fcd34d, 0 0 18px 6px rgba(252, 211, 77, 0.55);
+  animation: highlightBreath 2s ease-in-out infinite;
+}
+
+@keyframes highlightBreath {
+  0%, 100% { box-shadow: 0 0 0 3px #fcd34d, 0 0 14px 4px rgba(252, 211, 77, 0.5); }
+  50%       { box-shadow: 0 0 0 3px #fde68a, 0 0 24px 8px rgba(252, 211, 77, 0.8); }
+}
+
 .element-pulse {
   animation: elementPulse 1.5s ease-in-out infinite;
 }
