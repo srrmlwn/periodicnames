@@ -8,6 +8,14 @@ import type { NameResult } from './types';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
 
+// Natural size of the periodic table grid (18 cols × 9 rows, w-10 tiles, gap-0.5)
+const TABLE_W = 754; // 18*40 + 17*2
+const TABLE_H = 376; // 9*40 + 8*2
+
+function getTableScale() {
+  return Math.max(window.innerWidth / TABLE_W, window.innerHeight / TABLE_H);
+}
+
 function nameFromPath(path: string): string {
   return decodeURIComponent(path)
     .replace(/-/g, ' ')
@@ -26,11 +34,11 @@ function App() {
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
   const [revealedCount, setRevealedCount] = useState(0);
   const [inputKey, setInputKey] = useState(0);
+  const [tableScale, setTableScale] = useState(getTableScale);
   const revealTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const revealDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialized = useRef(false);
 
-  // Derive initial name from URL once on mount
   const urlName = useState(() => {
     const path = window.location.pathname.slice(1);
     return path ? nameFromPath(path) : '';
@@ -47,12 +55,17 @@ function App() {
     }
   };
 
-  // Auto-submit if a name was in the URL on load
   useEffect(() => {
     if (initialized.current || !urlName) return;
     initialized.current = true;
-    handleNameSubmit(urlName); // eslint-disable-line react-hooks/exhaustive-deps
+    handleNameSubmit(urlName);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleResize = () => setTableScale(getTableScale());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleNameSubmit = (name: string) => {
     history.pushState(null, '', '/' + nameToSlug(name));
@@ -64,7 +77,6 @@ function App() {
     setRevealedCount(0);
     setAnimationPhase('revealing');
 
-    // Wait for table zoom (0.5s) + pause (0.5s) before starting elements
     revealDelayTimer.current = setTimeout(() => {
       setRevealedCount(1);
 
@@ -94,48 +106,39 @@ function App() {
     setInputKey(k => k + 1);
   };
 
-  const isCompact = animationPhase !== 'input';
   const revealedSymbols = result
     ? result.orderedElements.slice(0, revealedCount).map(e => e.symbol)
     : [];
-  const currentElement = result && revealedCount > 0
-    ? result.orderedElements[revealedCount - 1]
-    : null;
-  const activeSymbol = currentElement && 'atomicNumber' in currentElement
-    ? currentElement.symbol
-    : null;
 
   return (
-    <div className="min-h-screen bg-slate-100 py-4">
-      <div className="container mx-auto px-4">
-        <Header />
-
-        <div className={`mb-3 ${isCompact ? 'hidden md:block' : ''}`}>
-          <PeriodicTable
-            highlightedElements={revealedSymbols}
-            compact={isCompact}
-            isResults={isCompact}
-            activeSymbol={activeSymbol}
-            revealCount={revealedCount}
-          />
+    <div className="min-h-screen bg-white">
+      {/* Fixed full-screen periodic table background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
+        <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'center center' }}>
+          <PeriodicTable highlightedSymbols={animationPhase === 'done' ? revealedSymbols : []} />
         </div>
+      </div>
 
-        <div className="flex items-center justify-center mb-3">
+      {/* Content layer */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <div className="px-4 pt-4">
+          <Header />
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 gap-6">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
-            hasResult={isCompact}
+            hasResult={animationPhase !== 'input'}
             onRefresh={handleRefresh}
             initialValue={inputKey === 0 ? urlName : ''}
           />
+          <ResultDisplay
+            result={result}
+            isVisible={animationPhase !== 'input'}
+            revealedCount={revealedCount}
+            isDone={animationPhase === 'done'}
+          />
         </div>
-
-        <ResultDisplay
-          result={result}
-          isVisible={isCompact}
-          revealedCount={revealedCount}
-          isDone={animationPhase === 'done'}
-        />
       </div>
     </div>
   );

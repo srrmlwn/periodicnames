@@ -183,21 +183,6 @@
   animation: resultExit 0.3s ease-in forwards;
 }
 
-.periodic-table-card {
-  transition: zoom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Scale the periodic table card to fit on mobile without horizontal scroll */
-@media (max-width: 767px) {
-  .periodic-table-card {
-    zoom: 0.37;
-  }
-}
-@media (max-width: 340px) {
-  .periodic-table-card {
-    zoom: 0.33;
-  }
-}
 
 .hover-lift {
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
@@ -214,16 +199,11 @@
 .animate-stagger-4 { animation-delay: 0.4s; }
 .animate-stagger-5 { animation-delay: 0.5s; }
 
-.table-tile-dimmed {
-  opacity: 0.3;
+.table-bg-tile {
+  opacity: 0.12;
+  transition: opacity 1s ease;
 }
 
-@keyframes tileActivate {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-
-.tile-activate {
-  animation: tileActivate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+.table-bg-tile-lit {
+  opacity: 0.45;
 }

@@ -61,9 +61,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
   if (currentWord.length > 0) wordGroups.push({ items: currentWord, isSpace: false });
 
   return (
-    <div className={`max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg ${
-      isExiting ? 'result-exit' : 'results-fade-in'
-    }`}>
+    <div className={isExiting ? 'result-exit' : 'results-fade-in'}>
       <div className="flex flex-wrap gap-2 justify-center items-center">
         {wordGroups.map((group, gi) => {
           if (group.isSpace) {

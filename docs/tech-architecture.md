@@ -4,40 +4,44 @@
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 + TypeScript |
-| Styling | Tailwind CSS |
+| Framework | React 18 + TypeScript (strict mode) |
+| Styling | Tailwind CSS + custom keyframes in `index.css` |
 | Build | Vite |
-| Deployment | Vercel |
-| Domain | periodicnames.com |
+| Deployment | Vercel (periodicnames.com) |
+| Routing | SPA via `history.pushState` + `vercel.json` catch-all rewrite |
 
-No backend today. Everything runs client-side.
+No backend. Everything runs client-side.
 
 ---
 
-## What's Built (Phase 1 baseline)
+## File Structure
 
 ```
 src/
 ├── components/
-│   ├── Header.tsx           — site title + subtitle
-│   ├── NameInput.tsx        — text input + inline submit
-│   ├── PeriodicTable.tsx    — full table grid, highlights matched elements
-│   ├── ElementTile.tsx      — individual element square (symbol, number, name, mass)
-│   ├── ResultDisplay.tsx    — animated result strip
-│   └── ShareButton.tsx      — share button scaffold (Phase 2)
+│   ├── Header.tsx              — site title + subtitle (Nunito, extrabold)
+│   ├── NameInput.tsx           — input with inline submit (→) / refresh (↺) toggle
+│   ├── PeriodicTable.tsx       — full 118-element grid, background-only mode
+│   ├── ElementTile.tsx         — individual element square (size sm | lg)
+│   ├── ResultDisplay.tsx       — animated result strip, exit/enter transitions
+│   └── SharePreviewModal.tsx   — share image/video preview + download
 ├── data/
-│   ├── elements.ts          — all 118 real elements
-│   ├── fakeElements.ts      — ~30 invented elements for unmatched letters
-│   └── elementCategories.ts — category → color mapping
+│   ├── elements.ts             — all 118 real elements, getAllElements()
+│   ├── fakeElements.ts         — invented elements for unmatched letters, getFakeElementBySymbol()
+│   └── elementCategories.ts   — category → display name mapping
 ├── utils/
-│   ├── elementMatcher.ts    — name → element array algorithm
-│   └── (ShareImageGenerator, TwitterSharer, InstagramSharer — Phase 2 scaffolding)
-├── templates/               — image design templates (Phase 2 scaffolding)
-├── types/index.ts           — Element, NameResult, FakeElement interfaces
-└── App.tsx                  — animation phase state machine (input → processing → results)
+│   ├── elementMatcher.ts       — DP-based name → element array (maximizes real elements)
+│   ├── colorSchemes.ts         — getCategoryColor(), getCategoryBorderColor(), etc.
+│   ├── elementRenderer.ts      — createElementLayout() for ResultDisplay word grouping
+│   ├── ShareImageGenerator.ts  — Canvas API PNG generation (1200×630)
+│   └── ShareVideoGenerator.ts  — MediaRecorder API reel video generation
+├── types/index.ts              — Element, FakeElement, NameResult interfaces
+└── App.tsx                     — animation state machine + layout orchestrator
 ```
 
-### Key Data Types
+---
+
+## Key Data Types
 
 ```typescript
 interface Element {
@@ -46,148 +50,173 @@ interface Element {
   atomicNumber: number;
   atomicMass: number;
   category: ElementCategory;
-  isReal: boolean;
+}
+
+interface FakeElement {
+  symbol: string;
+  name: string;
+  // no atomicNumber — used as discriminant: 'atomicNumber' in e
 }
 
 interface NameResult {
   originalName: string;
-  orderedElements: Element[];
+  orderedElements: (Element | FakeElement)[];  // in name order, source of truth for display
+  elements: Element[];
   fakeElements: FakeElement[];
+  totalElements: number;
+  realElementsCount: number;
 }
 ```
 
-### Algorithm
+---
 
-Dynamic-programming approach over the name string:
-1. Normalize input (uppercase, strip non-alpha)
-2. For each position, try all possible real element symbol matches (length 1–2)
-3. Find the decomposition that maximizes real elements and minimizes fake ones
-4. Fill uncovered positions with fake elements from the curated database
+## Animation State Machine (`App.tsx`)
+
+```
+'input'  →  'revealing'  →  'done'
+```
+
+- **`input`**: Initial state. Background table at base opacity (0.12). Input centered.
+- **`revealing`**: After submit. Single `setInterval` (500ms) increments `revealedCount`. Both `PeriodicTable` and `ResultDisplay` read from `revealedCount` — no independent timers. 1s initial delay before first element (allows any layout settling).
+- **`done`**: All elements revealed. Background table brightens matched tiles to 0.45 opacity (1s CSS transition). Share button appears.
+
+Transitions:
+- `handleNameSubmit` → pushes URL, runs DP matcher, starts reveal sequence
+- `handleRefresh` → resets all state, pops URL to `/`
+
+### Key implementation details
+
+**Centralized reveal**: `revealedCount` (App.tsx state) is the single source of truth. `PeriodicTable` uses it to know which tiles to brighten; `ResultDisplay` uses it to know which tiles to show. This eliminated all sync issues from having independent stagger timers.
+
+**Duplicate element re-pulse**: When the same real element appears twice in a name (e.g., "Harinii" → two iodine tiles), the active tile in `PeriodicTable` uses key `${colIndex}-${revealCount}` to force remount and retrigger the CSS animation.
+
+**Fake elements**: No table animation (they have no position in the real periodic table). Silence signals they aren't real.
+
+**React Strict Mode guard**: `initialized` ref prevents the URL auto-submit `useEffect` from firing twice in development.
 
 ---
 
-## Phase 1 — UI Changes (Cartoonish Style)
+## Layout Architecture
 
-Pure CSS/Tailwind changes, no new dependencies.
+```
+<div class="min-h-screen bg-white">
 
-**ElementTile:**
-- `border-2 border-black` (or `border-3`) — bold outline
-- Saturated background colors per category (e.g. `bg-red-500` not `bg-red-100`)
-- `rounded-lg` corners
-- Symbol font: `font-black` + slightly oversized
-- Fake element: `border-dashed border-black` + shimmer/gradient background
+  <!-- Fixed background layer (z-0, pointer-events: none) -->
+  <div class="fixed inset-0 flex items-center justify-center overflow-hidden">
+    <PeriodicTable />  <!-- scaled to cover viewport -->
+  </div>
 
-**Animations (CSS + Tailwind):**
-- Tile reveal: `@keyframes popIn` — scale from 0.6 + fade in, with JS-driven `animation-delay`
-- Periodic table highlight: `@keyframes pulse-glow` — box-shadow pulse
-- Exit animation: `opacity-0 scale-95` transition before clearing result
+  <!-- Content layer (z-10) -->
+  <div class="relative z-10 min-h-screen flex flex-col">
+    <Header />
+    <div class="flex-1 flex flex-col items-center justify-center">
+      <NameInput />
+      <ResultDisplay />
+    </div>
+  </div>
+
+</div>
+```
+
+**Background table scaling**: `Math.max(vw / 754, vh / 376)` applied via `transform: scale()`. Covers the viewport (cover behavior), centered. Recalculated on resize.
+
+Natural table dimensions: `754px × 376px` (18 cols × 9 rows, 40px tiles, 2px gaps).
 
 ---
 
-## Phase 2 — Social Sharing Architecture
+## Element Matching Algorithm (`elementMatcher.ts`)
 
-Still client-side only. No new backend needed.
+Dynamic programming over the name string, per word:
 
-### Image Generation (Canvas API)
+1. Normalize input: lowercase, split on spaces
+2. For each word, build `dp[i]` = max real elements achievable from position `i` to end
+3. Process right-to-left: at each `i`, try length 1 and length 2 substrings
+   - If a real element symbol matches → score = `dp[i+len] + 1`
+   - If only a fake element → score = `dp[i+1] + 0`
+   - Take the max; record choice in `choice[i]`
+4. Reconstruct forward via `choice` array
+5. Interleave word results with space separators in `orderedElements`
 
-```
-src/utils/ShareImageGenerator.ts
-  generateImage(result: NameResult, platform: 'twitter' | 'instagram'): Promise<Blob>
-  
-src/templates/imageTemplates.ts
-  twitterTemplate   — 1200×675, horizontal element strip
-  instagramTemplate — 1080×1080, centered grid layout
-```
-
-Rendering pipeline:
-1. Create off-screen `<canvas>` at target dimensions
-2. Draw background (solid or gradient matching app color scheme)
-3. Re-render each element tile using canvas `fillRect` + `fillText`
-4. Draw "periodicnames.com" branding
-5. `canvas.toBlob()` → PNG
-
-### Video Generation (MediaRecorder API)
-
-```
-src/utils/ReelGenerator.ts
-  recordAnimation(result: NameResult): Promise<Blob>  // returns MP4/WebM
-```
-
-Flow:
-1. Create off-screen canvas
-2. Use `requestAnimationFrame` to drive the tile-reveal animation on canvas
-3. `canvas.captureStream(30)` → `MediaRecorder` records to chunks
-4. Stop after animation completes → `Blob` of video
-5. Trigger download → user uploads to Instagram Reel / Twitter
-
-### Sharing Flows
-
-| Platform | Format | Mechanism |
-|---|---|---|
-| Twitter | PNG image + text | Download image + `twitter.com/intent/tweet?text=...` |
-| Instagram post | PNG image | Download + copyable caption instructions |
-| Instagram Reel | MP4 video | Download + instructions |
-| Mobile (any) | PNG or video | `navigator.share({ files: [...] })` Web Share API |
-
-### New Components (Phase 2)
-
-```
-src/components/SharePanel.tsx    — dropdown: Twitter · Instagram Post · Reel
-src/components/ShareModal.tsx    — instructions + copyable caption after download
-```
+This guarantees maximum real element count (e.g., "Sc" beats "S" + "c" when Sc exists as a real element).
 
 ---
 
-## Phase 3 — Print on Demand Architecture
+## CSS Animation Conventions
 
-This phase requires a minimal backend to keep the Printful API key secure.
+All `@keyframes` live in `src/index.css`. No animation libraries.
 
-### Backend
+Key classes:
+- `.table-bg-tile` — `opacity: 0.12; transition: opacity 1s ease` (base background tile)
+- `.table-bg-tile-lit` — `opacity: 0.45` (matched tile after animation completes)
+- `.fake-shimmer` — gold shimmer sweep on fake element tiles
+- `.fake-wobble` — wobble keyframe on fake tile first appearance
+- `.result-exit` — fade-out + slight upward translate when result is dismissed
+- `.results-fade-in` — fade-in + slight upward translate when result enters
 
-- **Vercel Edge Function** (`/api/print/*`)
-  - `POST /api/print/mockup` — generates product mockup via Printful API
-  - `POST /api/print/order` — creates draft order, returns Printful checkout URL
+Standard easing for spring-like effects: `cubic-bezier(0.34, 1.56, 0.64, 1)`.
+No global `* { transition: all }` — only targeted transitions.
+
+---
+
+## URL Routing
+
+SPA routing via `history.pushState`:
+
+- Submit `"Harinii"` → URL becomes `/harinii`
+- Refresh → URL becomes `/`
+- On page load, `window.location.pathname` is parsed and auto-submitted
+
+`vercel.json` rewrites all paths to `/` so Vercel serves `index.html` for deep links.
+
+---
+
+## Phase 2 — Social Sharing
+
+**Image Generation** (`ShareImageGenerator.ts`):
+- Off-screen `<canvas>` at 1200×630px
+- Faded periodic table background (same tile layout, low opacity)
+- Element tiles centered, name spelled out
+- `periodicnames.com/<name>` URL footer
+- `canvas.toBlob()` → PNG download
+
+**Video Generation** (`ShareVideoGenerator.ts`):
+- Off-screen canvas + `requestAnimationFrame`
+- 500ms stagger per tile (matches app animation)
+- Plain opacity fade (no spring bounce)
+- `canvas.captureStream(30)` → `MediaRecorder` → WebM/MP4 download
+
+**Remaining Phase 2 work:**
+- Twitter/X intent URL share
+- Instagram Reel upload instructions modal
+- `navigator.share({ files })` Web Share API for mobile
+
+---
+
+## Phase 3 — Print on Demand
+
+Requires a minimal backend to keep the Printful API key secure.
+
+**Backend**: Vercel Functions (`/api/print/*`)
+- `POST /api/print/mockup` — generates product mockup via Printful API
+- `POST /api/print/order` — creates draft order, returns Printful checkout URL
 - API key stored in Vercel environment variables
-- No database needed (Printful handles order state)
 
-### Design Generation
+**Design generation**: Same Canvas approach as Phase 2, scaled to ≥2400×2400px for print. Print-safe colors (no pure `#000000`, no neon).
 
-High-res PNG for print (minimum 2400×2400px):
-- Same Canvas API approach as Phase 2, scaled up
-- Print-safe colors (avoid pure #000000 → use #1a1a1a for black; avoid neon)
-- Exported as PNG blob → sent to Printful mockup API as base64 or direct upload
-
-### Printful Integration
-
-```typescript
-// Simplified flow
-async function createMockup(designBlob: Blob, productId: string): Promise<MockupUrl>
-async function createOrder(designBlob: Blob, product: PrintProduct, shippingInfo: ShippingInfo): Promise<string> // returns checkout URL
+**New components**:
 ```
-
-Products mapped to Printful catalog IDs at build time.
-
-### New Components (Phase 3)
-
+src/components/PrintPanel.tsx     — product picker (t-shirt / mug / poster)
+src/components/ProductMockup.tsx  — live mockup preview
+src/pages/Checkout.tsx            — redirect to Printful checkout
 ```
-src/components/PrintPanel.tsx     — product picker (t-shirt / mug / coaster / poster)
-src/components/ProductMockup.tsx  — live mockup preview image
-src/pages/Checkout.tsx            — size/color/quantity → redirect to Printful checkout
-```
-
----
-
-## State Management
-
-No global state manager (Zustand, Redux) needed through Phase 2. Local `useState` + prop drilling is sufficient.
-
-Phase 3 may warrant a lightweight context for cart state if multi-product ordering is added.
 
 ---
 
 ## Performance Notes
 
-- Element data (~118 real + ~30 fake) is a static JSON import — negligible bundle impact
-- Canvas image generation: target < 2s on mid-range mobile
-- Video recording: 3–5s clip, target < 10s total generation time
-- No server-side rendering needed (pure SPA is fine for this use case)
+- Element data (118 real + ~30 fake) is static — negligible bundle impact
+- No global transition rules — targeted CSS transitions only
+- Background table uses `transform: scale()` (GPU composited, no layout recalculation)
+- Canvas image generation target: < 2s on mid-range mobile
+- Video recording target: 3–5s clip, < 10s total generation
+- No SSR needed (pure SPA)
