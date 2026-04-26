@@ -98,7 +98,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
     <div className={`max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg ${
       isExiting ? 'result-exit' : 'results-fade-in'
     }`}>
-      <div className="flex flex-wrap gap-0.5 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center">
         {layout.items.map((item, index) => {
           const isAnimated = animatedElements.includes(index);
 
@@ -106,12 +106,12 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
             return (
               <div
                 key={`element-${index}`}
-                className={`w-4 h-12 flex items-center justify-center ${
+                className={`w-6 h-16 flex items-center justify-center ${
                   isAnimated ? 'tile-pop' : 'opacity-0'
                 }`}
                 style={{ animationDelay: `${index * 65}ms` }}
               >
-                <span className="text-slate-400 text-xs">•</span>
+                <span className="text-slate-300 text-lg font-bold">·</span>
               </div>
             );
           }
@@ -119,7 +119,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
           return (
             <div
               key={`element-${index}`}
-              className={`w-12 h-12 hover:z-30 ${
+              className={`w-16 h-16 hover:z-30 ${
                 isAnimated ? 'tile-pop' : 'opacity-0'
               }`}
               style={{ animationDelay: `${index * 65}ms` }}

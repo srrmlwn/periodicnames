@@ -14,6 +14,7 @@ function App() {
   const [isVisible, setIsVisible] = useState(false);
   const [highlightedElements, setHighlightedElements] = useState<string[]>([]);
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
+  const [inputKey, setInputKey] = useState(0);
 
   const handleNameSubmit = (name: string) => {
     setIsLoading(true);
@@ -41,6 +42,7 @@ function App() {
     setIsVisible(false);
     setHighlightedElements([]);
     setAnimationPhase('input');
+    setInputKey(k => k + 1);
   };
 
   return (
@@ -68,7 +70,7 @@ function App() {
 
         {/* Name input + refresh button */}
         <div className="flex items-center justify-center space-x-2 mb-4">
-          <NameInput onSubmit={handleNameSubmit} isLoading={isLoading} />
+          <NameInput key={inputKey} onSubmit={handleNameSubmit} isLoading={isLoading} />
           {animationPhase === 'results' && (
             <button
               onClick={handleRefresh}

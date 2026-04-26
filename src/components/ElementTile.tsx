@@ -78,17 +78,15 @@ const ElementTile: React.FC<ElementTileProps> = ({
 
   const animationClasses = isHighlighted
     ? `
-      z-20 shadow-xl
+      z-20 scale-110 ring-2 ring-white ring-offset-1
       ${showGlow ? getGlowColor(element?.category || '') : ''}
       ${showPulse ? 'element-pulse' : ''}
       ${isAnimating ? 'element-fade-in' : ''}
-      hover:shadow-lg hover:z-30 active:scale-95
-      group-hover:ring-1 group-hover:ring-blue-300 group-hover:ring-opacity-30
-      hover:scale-125 transition-all duration-300 ease-out
+      hover:scale-125 hover:z-30 active:scale-95
+      transition-all duration-300 ease-out
     `
     : `
       hover:shadow-lg hover:z-30 active:scale-95
-      group-hover:ring-1 group-hover:ring-blue-300 group-hover:ring-opacity-30
       hover:scale-125 transition-all duration-300 ease-out
     `;
 

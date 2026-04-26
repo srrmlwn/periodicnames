@@ -27,7 +27,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSubmit(e);
     }
@@ -41,7 +41,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Enter your name..."
             className={`w-full px-4 pr-12 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out ${
               isTyping ? 'scale-105 shadow-lg' : ''
