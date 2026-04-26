@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="3" y="3" width="94" height="94" rx="12" ry="12" fill="#2563eb" stroke="#111111" stroke-width="6"/>
+  <text x="86" y="19" font-family="Nunito, Arial, sans-serif" font-size="13" font-weight="900" fill="rgba(255,255,255,0.85)" text-anchor="end">119</text>
+  <text x="50" y="66" font-family="Nunito, Arial, sans-serif" font-size="46" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="auto">Pn</text>
+  <text x="50" y="86" font-family="Nunito, Arial, sans-serif" font-size="10.5" font-weight="700" fill="rgba(255,255,255,0.9)" text-anchor="middle" letter-spacing="0.5">periodic</text>
+</svg>
