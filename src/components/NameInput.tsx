@@ -7,6 +7,8 @@ interface NameInputProps {
   initialValue?: string;
 }
 
+const MAX_CHARS = 30;
+
 const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh, initialValue = '' }) => {
   const [name, setName] = useState(initialValue);
 
@@ -24,17 +26,22 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value.slice(0, MAX_CHARS))}
             onKeyDown={handleKeyDown}
             placeholder="Enter your name..."
             className="w-full px-4 pr-12 py-2.5 text-center bg-white border-2 border-slate-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out placeholder:text-slate-400"
           />
+          {name.length >= MAX_CHARS - 6 && !hasResult && (
+            <span className={`absolute left-3 -bottom-5 text-xs ${name.length >= MAX_CHARS ? 'text-red-500' : 'text-slate-400'}`}>
+              {name.length}/{MAX_CHARS}
+            </span>
+          )}
           
           {hasResult ? (
             <button

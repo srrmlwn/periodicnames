@@ -61,15 +61,15 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
   if (currentWord.length > 0) wordGroups.push({ items: currentWord, isSpace: false });
 
   return (
-    <div className={isExiting ? 'result-exit' : 'results-fade-in'}>
-      <div className="flex flex-wrap gap-2 justify-center items-center">
+    <div className={`w-full ${isExiting ? 'result-exit' : 'results-fade-in'}`}>
+      <div className="flex flex-wrap gap-1 sm:gap-2 justify-center items-end">
         {wordGroups.map((group, gi) => {
           if (group.isSpace) {
             const item = group.items[0];
             return (
               <div
                 key={`space-${gi}`}
-                className={`w-6 h-16 flex items-center justify-center transition-opacity duration-200 ${
+                className={`w-4 h-12 sm:w-6 sm:h-16 flex items-center justify-center transition-opacity duration-200 ${
                   item.index < revealedCount ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -79,11 +79,11 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
           }
 
           return (
-            <div key={`word-${gi}`} className="flex gap-2 flex-nowrap">
+            <div key={`word-${gi}`} className="flex gap-1 sm:gap-2 flex-wrap justify-center">
               {group.items.map(item => (
                 <div
                   key={`el-${item.index}`}
-                  className={`w-16 h-16 hover:z-30 transition-opacity duration-200 ${item.index < revealedCount ? 'opacity-100' : 'opacity-0'}`}
+                  className={`w-12 h-12 sm:w-16 sm:h-16 hover:z-30 transition-opacity duration-200 ${item.index < revealedCount ? 'opacity-100' : 'opacity-0'}`}
                 >
                   <ElementTile
                     element={item.element}

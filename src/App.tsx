@@ -11,13 +11,17 @@ type AnimationPhase = 'input' | 'revealing' | 'done';
 // Natural size of the periodic table grid (18 cols × 9 rows, w-10 tiles, gap-0.5)
 const TABLE_W = 754; // 18*40 + 17*2
 const TABLE_H = 376; // 9*40 + 8*2
-const TABLE_INSET = 48; // px breathing room on each side
+const TABLE_INSET = 48; // px breathing room on each side (desktop only)
 const TABLE_MAX_SCALE = 1.3; // cap tile size so table never overwhelms the UI
 
 function getTableScale() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  // On mobile (<640px) skip the inset so the table fills the width
+  const inset = vw < 640 ? 0 : TABLE_INSET * 2;
   return Math.min(
-    (window.innerWidth - TABLE_INSET * 2) / TABLE_W,
-    (window.innerHeight - TABLE_INSET * 2) / TABLE_H,
+    (vw - inset) / TABLE_W,
+    (vh - inset) / TABLE_H,
     TABLE_MAX_SCALE
   );
 }
@@ -130,7 +134,7 @@ function App() {
         <div className="px-4 pt-4">
           <Header />
         </div>
-        <div className="flex flex-col items-center px-4 pb-8 gap-6" style={{ paddingTop: 'max(48px, calc(50vh - 130px))' }}>
+        <div className="flex flex-col items-center px-4 pb-8 gap-6" style={{ paddingTop: 'max(32px, calc(50vh - 200px))' }}>
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
