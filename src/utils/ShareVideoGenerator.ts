@@ -9,6 +9,10 @@ const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0
 const STAGGER_MS = 65;
 const POP_MS = 450;
 const HOLD_MS = 1000;
+const TILES_START_MS = 1000; // tiles begin after the text-intro phase
+const TEXT_FADE_IN_END = 500;
+const TEXT_HOLD_END = 900;
+const TEXT_FADE_OUT_END = 1200;
 const CANVAS_SIZE = 1080;
 const FPS = 30;
 
@@ -62,7 +66,7 @@ export class ShareVideoGenerator {
 
   getEstimatedDurationMs(result: NameResult): number {
     const numTiles = result.orderedElements.filter(e => e.symbol !== ' ').length;
-    return Math.max(numTiles - 1, 0) * STAGGER_MS + POP_MS + HOLD_MS;
+    return TILES_START_MS + Math.max(numTiles - 1, 0) * STAGGER_MS + POP_MS + HOLD_MS;
   }
 
   async generateReelVideo(
@@ -128,7 +132,7 @@ export class ShareVideoGenerator {
     const tileStarts = new Map<ElementRenderItem, number>();
     let idx = 0;
     layout.items.forEach(item => {
-      if (item.type !== 'space') tileStarts.set(item, idx++ * STAGGER_MS);
+      if (item.type !== 'space') tileStarts.set(item, TILES_START_MS + idx++ * STAGGER_MS);
     });
 
     const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
@@ -150,6 +154,25 @@ export class ShareVideoGenerator {
       const contentTop = titleY + titleSize * 0.2 + 24;
       const contentBottom = urlBaselineY - urlSize - 16;
       const tilesStartY = contentTop + Math.max(0, (contentBottom - contentTop - totalRowsHeight) / 2);
+
+      // Text intro phase
+      const nameOpacity = elapsed < TEXT_FADE_IN_END
+        ? elapsed / TEXT_FADE_IN_END
+        : elapsed < TEXT_HOLD_END
+          ? 1
+          : elapsed < TEXT_FADE_OUT_END
+            ? 1 - (elapsed - TEXT_HOLD_END) / (TEXT_FADE_OUT_END - TEXT_HOLD_END)
+            : 0;
+      const nameScale = elapsed < TEXT_FADE_IN_END
+        ? 0.85 + 0.15 * (elapsed / TEXT_FADE_IN_END)
+        : elapsed < TEXT_HOLD_END
+          ? 1
+          : 1 - 0.1 * ((elapsed - TEXT_HOLD_END) / (TEXT_FADE_OUT_END - TEXT_HOLD_END));
+
+      if (nameOpacity > 0.01) {
+        this.drawNameText(ctx, result.originalName, nameOpacity, nameScale,
+          contentTop, contentBottom);
+      }
 
       rows.forEach((row, ri) => {
         let rowWidth = 0;
@@ -187,6 +210,52 @@ export class ShareVideoGenerator {
     };
 
     requestAnimationFrame(frame);
+  }
+
+  private drawNameText(
+    ctx: CanvasRenderingContext2D,
+    name: string,
+    opacity: number,
+    scale: number,
+    contentTop: number,
+    contentBottom: number
+  ): void {
+    const centerY = (contentTop + contentBottom) / 2;
+    const maxWidth = CANVAS_SIZE * 0.82;
+
+    // Auto-scale font size to fit the name
+    let fontSize = 210;
+    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
+    const measured = ctx.measureText(name).width;
+    if (measured > maxWidth) fontSize = Math.floor(fontSize * maxWidth / measured);
+    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
+
+    const chars = name.split('').map(ch => ({ ch, w: ctx.measureText(ch).width }));
+    const totalWidth = chars.reduce((s, c) => s + c.w, 0);
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.translate(CANVAS_SIZE / 2, centerY);
+    ctx.scale(scale, scale);
+
+    let x = -totalWidth / 2;
+    let ci = 0;
+    for (const { ch, w } of chars) {
+      if (ch !== ' ') {
+        const color = TITLE_COLORS[ci++ % TITLE_COLORS.length];
+        ctx.lineWidth = fontSize * 0.065;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#111111';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.strokeText(ch, x, 0);
+        ctx.fillStyle = color;
+        ctx.fillText(ch, x, 0);
+      }
+      x += w;
+    }
+
+    ctx.restore();
   }
 
   private drawPeriodicTableBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
