@@ -1,78 +1,106 @@
 import { getAllElements } from '../data/elements';
-import { getAllFakeElements } from '../data/fakeElements';
+import { getFakeElementBySymbol } from '../data/fakeElements';
+import type { FakeElement } from '../data/fakeElements';
 import type { NameResult } from '../types';
+
+function titleCase(s: string): string {
+  if (s.length === 0) return s;
+  return s[0].toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function matchWordToElements(
+  word: string,
+  realElements: ReturnType<typeof getAllElements>
+): (ReturnType<typeof getAllElements>[number] | FakeElement)[] {
+  const n = word.length;
+
+  // dp[i] = max real element count achievable from position i to end
+  const dp = new Array<number>(n + 1).fill(0);
+  // choice[i] = { len, isReal } — what to pick at position i
+  const choice = new Array<{ len: number; isReal: boolean }>(n);
+
+  for (let i = n - 1; i >= 0; i--) {
+    let bestScore = -1;
+    let bestChoice = { len: 1, isReal: false };
+
+    for (const len of [2, 1]) {
+      if (i + len > n) continue;
+      const candidate = titleCase(word.substring(i, i + len));
+      const realMatch = realElements.find(el => el.symbol === candidate);
+
+      if (realMatch) {
+        const score = dp[i + len] + 1;
+        if (score > bestScore) {
+          bestScore = score;
+          bestChoice = { len, isReal: true };
+        }
+      } else if (len === 1) {
+        // Fake element fallback for single character
+        const score = dp[i + 1] + 0;
+        if (score > bestScore) {
+          bestScore = score;
+          bestChoice = { len: 1, isReal: false };
+        }
+      }
+    }
+
+    dp[i] = bestScore === -1 ? 0 : bestScore;
+    choice[i] = bestChoice;
+  }
+
+  const ordered: (ReturnType<typeof getAllElements>[number] | FakeElement)[] = [];
+  let pos = 0;
+  while (pos < n) {
+    const { len, isReal } = choice[pos];
+    if (isReal) {
+      const candidate = titleCase(word.substring(pos, pos + len));
+      const el = realElements.find(el => el.symbol === candidate);
+      if (el) ordered.push(el);
+    } else {
+      const fakeEl = getFakeElementBySymbol(word[pos]);
+      if (fakeEl) ordered.push(fakeEl);
+    }
+    pos += len;
+  }
+
+  return ordered;
+}
 
 export function matchNameToElements(name: string): NameResult {
   const realElements = getAllElements();
-  const fakeElements = getAllFakeElements();
-  
+
   const result: NameResult = {
     originalName: name,
     elements: [],
     fakeElements: [],
     orderedElements: [],
     totalElements: 0,
-    realElementsCount: 0
+    realElementsCount: 0,
   };
-  
-  let remainingName = name.toUpperCase();
-  
-  // Try to match with real elements first (greedy approach)
-  while (remainingName.length > 0) {
-    let matched = false;
-    
-    // Handle spaces as special characters
-    if (remainingName[0] === ' ') {
-      // Add a space element to maintain spacing
-      const spaceElement = { symbol: ' ', name: 'Space', color: '#FFFFFF' };
+
+  const spaceElement: FakeElement = { symbol: ' ', name: 'Space', color: '#FFFFFF' };
+  const words = name.toUpperCase().split(' ');
+
+  words.forEach((word, wordIndex) => {
+    if (wordIndex > 0) {
       result.fakeElements.push(spaceElement);
       result.orderedElements.push(spaceElement);
-      remainingName = remainingName.substring(1);
-      continue;
     }
-    
-    // Try longest possible real element symbols first
-    for (let length = Math.min(remainingName.length, 3); length >= 1; length--) {
-      const candidate = remainingName.substring(0, length);
-      const element = realElements.find(el => el.symbol.toUpperCase() === candidate);
-      
-      if (element) {
-        result.elements.push(element);
-        result.orderedElements.push(element);
+
+    const wordElements = matchWordToElements(word, realElements);
+
+    for (const el of wordElements) {
+      if ('atomicNumber' in el) {
+        result.elements.push(el);
         result.realElementsCount++;
-        remainingName = remainingName.substring(length);
-        matched = true;
-        break;
-      }
-    }
-    
-    // If no real element found, try fake elements
-    if (!matched) {
-      const firstChar = remainingName[0];
-      const fakeElement = fakeElements.find(el => el.symbol === firstChar);
-      
-      if (fakeElement) {
-        result.fakeElements.push(fakeElement);
-        result.orderedElements.push(fakeElement);
-        remainingName = remainingName.substring(1);
       } else {
-        // If even fake element not found, skip this character
-        remainingName = remainingName.substring(1);
+        result.fakeElements.push(el);
       }
+      result.orderedElements.push(el);
     }
-  }
-  
+  });
+
   result.totalElements = result.elements.length + result.fakeElements.length;
-  
+
   return result;
 }
-
-// Test function for development
-export function testElementMatching() {
-  const testNames = ['Sriram', 'Carlos', 'Moses'];
-  
-  testNames.forEach(name => {
-    const result = matchNameToElements(name);
-    console.log(`${name}:`, result);
-  });
-} 
