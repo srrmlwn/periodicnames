@@ -199,6 +199,18 @@
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Scale the periodic table card to fit on mobile without horizontal scroll */
+@media (max-width: 767px) {
+  .periodic-table-card {
+    zoom: 0.37;
+  }
+}
+@media (max-width: 340px) {
+  .periodic-table-card {
+    zoom: 0.33;
+  }
+}
+
 .hover-lift {
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
 }

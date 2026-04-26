@@ -183,7 +183,7 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements, comp
 
   return (
     <div className="p-2 flex justify-center">
-      <div className="bg-white rounded-lg shadow-lg p-4 overflow-x-auto w-fit max-w-full">
+      <div className="periodic-table-card bg-white rounded-lg shadow-lg p-4 overflow-x-auto w-fit max-w-full">
         <div className="flex flex-col gap-0.5 w-fit p-2">
           {renderPeriodicTable()}
         </div>

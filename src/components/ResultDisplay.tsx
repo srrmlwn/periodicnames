@@ -94,22 +94,39 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
   const layout = createElementLayout(result);
 
+  // Group items into per-word chunks so flex-wrap only breaks at word boundaries
+  type WordGroup = { items: typeof layout.items; isSpace: boolean };
+  const wordGroups: WordGroup[] = [];
+  let currentWord: typeof layout.items = [];
+  layout.items.forEach(item => {
+    if (item.type === 'space') {
+      if (currentWord.length > 0) {
+        wordGroups.push({ items: currentWord, isSpace: false });
+        currentWord = [];
+      }
+      wordGroups.push({ items: [item], isSpace: true });
+    } else {
+      currentWord.push(item);
+    }
+  });
+  if (currentWord.length > 0) wordGroups.push({ items: currentWord, isSpace: false });
+
   return (
     <div className={`max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg ${
       isExiting ? 'result-exit' : 'results-fade-in'
     }`}>
-      <div className="flex flex-wrap gap-2 justify-center">
-        {layout.items.map((item, index) => {
-          const isAnimated = animatedElements.includes(index);
-
-          if (item.type === 'space') {
+      <div className="flex flex-wrap gap-2 justify-center items-center">
+        {wordGroups.map((group, gi) => {
+          if (group.isSpace) {
+            const item = group.items[0];
+            const isAnimated = animatedElements.includes(item.index);
             return (
               <div
-                key={`element-${index}`}
+                key={`space-${gi}`}
                 className={`w-6 h-16 flex items-center justify-center ${
                   isAnimated ? 'tile-pop' : 'opacity-0'
                 }`}
-                style={{ animationDelay: `${index * 65}ms` }}
+                style={{ animationDelay: `${item.index * 65}ms` }}
               >
                 <span className="text-slate-300 text-lg font-bold">·</span>
               </div>
@@ -117,20 +134,25 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
           }
 
           return (
-            <div
-              key={`element-${index}`}
-              className={`w-16 h-16 hover:z-30 ${
-                isAnimated ? 'tile-pop' : 'opacity-0'
-              }`}
-              style={{ animationDelay: `${index * 65}ms` }}
-            >
-              <ElementTile
-                element={item.element}
-                fakeElement={item.fakeElement}
-                isHighlighted={false}
-                animationDelay={index * 50}
-                size="lg"
-              />
+            <div key={`word-${gi}`} className="flex gap-2 flex-nowrap">
+              {group.items.map(item => {
+                const isAnimated = animatedElements.includes(item.index);
+                return (
+                  <div
+                    key={`el-${item.index}`}
+                    className={`w-16 h-16 hover:z-30 ${isAnimated ? 'tile-pop' : 'opacity-0'}`}
+                    style={{ animationDelay: `${item.index * 65}ms` }}
+                  >
+                    <ElementTile
+                      element={item.element}
+                      fakeElement={item.fakeElement}
+                      isHighlighted={false}
+                      animationDelay={item.index * 50}
+                      size="lg"
+                    />
+                  </div>
+                );
+              })}
             </div>
           );
         })}

@@ -43,7 +43,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter your name..."
-            className={`w-full px-4 pr-12 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out ${
+            className={`w-full px-4 pr-12 py-2 text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out ${
               isTyping ? 'scale-105 shadow-lg' : ''
             }`}
             disabled={isLoading}
