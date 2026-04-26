@@ -81,20 +81,17 @@ export class ShareImageGenerator {
     const titleBaselineY = padding + titleSize;
     this.drawColorfulTitle('Periodic Names', width / 2, titleBaselineY, titleSize);
 
-    const tileSize = isX ? 92 : 116;
-    const tileGap = isX ? 8 : 10;
-    const wordGap = isX ? 18 : 24;
-    const rowGap = isX ? 10 : 12;
-
-    const layout = createElementLayout(result);
-    const rows = this.buildWordRows(layout, tileSize, tileGap, wordGap, width - padding * 2);
-    const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
-
     const urlSize = isX ? 24 : 30;
     const urlBaselineY = height - (isX ? 38 : 50);
 
     const contentTop = titleBaselineY + titleSize * 0.2 + 24;
     const contentBottom = urlBaselineY - urlSize - 16;
+
+    const layout = createElementLayout(result);
+    const { tileSize, rows, tileGap, wordGap, rowGap } =
+      this.computeOptimalLayout(layout, width - padding * 2, contentBottom - contentTop);
+
+    const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
     const tilesStartY = contentTop + Math.max(0, (contentBottom - contentTop - totalTilesHeight) / 2);
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, width);
@@ -155,6 +152,44 @@ export class ShareImageGenerator {
       }
       x += w;
     }
+  }
+
+  private computeOptimalLayout(
+    layout: ElementLayout,
+    availableWidth: number,
+    availableHeight: number
+  ): { tileSize: number; rows: ElementRenderItem[][][]; tileGap: number; wordGap: number; rowGap: number } {
+    // Pre-compute max word length (tile count) — words never wrap, so this is the hard width constraint
+    const words: ElementRenderItem[][] = [];
+    let cur: ElementRenderItem[] = [];
+    for (const item of layout.items) {
+      if (item.type === 'space') {
+        if (cur.length > 0) { words.push(cur); cur = []; }
+      } else { cur.push(item); }
+    }
+    if (cur.length > 0) words.push(cur);
+    const maxWordLen = Math.max(1, ...words.map(w => w.length));
+
+    for (let tileSize = 140; tileSize >= 48; tileSize -= 4) {
+      const tileGap = Math.round(tileSize * 0.09);
+      const wordGap = Math.round(tileSize * 0.20);
+      const rowGap = Math.round(tileSize * 0.12);
+
+      // Widest single word must fit in one row
+      if (maxWordLen * tileSize + (maxWordLen - 1) * tileGap > availableWidth) continue;
+
+      const rows = this.buildWordRows(layout, tileSize, tileGap, wordGap, availableWidth);
+      const totalHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
+      if (totalHeight <= availableHeight) return { tileSize, rows, tileGap, wordGap, rowGap };
+    }
+
+    // Absolute fallback
+    const tileSize = 48;
+    return {
+      tileSize,
+      rows: this.buildWordRows(layout, tileSize, 4, 10, availableWidth),
+      tileGap: 4, wordGap: 10, rowGap: 6,
+    };
   }
 
   private buildWordRows(
