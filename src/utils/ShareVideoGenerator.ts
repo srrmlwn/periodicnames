@@ -8,11 +8,11 @@ import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeE
 const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
 const STAGGER_MS = 65;
 const POP_MS = 450;
-const HOLD_MS = 1000;
-const TILES_START_MS = 1000; // tiles begin after the text-intro phase
-const TEXT_FADE_IN_END = 500;
-const TEXT_HOLD_END = 900;
-const TEXT_FADE_OUT_END = 1200;
+const HOLD_MS = 1200;
+const TILES_START_MS = 1800;
+const TEXT_FADE_IN_END = 700;
+const TEXT_HOLD_END = 1600;
+const TEXT_FADE_OUT_END = 2000;
 const CANVAS_SIZE = 1080;
 const FPS = 30;
 
@@ -113,15 +113,37 @@ export class ShareVideoGenerator {
     const ctx = canvas.getContext('2d')!;
     const layout = createElementLayout(result);
 
-    const tileSize = 110;
-    const tileGap = 10;
-    const wordGap = 22;
-    const rowGap = 12;
     const padding = 80;
-    const usableWidth = CANVAS_SIZE - padding * 2;
+    const titleSize = 68;
+    const titleY = padding + titleSize;
+    const urlSize = 26;
+    const urlBaselineY = CANVAS_SIZE - 40;
+    const contentTop = titleY + titleSize * 0.2 + 24;
+    const contentBottom = urlBaselineY - urlSize - 16;
+    const availableWidth = CANVAS_SIZE - padding * 2;
+    const availableHeight = contentBottom - contentTop;
 
-    const rows = this.buildWordRows(layout.items, tileSize, tileGap, wordGap, usableWidth);
+    // Responsive tile layout: largest tiles that fit the available space
+    const { tileSize, rows, tileGap, wordGap, rowGap } =
+      this.computeOptimalLayout(layout, availableWidth, availableHeight);
+
     const totalRowsHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
+    const tilesStartY = contentTop + Math.max(0, (availableHeight - totalRowsHeight) / 2);
+
+    // Size the text font to match the widest tile row so they look the same scale
+    let maxTileRowWidth = 0;
+    rows.forEach(row => {
+      let w = 0;
+      row.forEach((word, wi) => {
+        if (wi > 0) w += wordGap;
+        w += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
+      });
+      maxTileRowWidth = Math.max(maxTileRowWidth, w);
+    });
+    const REF = 300;
+    ctx.font = `900 ${REF}px "Nunito", "Arial Black", sans-serif`;
+    const refWidth = ctx.measureText(result.originalName).width;
+    const nameFontSize = Math.min(Math.round(REF * maxTileRowWidth / refWidth), REF);
 
     // Pre-render the faded periodic table background once
     const bgCanvas = document.createElement('canvas');
@@ -145,15 +167,7 @@ export class ShareVideoGenerator {
       ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
       ctx.drawImage(bgCanvas, 0, 0);
 
-      const titleSize = 68;
-      const titleY = padding + titleSize;
       this.drawColorfulTitle(ctx, 'Periodic Names', CANVAS_SIZE / 2, titleY, titleSize);
-
-      const urlSize = 26;
-      const urlBaselineY = CANVAS_SIZE - 40;
-      const contentTop = titleY + titleSize * 0.2 + 24;
-      const contentBottom = urlBaselineY - urlSize - 16;
-      const tilesStartY = contentTop + Math.max(0, (contentBottom - contentTop - totalRowsHeight) / 2);
 
       // Text intro phase
       const nameOpacity = elapsed < TEXT_FADE_IN_END
@@ -167,11 +181,11 @@ export class ShareVideoGenerator {
         ? 0.85 + 0.15 * (elapsed / TEXT_FADE_IN_END)
         : elapsed < TEXT_HOLD_END
           ? 1
-          : 1 - 0.1 * ((elapsed - TEXT_HOLD_END) / (TEXT_FADE_OUT_END - TEXT_HOLD_END));
+          : 1 - 0.08 * ((elapsed - TEXT_HOLD_END) / (TEXT_FADE_OUT_END - TEXT_HOLD_END));
 
       if (nameOpacity > 0.01) {
-        this.drawNameText(ctx, result.originalName, nameOpacity, nameScale,
-          contentTop, contentBottom);
+        this.drawNameText(ctx, result.originalName, nameFontSize, nameOpacity, nameScale,
+          (contentTop + contentBottom) / 2);
       }
 
       rows.forEach((row, ri) => {
@@ -212,24 +226,48 @@ export class ShareVideoGenerator {
     requestAnimationFrame(frame);
   }
 
+  private computeOptimalLayout(
+    layout: { items: ElementRenderItem[] },
+    availableWidth: number,
+    availableHeight: number
+  ): { tileSize: number; rows: ElementRenderItem[][][]; tileGap: number; wordGap: number; rowGap: number } {
+    // Pre-group into words once (groupings are independent of tile size)
+    const words: ElementRenderItem[][] = [];
+    let cur: ElementRenderItem[] = [];
+    for (const item of layout.items) {
+      if (item.type === 'space') {
+        if (cur.length > 0) { words.push(cur); cur = []; }
+      } else { cur.push(item); }
+    }
+    if (cur.length > 0) words.push(cur);
+    const maxWordLen = Math.max(1, ...words.map(w => w.length));
+
+    for (let tileSize = 200; tileSize >= 60; tileSize -= 4) {
+      const tileGap = Math.round(tileSize * 0.09);
+      const wordGap = Math.round(tileSize * 0.20);
+      const rowGap = Math.round(tileSize * 0.12);
+
+      // Ensure the widest single word fits on one row
+      if (maxWordLen * tileSize + (maxWordLen - 1) * tileGap > availableWidth) continue;
+
+      const rows = this.buildWordRows(layout.items, tileSize, tileGap, wordGap, availableWidth);
+      const totalHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
+      if (totalHeight <= availableHeight) return { tileSize, rows, tileGap, wordGap, rowGap };
+    }
+
+    const tileSize = 60;
+    return { tileSize, rows: this.buildWordRows(layout.items, tileSize, 5, 12, availableWidth), tileGap: 5, wordGap: 12, rowGap: 7 };
+  }
+
   private drawNameText(
     ctx: CanvasRenderingContext2D,
     name: string,
+    fontSize: number,
     opacity: number,
     scale: number,
-    contentTop: number,
-    contentBottom: number
+    centerY: number
   ): void {
-    const centerY = (contentTop + contentBottom) / 2;
-    const maxWidth = CANVAS_SIZE * 0.82;
-
-    // Auto-scale font size to fit the name
-    let fontSize = 210;
     ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
-    const measured = ctx.measureText(name).width;
-    if (measured > maxWidth) fontSize = Math.floor(fontSize * maxWidth / measured);
-    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
-
     const chars = name.split('').map(ch => ({ ch, w: ctx.measureText(ch).width }));
     const totalWidth = chars.reduce((s, c) => s + c.w, 0);
 
