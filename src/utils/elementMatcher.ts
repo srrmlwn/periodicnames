@@ -69,6 +69,7 @@ function matchWordToElements(
 export function matchNameToElements(name: string): NameResult {
   const realElements = getAllElements();
 
+
   const result: NameResult = {
     originalName: name,
     elements: [],

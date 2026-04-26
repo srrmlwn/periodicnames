@@ -29,30 +29,30 @@ export interface ColorScheme {
 
 export const defaultColorScheme: ColorScheme = {
   name: 'default',
-  background: '#f9fafb', // gray-50
+  background: '#f1f5f9', // slate-100
   categories: {
-    alkali: '#ef4444', // red-500
-    alkaline: '#f97316', // orange-500
-    transition: '#3b82f6', // blue-500
-    postTransition: '#10b981', // emerald-500
-    metalloid: '#8b5cf6', // purple-500
-    nonmetal: '#06b6d4', // cyan-500
-    noble: '#ec4899', // pink-500
-    lanthanide: '#6366f1', // indigo-500
-    actinide: '#64748b', // slate-500
+    alkali: '#e03030',
+    alkaline: '#f97316',
+    transition: '#2563eb',
+    postTransition: '#059669',
+    metalloid: '#7c3aed',
+    nonmetal: '#0284c7',
+    noble: '#db2777',
+    lanthanide: '#4338ca',
+    actinide: '#475569',
     fake: '#fbbf24', // amber-400
   },
   borders: {
-    alkali: '#dc2626', // red-600
-    alkaline: '#ea580c', // orange-600
-    transition: '#2563eb', // blue-600
-    postTransition: '#059669', // emerald-600
-    metalloid: '#7c3aed', // purple-600
-    nonmetal: '#0891b2', // cyan-600
-    noble: '#db2777', // pink-600
-    lanthanide: '#4f46e5', // indigo-600
-    actinide: '#475569', // slate-600
-    fake: '#f59e0b', // amber-500
+    alkali: '#b91c1c',
+    alkaline: '#c2410c',
+    transition: '#1d4ed8',
+    postTransition: '#047857',
+    metalloid: '#6d28d9',
+    nonmetal: '#0369a1',
+    noble: '#be185d',
+    lanthanide: '#3730a3',
+    actinide: '#334155',
+    fake: '#111111',
   },
 };
 
@@ -70,4 +70,4 @@ export function getFakeElementColor(colorScheme: ColorScheme = defaultColorSchem
 
 export function getFakeElementBorderColor(colorScheme: ColorScheme = defaultColorScheme): string {
   return colorScheme.borders.fake;
-} 
+}
