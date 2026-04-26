@@ -1,10 +1,9 @@
 import { getAllElements } from '../data/elements';
-import { getAllFakeElements } from '../data/fakeElements';
+import { getFakeElementBySymbol } from '../data/fakeElements';
 import type { NameResult } from '../types';
 
 export function matchNameToElements(name: string): NameResult {
   const realElements = getAllElements();
-  const fakeElements = getAllFakeElements();
   
   const result: NameResult = {
     originalName: name,
@@ -49,8 +48,8 @@ export function matchNameToElements(name: string): NameResult {
     // If no real element found, try fake elements
     if (!matched) {
       const firstChar = remainingName[0];
-      const fakeElement = fakeElements.find(el => el.symbol === firstChar);
-      
+      const fakeElement = getFakeElementBySymbol(firstChar);
+
       if (fakeElement) {
         result.fakeElements.push(fakeElement);
         result.orderedElements.push(fakeElement);

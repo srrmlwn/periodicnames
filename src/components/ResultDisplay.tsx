@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ElementTile from './ElementTile';
 import ShareButton from './ShareButton';
 import { ShareImageGenerator } from '../utils/ShareImageGenerator';
@@ -14,6 +14,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   const [animatedElements, setAnimatedElements] = useState<number[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shouldRenderRef = useRef(false);
 
   const handleShare = async (platform: 'x' | 'instagram') => {
     if (!result) return;
@@ -41,6 +45,31 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   };
 
   useEffect(() => {
+    if (isVisible) {
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+      shouldRenderRef.current = true;
+      setShouldRender(true);
+      setIsExiting(false);
+    } else if (shouldRenderRef.current) {
+      setIsExiting(true);
+      exitTimerRef.current = setTimeout(() => {
+        shouldRenderRef.current = false;
+        setShouldRender(false);
+        setIsExiting(false);
+      }, 300);
+    }
+
+    return () => {
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+    };
+  }, [isVisible]);
+
+  useEffect(() => {
     if (isVisible && result) {
       setAnimatedElements([]);
       setShowSuccessMessage(false);
@@ -48,10 +77,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
       result.orderedElements.forEach((_, index) => {
         setTimeout(() => {
           setAnimatedElements(prev => [...prev, index]);
-        }, index * 100);
+        }, index * 65);
       });
 
-      const totalAnimationTime = (result.orderedElements.length - 1) * 100 + 500;
+      const totalAnimationTime = (result.orderedElements.length - 1) * 65 + 450;
       setTimeout(() => {
         setShowSuccessMessage(true);
       }, totalAnimationTime + 200);
@@ -61,13 +90,13 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
     }
   }, [result, isVisible]);
 
-  if (!isVisible || !result) return null;
+  if (!shouldRender || !result) return null;
 
   const layout = createElementLayout(result);
 
   return (
     <div className={`max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg ${
-      isVisible ? 'results-fade-in' : 'opacity-0'
+      isExiting ? 'result-exit' : 'results-fade-in'
     }`}>
       <div className="flex flex-wrap gap-0.5 justify-center">
         {layout.items.map((item, index) => {
@@ -77,10 +106,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
             return (
               <div
                 key={`element-${index}`}
-                className={`w-4 h-12 flex items-center justify-center transition-all duration-300 ${
-                  isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                className={`w-4 h-12 flex items-center justify-center ${
+                  isAnimated ? 'tile-pop' : 'opacity-0'
                 }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 65}ms` }}
               >
                 <span className="text-slate-400 text-xs">•</span>
               </div>
@@ -90,16 +119,17 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
           return (
             <div
               key={`element-${index}`}
-              className={`w-12 h-12 transition-all duration-500 ease-out hover:z-30 ${
-                isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+              className={`w-12 h-12 hover:z-30 ${
+                isAnimated ? 'tile-pop' : 'opacity-0'
               }`}
-              style={{ transitionDelay: `${index * 100}ms` }}
+              style={{ animationDelay: `${index * 65}ms` }}
             >
               <ElementTile
                 element={item.element}
                 fakeElement={item.fakeElement}
                 isHighlighted={false}
                 animationDelay={index * 50}
+                size="lg"
               />
             </div>
           );

@@ -44,7 +44,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
+    <div className="min-h-screen bg-slate-100 py-4">
       <div className="container mx-auto px-4">
         <Header />
 
@@ -54,6 +54,7 @@ function App() {
         }`}>
           <PeriodicTable highlightedElements={highlightedElements} />
         </div>
+        <p className="text-xs text-gray-400 text-center mt-1 md:hidden">← scroll to see full table →</p>
 
         {/* Processing spinner */}
         {animationPhase === 'processing' && (

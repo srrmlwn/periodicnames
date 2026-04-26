@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from '../utils/colorSchemes';
+import { getCategoryColor, getFakeElementBorderColor } from '../utils/colorSchemes';
 
 interface ElementTileProps {
   element?: Element;
@@ -9,6 +9,7 @@ interface ElementTileProps {
   isHighlighted?: boolean;
   onClick?: () => void;
   animationDelay?: number;
+  size?: 'sm' | 'lg';
 }
 
 const ElementTile: React.FC<ElementTileProps> = ({
@@ -16,7 +17,8 @@ const ElementTile: React.FC<ElementTileProps> = ({
   fakeElement,
   isHighlighted = false,
   onClick,
-  animationDelay = 0
+  animationDelay = 0,
+  size = 'sm'
 }) => {
   const isFake = !!fakeElement;
   const displayElement = element || fakeElement;
@@ -24,6 +26,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showGlow, setShowGlow] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
+  const [hasWobbled, setHasWobbled] = useState(false);
 
   useEffect(() => {
     if (isHighlighted) {
@@ -36,6 +39,14 @@ const ElementTile: React.FC<ElementTileProps> = ({
       setIsAnimating(false);
     }
   }, [isHighlighted, animationDelay]);
+
+  useEffect(() => {
+    if (isFake) {
+      requestAnimationFrame(() => {
+        setHasWobbled(false);
+      });
+    }
+  }, [isFake]);
 
   if (!displayElement) return null;
 
@@ -59,9 +70,9 @@ const ElementTile: React.FC<ElementTileProps> = ({
   };
 
   const baseClasses = `
-    w-10 h-10 rounded-md border border-2 shadow-sm
+    w-full h-full rounded-md border-2 shadow-sm
     flex flex-col items-center justify-center
-    cursor-pointer font-bold text-xs relative overflow-hidden
+    cursor-pointer font-bold relative overflow-hidden
     transition-all duration-300 ease-out hover-lift
   `;
 
@@ -82,13 +93,17 @@ const ElementTile: React.FC<ElementTileProps> = ({
     `;
 
   const fakeClasses = isFake
-    ? 'bg-amber-400 border-dashed border-amber-500 text-amber-900'
+    ? `border-dashed text-amber-900 fake-shimmer ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
     : 'text-white';
 
   const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
 
-  const backgroundColor = isFake ? getFakeElementColor() : getCategoryColor(element?.category || '');
-  const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor(element?.category || '');
+  const backgroundColor = isFake ? 'transparent' : getCategoryColor(element?.category || '');
+  const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
+
+  const atomicNumberClass = size === 'lg' ? 'text-xs' : 'text-[5px]';
+  const symbolClass = size === 'lg' ? 'text-2xl font-black' : 'text-sm font-bold';
+  const nameClass = size === 'lg' ? 'text-[9px]' : 'text-[6px]';
 
   return (
     <div
@@ -102,23 +117,23 @@ const ElementTile: React.FC<ElementTileProps> = ({
         transitionDelay: `${animationDelay}ms`
       }}
     >
-      <div className="absolute top-0 left-0.5 text-[5px] text-white/80 font-normal">
+      <div className={`absolute top-0 left-0.5 ${atomicNumberClass} text-white/80 font-normal`}>
         {element?.atomicNumber || '?'}
       </div>
 
       {element?.atomicMass && (
-        <div className={`absolute top-0 right-0.5 text-[5px] text-white/70 font-normal transition-opacity duration-300 ${
+        <div className={`absolute top-0 right-0.5 ${atomicNumberClass} text-white/70 font-normal transition-opacity duration-300 ${
           isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}>
           {element.atomicMass}
         </div>
       )}
 
-      <div className="text-sm font-bold leading-none">
+      <div className={`${symbolClass} leading-none`}>
         {displayElement.symbol}
       </div>
 
-      <div className={`absolute bottom-0.5 left-0.5 right-0.5 text-[6px] text-center leading-tight font-normal transition-all duration-300 ${
+      <div className={`absolute bottom-0.5 left-0.5 right-0.5 ${nameClass} text-center leading-tight font-normal transition-all duration-300 ${
         isHighlighted ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
       }`}>
         <span className="block truncate">
