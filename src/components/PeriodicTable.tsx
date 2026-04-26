@@ -5,20 +5,20 @@ import { getAllElements } from '../data/elements';
 interface PeriodicTableProps {
   highlightedElements: string[];
   compact?: boolean;
+  isResults?: boolean;
+  activeSymbol?: string | null;
+  revealCount?: number;
 }
 
-const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements, compact = false }) => {
+const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements, compact = false, isResults = false, activeSymbol, revealCount = 0 }) => {
   const realElements = getAllElements();
 
   const isHighlighted = (symbol: string) => highlightedElements.includes(symbol);
 
-  const getAnimationDelay = (symbol: string) => {
-    const index = highlightedElements.indexOf(symbol);
-    return index >= 0 ? index * 200 : 0;
-  };
+  const getAnimationDelay = (_symbol: string) => 150;
 
-  const tileClass = compact ? 'w-7 h-7 transition-all duration-500' : 'w-10 h-10 transition-all duration-500';
-  const tileSize = compact ? 'xs' as const : 'sm' as const;
+  const tileClass = 'w-10 h-10 transition-opacity duration-500';
+  const tileSize = 'sm' as const;
 
   const renderPeriodicTable = () => {
     const row1 = new Array(18).fill(null);
@@ -163,27 +163,38 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements, comp
 
     return allRows.map((row, rowIndex) => (
       <div key={rowIndex} className="flex gap-0.5 mb-0.5">
-        {row.map((element, colIndex) => (
-          <div key={colIndex} className={tileClass}>
-            {element ? (
-              <ElementTile
-                element={element}
-                isHighlighted={isHighlighted(element.symbol)}
-                animationDelay={getAnimationDelay(element.symbol)}
-                size={tileSize}
-              />
-            ) : (
-              <div className={tileClass}></div>
-            )}
-          </div>
-        ))}
+        {row.map((element, colIndex) => {
+          const isActive = !!element && element.symbol === activeSymbol;
+          const isDimmed = isResults && !!element && !isHighlighted(element.symbol);
+          const tileKey = isActive ? `${colIndex}-${revealCount}` : `${colIndex}`;
+          return (
+            <div
+              key={tileKey}
+              className={`${tileClass}${isDimmed ? ' table-tile-dimmed' : ''}${isActive ? ' tile-activate' : ''}`}
+            >
+              {element ? (
+                <ElementTile
+                  element={element}
+                  isHighlighted={isHighlighted(element.symbol)}
+                  animationDelay={getAnimationDelay(element.symbol)}
+                  size={tileSize}
+                />
+              ) : (
+                <div className={tileClass}></div>
+              )}
+            </div>
+          );
+        })}
       </div>
     ));
   };
 
   return (
     <div className="p-2 flex justify-center">
-      <div className="periodic-table-card bg-white rounded-lg shadow-lg p-4 overflow-x-auto w-fit max-w-full">
+      <div
+        className="periodic-table-card bg-white rounded-lg shadow-lg p-4 overflow-x-auto w-fit max-w-full"
+        style={{ zoom: compact ? 0.7 : undefined }}
+      >
         <div className="flex flex-col gap-0.5 w-fit p-2">
           {renderPeriodicTable()}
         </div>

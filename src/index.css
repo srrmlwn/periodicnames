@@ -114,13 +114,6 @@
   100% { background-position: 200% 0; }
 }
 
-@keyframes tilePop {
-  0%   { opacity: 0; transform: scale(0.4) translateY(10px); }
-  65%  { opacity: 1; transform: scale(1.12) translateY(-3px); }
-  82%  { transform: scale(0.94); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
 @keyframes fakeWobble {
   0%, 100% { transform: rotate(0deg) scale(1); }
   20% { transform: rotate(-5deg) scale(1.06); }
@@ -182,10 +175,6 @@
   animation: shimmer 2s linear infinite;
 }
 
-.tile-pop {
-  animation: tilePop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
 .fake-wobble {
   animation: fakeWobble 0.65s ease-in-out both;
 }
@@ -194,9 +183,8 @@
   animation: resultExit 0.3s ease-in forwards;
 }
 
-* {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+.periodic-table-card {
+  transition: zoom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scale the periodic table card to fit on mobile without horizontal scroll */
@@ -225,3 +213,17 @@
 .animate-stagger-3 { animation-delay: 0.3s; }
 .animate-stagger-4 { animation-delay: 0.4s; }
 .animate-stagger-5 { animation-delay: 0.5s; }
+
+.table-tile-dimmed {
+  opacity: 0.3;
+}
+
+@keyframes tileActivate {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.tile-activate {
+  animation: tileActivate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

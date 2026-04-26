@@ -7,11 +7,11 @@ import type { NameResult } from '../types';
 interface ResultDisplayProps {
   result: NameResult | null;
   isVisible: boolean;
+  revealedCount: number;
+  isDone: boolean;
 }
 
-const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
-  const [animatedElements, setAnimatedElements] = useState<number[]>([]);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, revealedCount, isDone }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -35,34 +35,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
         setIsExiting(false);
       }, 300);
     }
-
     return () => {
-      if (exitTimerRef.current) {
-        clearTimeout(exitTimerRef.current);
-      }
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
     };
   }, [isVisible]);
-
-  useEffect(() => {
-    if (isVisible && result) {
-      setAnimatedElements([]);
-      setShowSuccessMessage(false);
-
-      result.orderedElements.forEach((_, index) => {
-        setTimeout(() => {
-          setAnimatedElements(prev => [...prev, index]);
-        }, index * 65);
-      });
-
-      const totalAnimationTime = (result.orderedElements.length - 1) * 65 + 450;
-      setTimeout(() => {
-        setShowSuccessMessage(true);
-      }, totalAnimationTime + 200);
-    } else {
-      setAnimatedElements([]);
-      setShowSuccessMessage(false);
-    }
-  }, [result, isVisible]);
 
   if (!shouldRender || !result) return null;
 
@@ -92,14 +68,12 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
         {wordGroups.map((group, gi) => {
           if (group.isSpace) {
             const item = group.items[0];
-            const isAnimated = animatedElements.includes(item.index);
             return (
               <div
                 key={`space-${gi}`}
-                className={`w-6 h-16 flex items-center justify-center ${
-                  isAnimated ? 'tile-pop' : 'opacity-0'
+                className={`w-6 h-16 flex items-center justify-center transition-opacity duration-200 ${
+                  item.index < revealedCount ? 'opacity-100' : 'opacity-0'
                 }`}
-                style={{ animationDelay: `${item.index * 65}ms` }}
               >
                 <span className="text-slate-300 text-lg font-bold">·</span>
               </div>
@@ -108,38 +82,26 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
           return (
             <div key={`word-${gi}`} className="flex gap-2 flex-nowrap">
-              {group.items.map(item => {
-                const isAnimated = animatedElements.includes(item.index);
-                return (
-                  <div
-                    key={`el-${item.index}`}
-                    className={`w-16 h-16 hover:z-30 ${isAnimated ? 'tile-pop' : 'opacity-0'}`}
-                    style={{ animationDelay: `${item.index * 65}ms` }}
-                  >
-                    <ElementTile
-                      element={item.element}
-                      fakeElement={item.fakeElement}
-                      isHighlighted={false}
-                      animationDelay={item.index * 50}
-                      size="lg"
-                    />
-                  </div>
-                );
-              })}
+              {group.items.map(item => (
+                <div
+                  key={`el-${item.index}`}
+                  className={`w-16 h-16 hover:z-30 transition-opacity duration-200 ${item.index < revealedCount ? 'opacity-100' : 'opacity-0'}`}
+                >
+                  <ElementTile
+                    element={item.element}
+                    fakeElement={item.fakeElement}
+                    isHighlighted={false}
+                    animationDelay={0}
+                    size="lg"
+                  />
+                </div>
+              ))}
             </div>
           );
         })}
       </div>
 
-      {showSuccessMessage && (
-        <div className="mt-4 text-center">
-          <div className="inline-block px-3 py-1 bg-lime-100 text-lime-800 border border-lime-600 rounded-full text-xs font-medium element-fade-in">
-            🥳 Name successfully spelled with {layout.realElementsCount} real elements!
-          </div>
-        </div>
-      )}
-
-      {showSuccessMessage && (
+      {isDone && (
         <div className="mt-4 flex justify-center">
           <button
             onClick={() => setIsShareModalOpen(true)}

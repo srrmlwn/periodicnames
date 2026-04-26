@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Header from './components/Header';
 import NameInput from './components/NameInput';
 import ResultDisplay from './components/ResultDisplay';
@@ -6,89 +6,106 @@ import PeriodicTable from './components/PeriodicTable';
 import { matchNameToElements } from './utils/elementMatcher';
 import type { NameResult } from './types';
 
-type AnimationPhase = 'input' | 'processing' | 'results';
+type AnimationPhase = 'input' | 'revealing' | 'done';
 
 function App() {
   const [result, setResult] = useState<NameResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [highlightedElements, setHighlightedElements] = useState<string[]>([]);
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
+  const [revealedCount, setRevealedCount] = useState(0);
   const [inputKey, setInputKey] = useState(0);
+  const revealTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const revealDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopReveal = () => {
+    if (revealDelayTimer.current) {
+      clearTimeout(revealDelayTimer.current);
+      revealDelayTimer.current = null;
+    }
+    if (revealTimer.current) {
+      clearInterval(revealTimer.current);
+      revealTimer.current = null;
+    }
+  };
 
   const handleNameSubmit = (name: string) => {
-    setIsLoading(true);
-    setIsVisible(false);
-    setHighlightedElements([]);
-    setAnimationPhase('processing');
+    stopReveal();
+    const nameResult = matchNameToElements(name);
+    const total = nameResult.orderedElements.length;
 
-    setTimeout(() => {
-      const nameResult = matchNameToElements(name);
-      setResult(nameResult);
-      setIsVisible(true);
-      setIsLoading(false);
-      setAnimationPhase('results');
+    setResult(nameResult);
+    setRevealedCount(0);
+    setAnimationPhase('revealing');
 
-      const usedElements = [
-        ...nameResult.elements.map((e: { symbol: string }) => e.symbol),
-        ...nameResult.fakeElements.map((e: { symbol: string }) => e.symbol)
-      ];
-      setHighlightedElements(usedElements);
-    }, 500);
+    // Wait for table zoom (0.5s) + pause (0.5s) before starting elements
+    revealDelayTimer.current = setTimeout(() => {
+      setRevealedCount(1);
+
+      if (total <= 1) {
+        setTimeout(() => setAnimationPhase('done'), 300);
+        return;
+      }
+
+      let count = 1;
+      revealTimer.current = setInterval(() => {
+        count++;
+        setRevealedCount(count);
+        if (count >= total) {
+          stopReveal();
+          setTimeout(() => setAnimationPhase('done'), 300);
+        }
+      }, 500);
+    }, 1000);
   };
 
   const handleRefresh = () => {
+    stopReveal();
     setResult(null);
-    setIsVisible(false);
-    setHighlightedElements([]);
+    setRevealedCount(0);
     setAnimationPhase('input');
     setInputKey(k => k + 1);
   };
 
-  const isCompact = animationPhase === 'results';
+  const isCompact = animationPhase !== 'input';
+  const revealedSymbols = result
+    ? result.orderedElements.slice(0, revealedCount).map(e => e.symbol)
+    : [];
+  const currentElement = result && revealedCount > 0
+    ? result.orderedElements[revealedCount - 1]
+    : null;
+  const activeSymbol = currentElement && 'atomicNumber' in currentElement
+    ? currentElement.symbol
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-100 py-4">
       <div className="container mx-auto px-4">
         <Header />
 
-        {/* Periodic table — compact (28px) in results phase on desktop; hidden on mobile when results show */}
-        <div className={`transition-all duration-500 ease-in-out mb-3
-          ${animationPhase === 'processing' ? 'opacity-50' : 'opacity-100'}
-          ${animationPhase === 'results' ? 'hidden md:block' : ''}
-        `}>
+        <div className={`mb-3 ${isCompact ? 'hidden md:block' : ''}`}>
           <PeriodicTable
-            highlightedElements={highlightedElements}
+            highlightedElements={revealedSymbols}
             compact={isCompact}
+            isResults={isCompact}
+            activeSymbol={activeSymbol}
+            revealCount={revealedCount}
           />
         </div>
 
-        {animationPhase === 'processing' && (
-          <div className="flex justify-center items-center py-3">
-            <div className="inline-flex items-center space-x-2 text-gray-600">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Finding elements...</span>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-center space-x-2 mb-3">
-          <NameInput key={inputKey} onSubmit={handleNameSubmit} isLoading={isLoading} />
-          {animationPhase === 'results' && (
-            <button
-              onClick={handleRefresh}
-              className="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200 rounded-lg hover:bg-gray-100"
-              title="Try a new name"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          )}
+        <div className="flex items-center justify-center mb-3">
+          <NameInput
+            key={inputKey}
+            onSubmit={handleNameSubmit}
+            hasResult={isCompact}
+            onRefresh={handleRefresh}
+          />
         </div>
 
-        <ResultDisplay result={result} isVisible={isVisible} />
+        <ResultDisplay
+          result={result}
+          isVisible={isCompact}
+          revealedCount={revealedCount}
+          isDone={animationPhase === 'done'}
+        />
       </div>
     </div>
   );

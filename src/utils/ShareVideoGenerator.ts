@@ -6,10 +6,10 @@ import type { ElementRenderItem } from './elementRenderer';
 import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
 const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
-const STAGGER_MS = 65;
-const POP_MS = 450;
-const HOLD_MS = 1200;
-const TILES_START_MS = 1800;
+const STAGGER_MS = 500;
+const POP_MS = 200;
+const HOLD_MS = 1500;
+const TILES_START_MS = 2000; // starts after name text finishes fading out
 const TEXT_FADE_IN_END = 700;
 const TEXT_HOLD_END = 1600;
 const TEXT_FADE_OUT_END = 2000;
@@ -42,16 +42,9 @@ const ELEMENT_POSITIONS: [string, number, number][] = [
 interface TileAnim { scale: number; opacity: number; dy: number }
 
 function animForProgress(t: number): TileAnim {
-  if (t <= 0) return { scale: 0.5, opacity: 0, dy: 8 };
+  if (t <= 0) return { scale: 1, opacity: 0, dy: 0 };
   if (t >= 1) return { scale: 1, opacity: 1, dy: 0 };
-  type KF = [number, number, number, number];
-  const kfs: KF[] = [[0, 0.5, 0, 8], [0.6, 1.1, 1, -2], [0.8, 0.95, 1, 0], [1, 1, 1, 0]];
-  let i = 0;
-  while (i < kfs.length - 2 && kfs[i + 1][0] <= t) i++;
-  const [t0, s0, a0, y0] = kfs[i];
-  const [t1, s1, a1, y1] = kfs[i + 1];
-  const f = (t - t0) / (t1 - t0);
-  return { scale: s0 + (s1 - s0) * f, opacity: a0 + (a1 - a0) * f, dy: y0 + (y1 - y0) * f };
+  return { scale: 1, opacity: t, dy: 0 };
 }
 
 export class ShareVideoGenerator {
