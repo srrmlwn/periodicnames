@@ -201,9 +201,10 @@
 
 .table-bg-tile {
   opacity: 0.12;
-  transition: opacity 1s ease;
+  border-radius: 8px;
+  transition: box-shadow 1s ease;
 }
 
 .table-bg-tile-lit {
-  opacity: 0.45;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.22);
 }
