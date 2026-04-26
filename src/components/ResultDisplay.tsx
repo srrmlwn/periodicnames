@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ElementTile from './ElementTile';
-import ShareButton from './ShareButton';
-import { ShareImageGenerator } from '../utils/ShareImageGenerator';
+import SharePreviewModal from './SharePreviewModal';
 import { createElementLayout } from '../utils/elementRenderer';
 import type { NameResult } from '../types';
 
@@ -13,36 +12,11 @@ interface ResultDisplayProps {
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   const [animatedElements, setAnimatedElements] = useState<number[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldRenderRef = useRef(false);
-
-  const handleShare = async (platform: 'x' | 'instagram') => {
-    if (!result) return;
-
-    setIsGenerating(true);
-    try {
-      const generator = new ShareImageGenerator();
-      const imageBlob = platform === 'x'
-        ? await generator.generateXImage(result)
-        : await generator.generateInstagramImage(result);
-
-      const imageUrl = URL.createObjectURL(imageBlob);
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = `periodic-names-${platform}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(imageUrl);
-    } catch (error) {
-      console.error('Failed to generate image:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   useEffect(() => {
     if (isVisible) {
@@ -94,7 +68,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
   const layout = createElementLayout(result);
 
-  // Group items into per-word chunks so flex-wrap only breaks at word boundaries
   type WordGroup = { items: typeof layout.items; isSpace: boolean };
   const wordGroups: WordGroup[] = [];
   let currentWord: typeof layout.items = [];
@@ -167,19 +140,25 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
       )}
 
       {showSuccessMessage && (
-        <div className="mt-4 flex justify-center space-x-3">
-          <ShareButton
-            platform="x"
-            onClick={() => handleShare('x')}
-            className={isGenerating ? 'opacity-50 cursor-not-allowed' : ''}
-          />
-          <ShareButton
-            platform="instagram"
-            onClick={() => handleShare('instagram')}
-            className={isGenerating ? 'opacity-50 cursor-not-allowed' : ''}
-          />
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="px-5 py-2.5 bg-slate-800 text-white font-semibold text-sm rounded-xl hover:bg-slate-700 transition-colors duration-200 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
         </div>
       )}
+
+      <SharePreviewModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        result={result}
+      />
     </div>
   );
 };
