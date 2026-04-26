@@ -4,10 +4,11 @@ interface NameInputProps {
   onSubmit: (name: string) => void;
   hasResult?: boolean;
   onRefresh?: () => void;
+  initialValue?: string;
 }
 
-const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh }) => {
-  const [name, setName] = useState('');
+const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh, initialValue = '' }) => {
+  const [name, setName] = useState(initialValue);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

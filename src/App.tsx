@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
 import NameInput from './components/NameInput';
 import ResultDisplay from './components/ResultDisplay';
@@ -8,6 +8,19 @@ import type { NameResult } from './types';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
 
+function nameFromPath(path: string): string {
+  return decodeURIComponent(path)
+    .replace(/-/g, ' ')
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+    .trim();
+}
+
+function nameToSlug(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, '-');
+}
+
 function App() {
   const [result, setResult] = useState<NameResult | null>(null);
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
@@ -15,6 +28,13 @@ function App() {
   const [inputKey, setInputKey] = useState(0);
   const revealTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const revealDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialized = useRef(false);
+
+  // Derive initial name from URL once on mount
+  const urlName = useState(() => {
+    const path = window.location.pathname.slice(1);
+    return path ? nameFromPath(path) : '';
+  })[0];
 
   const stopReveal = () => {
     if (revealDelayTimer.current) {
@@ -27,7 +47,15 @@ function App() {
     }
   };
 
+  // Auto-submit if a name was in the URL on load
+  useEffect(() => {
+    if (initialized.current || !urlName) return;
+    initialized.current = true;
+    handleNameSubmit(urlName); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleNameSubmit = (name: string) => {
+    history.pushState(null, '', '/' + nameToSlug(name));
     stopReveal();
     const nameResult = matchNameToElements(name);
     const total = nameResult.orderedElements.length;
@@ -58,6 +86,7 @@ function App() {
   };
 
   const handleRefresh = () => {
+    history.pushState(null, '', '/');
     stopReveal();
     setResult(null);
     setRevealedCount(0);
@@ -97,6 +126,7 @@ function App() {
             onSubmit={handleNameSubmit}
             hasResult={isCompact}
             onRefresh={handleRefresh}
+            initialValue={inputKey === 0 ? urlName : ''}
           />
         </div>
 
