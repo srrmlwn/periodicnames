@@ -1,6 +1,7 @@
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
+import type { SharePlatform } from '../types/sharing';
 import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
 export interface ElementRenderItem {
@@ -99,8 +100,8 @@ export function getElementDisplayProperties(item: ElementRenderItem) {
  * Calculates layout dimensions for image generation
  */
 export function calculateImageLayout(
-  layout: ElementLayout, 
-  platform: 'x' | 'instagram'
+  layout: ElementLayout,
+  platform: SharePlatform
 ) {
   const tileSize = platform === 'x' ? 80 : 100;
   const spacing = 4;

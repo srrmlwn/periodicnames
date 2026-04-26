@@ -1,6 +1,6 @@
 import type { NameResult } from './index';
 
-export type SharePlatform = 'x' | 'instagram';
+export type SharePlatform = 'x' | 'instagram' | 'story';
 
 export interface ShareButtonProps {
   platform: SharePlatform;
@@ -11,9 +11,7 @@ export interface ShareButtonProps {
 export interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  platform: SharePlatform;
-  imageBlob: Blob;
-  caption: string;
+  result: NameResult;
 }
 
 export interface ShareEvent {

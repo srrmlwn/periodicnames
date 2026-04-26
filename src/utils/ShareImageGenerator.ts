@@ -1,198 +1,252 @@
 import type { NameResult } from '../types';
 import type { SharePlatform } from '../types/sharing';
+import type { Element } from '../data/elements';
 import { getDimensions } from '../templates/imageTemplates';
-import { createElementLayout, getElementDisplayProperties, calculateImageLayout } from './elementRenderer';
+import { createElementLayout } from './elementRenderer';
 import type { ElementLayout, ElementRenderItem } from './elementRenderer';
-import { defaultColorScheme } from './colorSchemes';
+import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
+
+const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
 
 export class ShareImageGenerator {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  
+
   constructor() {
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d')!;
   }
-  
-  // Generate X image (1200x675)
+
   async generateXImage(result: NameResult): Promise<Blob> {
-    const dimensions = getDimensions('x');
-    this.canvas.width = dimensions.width;
-    this.canvas.height = dimensions.height;
-    return this.renderDesign(result, 'x');
+    const { width, height } = getDimensions('x');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    return this.render(result, 'x');
   }
-  
-  // Generate Instagram image (1080x1080)
+
   async generateInstagramImage(result: NameResult): Promise<Blob> {
-    const dimensions = getDimensions('instagram');
-    this.canvas.width = dimensions.width;
-    this.canvas.height = dimensions.height;
-    return this.renderDesign(result, 'instagram');
+    const { width, height } = getDimensions('instagram');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    return this.render(result, 'instagram');
   }
-  
-  private async renderDesign(result: NameResult, platform: SharePlatform): Promise<Blob> {
-    // Clear canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    // Draw background - same as website (bg-gray-50)
-    this.drawBackground();
-    
-    // Create element layout using shared utility
+
+  async generateStoryImage(result: NameResult): Promise<Blob> {
+    const { width, height } = getDimensions('story');
+    this.canvas.width = width;
+    this.canvas.height = height;
+    return this.render(result, 'story');
+  }
+
+  private async render(result: NameResult, platform: SharePlatform): Promise<Blob> {
+    await document.fonts.ready;
+
+    const { width, height } = this.canvas;
+    const ctx = this.ctx;
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, width, height);
+
+    const isX = platform === 'x';
+    const padding = isX ? 60 : 80;
+    const usableWidth = width - padding * 2;
+
+    const titleSize = isX ? 54 : 68;
+    const titleBaselineY = padding + titleSize;
+    this.drawColorfulTitle('Periodic Names', width / 2, titleBaselineY, titleSize);
+
+    const subtitleSize = isX ? 26 : 34;
+    const subtitleY = titleBaselineY + titleSize * 0.15 + subtitleSize + 16;
+    ctx.font = `700 ${subtitleSize}px "Nunito", Arial, sans-serif`;
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(result.originalName, width / 2, subtitleY);
+
+    const tileSize = isX ? 88 : 110;
+    const tileGap = isX ? 8 : 10;
+    const wordGap = isX ? 18 : 24;
+    const rowGap = isX ? 10 : 12;
+
     const layout = createElementLayout(result);
-    
-    // Draw elements as tiles
-    this.drawElementTiles(layout, platform);
-    
-    // Draw branding
-    this.drawBranding();
-    
-    // Convert to blob
-    return new Promise((resolve) => {
-      this.canvas.toBlob((blob) => {
-        resolve(blob!);
-      }, 'image/png', 0.9);
+    const rows = this.buildWordRows(layout, tileSize, tileGap, wordGap, usableWidth);
+    const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
+
+    const topUsed = subtitleY + subtitleSize * 0.3 + 36;
+    const bottomReserved = 60;
+    const remaining = height - topUsed - bottomReserved;
+    const tilesStartY = topUsed + Math.max(0, (remaining - totalTilesHeight) / 2);
+
+    this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, width);
+
+    const brandSize = isX ? 18 : 22;
+    ctx.font = `600 ${brandSize}px "Nunito", Arial, sans-serif`;
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('periodicnames.com', width / 2, height - 28);
+
+    return new Promise(resolve => {
+      this.canvas.toBlob(blob => resolve(blob!), 'image/png', 0.95);
     });
   }
-  
-  private drawBackground(): void {
-    // Use the same gray background as the website (bg-gray-50)
-    this.ctx.fillStyle = defaultColorScheme.background;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+  private drawColorfulTitle(text: string, centerX: number, baselineY: number, fontSize: number): void {
+    const ctx = this.ctx;
+    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+
+    const chars = text.split('').map(ch => ({ ch, w: ctx.measureText(ch).width, isSpace: ch === ' ' }));
+    const totalWidth = chars.reduce((sum, c) => sum + c.w, 0);
+    let x = centerX - totalWidth / 2;
+    let colorIndex = 0;
+
+    for (const { ch, w, isSpace } of chars) {
+      if (!isSpace) {
+        const color = TITLE_COLORS[colorIndex % TITLE_COLORS.length];
+        colorIndex++;
+        ctx.lineWidth = fontSize * 0.065;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#111111';
+        ctx.textAlign = 'left';
+        ctx.strokeText(ch, x, baselineY);
+        ctx.fillStyle = color;
+        ctx.fillText(ch, x, baselineY);
+      }
+      x += w;
+    }
   }
-  
-  private drawElementTiles(layout: ElementLayout, platform: SharePlatform): void {
-    const { width, height } = this.canvas;
 
-    const layoutInfo = calculateImageLayout(layout, platform);
-
-    const startX = (width - layoutInfo.totalWidth) / 2;
-    const startY = (height - layoutInfo.totalHeight) / 2;
-
-    let currentX = startX;
-    let currentY = startY;
-    let elementsInCurrentRow = 0;
-
-    layout.items.forEach((item: ElementRenderItem) => {
+  private buildWordRows(
+    layout: ElementLayout,
+    tileSize: number,
+    tileGap: number,
+    wordGap: number,
+    maxWidth: number
+  ): ElementRenderItem[][][] {
+    const words: ElementRenderItem[][] = [];
+    let current: ElementRenderItem[] = [];
+    for (const item of layout.items) {
       if (item.type === 'space') {
-        // For spaces, just move the cursor position
-        currentX += 16; // Space width (w-4 = 16px)
-        return;
+        if (current.length > 0) { words.push(current); current = []; }
+      } else {
+        current.push(item);
       }
-      
-      // Check if we need to wrap to next row
-      if (elementsInCurrentRow >= layoutInfo.maxElementsPerRow) {
-        currentX = startX;
-        currentY += layoutInfo.tileSize + layoutInfo.spacing;
-        elementsInCurrentRow = 0;
+    }
+    if (current.length > 0) words.push(current);
+
+    const wordPx = (w: ElementRenderItem[]) =>
+      w.length * tileSize + Math.max(0, w.length - 1) * tileGap;
+
+    const rows: ElementRenderItem[][][] = [];
+    let row: ElementRenderItem[][] = [];
+    let rowWidth = 0;
+
+    for (const word of words) {
+      const ww = wordPx(word);
+      const added = (row.length > 0 ? wordGap : 0) + ww;
+      if (rowWidth + added > maxWidth && row.length > 0) {
+        rows.push(row);
+        row = [word];
+        rowWidth = ww;
+      } else {
+        row.push(word);
+        rowWidth += added;
       }
-      
-      // Draw the element
-      this.drawElementTile(item, currentX, currentY, layoutInfo.tileSize);
-      
-      // Move to next position
-      currentX += layoutInfo.tileSize + layoutInfo.spacing;
-      elementsInCurrentRow++;
+    }
+    if (row.length > 0) rows.push(row);
+    return rows;
+  }
+
+  private drawWordRows(
+    rows: ElementRenderItem[][][],
+    tileSize: number,
+    tileGap: number,
+    wordGap: number,
+    rowGap: number,
+    startY: number,
+    canvasWidth: number
+  ): void {
+    rows.forEach((row, ri) => {
+      let rowWidth = 0;
+      row.forEach((word, wi) => {
+        if (wi > 0) rowWidth += wordGap;
+        rowWidth += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
+      });
+
+      let x = (canvasWidth - rowWidth) / 2;
+      const y = startY + ri * (tileSize + rowGap);
+
+      row.forEach((word, wi) => {
+        if (wi > 0) x += wordGap;
+        word.forEach((item, ti) => {
+          if (ti > 0) x += tileGap;
+          this.drawTile(item, x, y, tileSize);
+          x += tileSize;
+        });
+      });
     });
   }
-  
-  private drawElementTile(item: ElementRenderItem, x: number, y: number, size: number): void {
-    const displayProps = getElementDisplayProperties(item);
-    if (!displayProps || displayProps.isSpace) return;
-    
-    const cornerRadius = size * 0.125; // 12.5% of tile size for rounded corners
-    
-    // Draw rounded rectangle background
-    this.drawRoundedRect(x, y, size, size, cornerRadius, displayProps.backgroundColor);
-    
-    // Draw border
-    this.ctx.strokeStyle = displayProps.borderColor;
-    this.ctx.lineWidth = 2;
-    
-    if (!displayProps.isFake) {
-      // Solid border for real elements
-      this.ctx.setLineDash([]);
-    } else {
-      // Dashed border for fake elements
-      this.ctx.setLineDash([4, 4]);
+
+  private drawTile(item: ElementRenderItem, x: number, y: number, size: number): void {
+    const ctx = this.ctx;
+    const isFake = !!item.fakeElement;
+    const el = item.element || item.fakeElement;
+    if (!el) return;
+
+    const bgColor = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
+    const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor((el as Element).category);
+    const radius = size * 0.1;
+    const borderWidth = Math.max(2, size * 0.03);
+
+    this.roundRectPath(x, y, size, size, radius);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = borderWidth;
+    ctx.setLineDash([]);
+    ctx.stroke();
+
+    if (!isFake && (el as Element).atomicNumber) {
+      ctx.font = `700 ${size * 0.14}px "Nunito", Arial, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.fillText(String((el as Element).atomicNumber), x + size * 0.07, y + size * 0.05);
     }
-    
-    this.ctx.stroke();
-    this.ctx.setLineDash([]); // Reset line dash
-    
-    // Draw atomic number (top left)
-    if (displayProps.atomicNumber) {
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      this.ctx.font = `bold ${size * 0.15}px Inter, sans-serif`;
-      this.ctx.textAlign = 'left';
-      this.ctx.textBaseline = 'top';
-      this.ctx.fillText(displayProps.atomicNumber.toString(), x + 4, y + 2);
-    }
-    
-    // Draw element symbol (center)
-    this.ctx.fillStyle = 'white';
-    this.ctx.font = `bold ${size * 0.4}px Inter, sans-serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(displayProps.symbol, x + size / 2, y + size / 2);
-    
-    // Draw element name (bottom)
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    this.ctx.font = `${size * 0.12}px Inter, sans-serif`;
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'bottom';
-    
-    // Truncate long names
-    const maxWidth = size - 8;
-    let name = displayProps.name;
-    while (this.ctx.measureText(name).width > maxWidth && name.length > 0) {
-      name = name.slice(0, -1);
-    }
-    if (name.length < displayProps.name.length) {
-      name = name.slice(0, -1) + '…';
-    }
-    
-    this.ctx.fillText(name, x + size / 2, y + size - 4);
+
+    ctx.font = `900 ${size * 0.38}px "Nunito", "Arial Black", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeText(el.symbol, x + size / 2, y + size * 0.52);
+    ctx.fillStyle = isFake ? '#78350f' : 'white';
+    ctx.fillText(el.symbol, x + size / 2, y + size * 0.52);
+
+    ctx.font = `600 ${size * 0.12}px "Nunito", Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = isFake ? 'rgba(120,53,15,0.85)' : 'rgba(255,255,255,0.88)';
+    const maxNameW = size * 0.88;
+    let name = el.name;
+    while (ctx.measureText(name).width > maxNameW && name.length > 1) name = name.slice(0, -1);
+    if (name.length < el.name.length) name = name.slice(0, -1) + '…';
+    ctx.fillText(name, x + size / 2, y + size * 0.94);
   }
-  
-  private drawRoundedRect(x: number, y: number, width: number, height: number, radius: number, fillColor: string): void {
-    this.ctx.beginPath();
-    this.ctx.moveTo(x + radius, y);
-    this.ctx.lineTo(x + width - radius, y);
-    this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    this.ctx.lineTo(x + width, y + height - radius);
-    this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    this.ctx.lineTo(x + radius, y + height);
-    this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    this.ctx.lineTo(x, y + radius);
-    this.ctx.quadraticCurveTo(x, y, x + radius, y);
-    this.ctx.closePath();
-    
-    this.ctx.fillStyle = fillColor;
-    this.ctx.fill();
+
+  private roundRectPath(x: number, y: number, w: number, h: number, r: number): void {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   }
-  
-  private drawBranding(): void {
-    const { width, height } = this.canvas;
-    
-    // Draw website URL
-    this.ctx.fillStyle = 'rgba(107, 114, 128, 0.8)'; // gray-500 with opacity
-    this.ctx.font = 'bold 16px Inter, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'bottom';
-    
-    const url = 'periodicnames.com';
-    this.ctx.fillText(url, width / 2, height - 20);
-  }
-  
-  // Download image with given filename
-  downloadImage(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-} 
+}
