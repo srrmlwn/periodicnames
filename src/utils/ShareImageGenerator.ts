@@ -2,6 +2,7 @@ import type { NameResult } from '../types';
 import type { SharePlatform } from '../types/sharing';
 import { getDimensions } from '../templates/imageTemplates';
 import { createElementLayout, getElementDisplayProperties, calculateImageLayout } from './elementRenderer';
+import type { ElementLayout, ElementRenderItem } from './elementRenderer';
 import { defaultColorScheme } from './colorSchemes';
 
 export class ShareImageGenerator {
@@ -59,22 +60,19 @@ export class ShareImageGenerator {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
   
-  private drawElementTiles(layout: any, platform: SharePlatform): void {
+  private drawElementTiles(layout: ElementLayout, platform: SharePlatform): void {
     const { width, height } = this.canvas;
-    
-    // Get layout dimensions using shared utility
+
     const layoutInfo = calculateImageLayout(layout, platform);
-    
-    // Calculate positioning
-    let startX = (width - layoutInfo.totalWidth) / 2;
-    let startY = (height - layoutInfo.totalHeight) / 2;
-    
-    // Track position for elements (including spaces)
+
+    const startX = (width - layoutInfo.totalWidth) / 2;
+    const startY = (height - layoutInfo.totalHeight) / 2;
+
     let currentX = startX;
     let currentY = startY;
     let elementsInCurrentRow = 0;
-    
-    layout.items.forEach((item: any) => {
+
+    layout.items.forEach((item: ElementRenderItem) => {
       if (item.type === 'space') {
         // For spaces, just move the cursor position
         currentX += 16; // Space width (w-4 = 16px)
@@ -97,7 +95,7 @@ export class ShareImageGenerator {
     });
   }
   
-  private drawElementTile(item: any, x: number, y: number, size: number): void {
+  private drawElementTile(item: ElementRenderItem, x: number, y: number, size: number): void {
     const displayProps = getElementDisplayProperties(item);
     if (!displayProps || displayProps.isSpace) return;
     

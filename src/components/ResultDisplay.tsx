@@ -17,77 +17,66 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
 
   const handleShare = async (platform: 'x' | 'instagram') => {
     if (!result) return;
-    
+
     setIsGenerating(true);
     try {
       const generator = new ShareImageGenerator();
-      const imageBlob = platform === 'x' 
+      const imageBlob = platform === 'x'
         ? await generator.generateXImage(result)
         : await generator.generateInstagramImage(result);
-      
-      // Create a temporary URL for the blob
+
       const imageUrl = URL.createObjectURL(imageBlob);
-      
-      // For now, we'll just download the image
-      // In a real implementation, you'd integrate with platform APIs
       const link = document.createElement('a');
       link.href = imageUrl;
       link.download = `periodic-names-${platform}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Clean up the URL
       URL.revokeObjectURL(imageUrl);
     } catch (error) {
       console.error('Failed to generate image:', error);
-      // Could add toast notification here
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Trigger animations when result changes
   useEffect(() => {
     if (isVisible && result) {
       setAnimatedElements([]);
       setShowSuccessMessage(false);
-      
-      // Stagger the animation of each element
+
       result.orderedElements.forEach((_, index) => {
         setTimeout(() => {
           setAnimatedElements(prev => [...prev, index]);
-        }, index * 100); // 100ms delay between each element
+        }, index * 100);
       });
-      
-      // Show success message after all animations complete
-      const totalAnimationTime = (result.orderedElements.length - 1) * 100 + 500; // Last element delay + transition duration
+
+      const totalAnimationTime = (result.orderedElements.length - 1) * 100 + 500;
       setTimeout(() => {
         setShowSuccessMessage(true);
-      }, totalAnimationTime + 200); // Extra 200ms buffer
+      }, totalAnimationTime + 200);
     } else {
       setAnimatedElements([]);
       setShowSuccessMessage(false);
     }
   }, [result, isVisible]);
 
-  if (!isVisible || !result) {
-    return null;
-  }
+  if (!isVisible || !result) return null;
 
-  // Create element layout using shared utility
   const layout = createElementLayout(result);
 
   return (
-    <div className="max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg element-fade-in">
+    <div className={`max-w-4xl mx-auto mt-4 p-4 bg-white rounded-lg shadow-lg ${
+      isVisible ? 'results-fade-in' : 'opacity-0'
+    }`}>
       <div className="flex flex-wrap gap-0.5 justify-center">
         {layout.items.map((item, index) => {
           const isAnimated = animatedElements.includes(index);
-          
+
           if (item.type === 'space') {
             return (
-              <div 
-                key={`element-${index}`} 
+              <div
+                key={`element-${index}`}
                 className={`w-4 h-12 flex items-center justify-center transition-all duration-300 ${
                   isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
                 }`}
@@ -97,10 +86,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
               </div>
             );
           }
-          
+
           return (
-            <div 
-              key={`element-${index}`} 
+            <div
+              key={`element-${index}`}
               className={`w-12 h-12 transition-all duration-500 ease-out hover:z-30 ${
                 isAnimated ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
               }`}
@@ -117,16 +106,14 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
         })}
       </div>
 
-      {/* Success message with animation */}
       {showSuccessMessage && (
         <div className="mt-4 text-center">
           <div className="inline-block px-3 py-1 bg-lime-100 text-lime-800 border border-lime-600 rounded-full text-xs font-medium element-fade-in">
-          🥳 Name successfully spelled with {layout.realElementsCount} real elements!
+            🥳 Name successfully spelled with {layout.realElementsCount} real elements!
           </div>
         </div>
       )}
-      
-      {/* Share buttons */}
+
       {showSuccessMessage && (
         <div className="mt-4 flex justify-center space-x-3">
           <ShareButton
@@ -145,4 +132,4 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible }) => {
   );
 };
 
-export default ResultDisplay; 
+export default ResultDisplay;

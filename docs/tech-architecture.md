@@ -1,146 +1,44 @@
-# Technical Architecture - Periodic Names
+# Technical Architecture
 
-## Tech Stack
+## Current Stack
 
-### Frontend
-- **React 18** - Core framework for the single-page application
-- **TypeScript** - Type safety for element matching algorithm and component props
-- **Tailwind CSS** - Utility-first CSS for responsive design and element styling
-- **Framer Motion** - Smooth animations for name transformations and element highlighting
-- **Vite** - Fast development and build tooling
+| Layer | Technology |
+|---|---|
+| Framework | React 18 + TypeScript |
+| Styling | Tailwind CSS |
+| Build | Vite |
+| Deployment | Vercel |
+| Domain | periodicnames.com |
 
-### Development Tools
-- **ESLint + Prettier** - Code quality and formatting
-- **React Testing Library** - Component testing
-- **Vitest** - Unit testing framework
+No backend today. Everything runs client-side.
 
-### Deployment
-- **Vercel** - Zero-config deployment with automatic previews
-- **Custom Domain** - periodicnames.com
+---
 
-## Project Structure
+## What's Built (Phase 1 baseline)
 
 ```
-periodicnames/
-├── public/
-│   ├── index.html
-│   └── favicon.ico
-├── src/
-│   ├── components/
-│   │   ├── Header.tsx
-│   │   ├── NameInput.tsx
-│   │   ├── PeriodicTable.tsx
-│   │   ├── ElementTile.tsx
-│   │   ├── ResultDisplay.tsx
-│   │   └── ShareButton.tsx
-│   ├── hooks/
-│   │   ├── useElementMatcher.ts
-│   │   └── useAnimation.ts
-│   ├── data/
-│   │   ├── elements.ts
-│   │   ├── fakeElements.ts
-│   │   └── elementCategories.ts
-│   ├── utils/
-│   │   ├── elementMatcher.ts
-│   │   ├── elementStyler.ts
-│   │   └── animations.ts
-│   ├── types/
-│   │   └── index.ts
-│   ├── styles/
-│   │   └── globals.css
-│   ├── App.tsx
-│   └── main.tsx
-├── package.json
-├── tailwind.config.js
-├── vite.config.ts
-└── tsconfig.json
+src/
+├── components/
+│   ├── Header.tsx           — site title + subtitle
+│   ├── NameInput.tsx        — text input + inline submit
+│   ├── PeriodicTable.tsx    — full table grid, highlights matched elements
+│   ├── ElementTile.tsx      — individual element square (symbol, number, name, mass)
+│   ├── ResultDisplay.tsx    — animated result strip
+│   └── ShareButton.tsx      — share button scaffold (Phase 2)
+├── data/
+│   ├── elements.ts          — all 118 real elements
+│   ├── fakeElements.ts      — ~30 invented elements for unmatched letters
+│   └── elementCategories.ts — category → color mapping
+├── utils/
+│   ├── elementMatcher.ts    — name → element array algorithm
+│   └── (ShareImageGenerator, TwitterSharer, InstagramSharer — Phase 2 scaffolding)
+├── templates/               — image design templates (Phase 2 scaffolding)
+├── types/index.ts           — Element, NameResult, FakeElement interfaces
+└── App.tsx                  — animation phase state machine (input → processing → results)
 ```
 
-## Component Architecture
+### Key Data Types
 
-### Core Components
-
-#### 1. Header.tsx
-**Purpose**: Site branding and navigation
-**Props**: None
-**Features**: 
-- Site title "Periodic Names"
-- Subtitle "Find your name in the Periodic Table of Elements"
-- Responsive design
-
-#### 2. NameInput.tsx
-**Purpose**: User input and form handling
-**Props**: 
-- `onSubmit: (name: string) => void`
-- `isLoading: boolean`
-**Features**:
-- Text input with placeholder
-- Inline up arrow submit button
-- Form validation
-- Loading state
-
-#### 3. PeriodicTable.tsx
-**Purpose**: Display interactive periodic table
-**Props**:
-- `highlightedElements: string[]`
-- `onElementClick?: (symbol: string) => void`
-**Features**:
-- Grid layout of all elements
-- Highlighting for used elements
-- Click interactions
-- Responsive grid
-
-#### 4. ElementTile.tsx
-**Purpose**: Individual element display
-**Props**:
-- `element: Element`
-- `isHighlighted: boolean`
-- `isFake: boolean`
-- `onClick?: () => void`
-**Features**:
-- Square tile design per specifications
-- Atomic number, symbol, name, mass
-- Color coding for categories
-- Fake element styling
-- Hover effects
-
-#### 5. ResultDisplay.tsx
-**Purpose**: Show name transformation result
-**Props**:
-- `result: NameResult`
-- `isVisible: boolean`
-**Features**:
-- Animated element breakdown
-- Element names and atomic numbers
-- Copy-to-clipboard functionality
-- Share buttons
-
-#### 6. ShareButton.tsx
-**Purpose**: Social media sharing
-**Props**:
-- `result: NameResult`
-**Features**:
-- Twitter, Facebook, LinkedIn sharing
-- Custom share text generation
-
-### Custom Hooks
-
-#### useElementMatcher.ts
-**Purpose**: Core algorithm logic
-**Returns**:
-- `matchName: (name: string) => NameResult`
-- `isLoading: boolean`
-- `error: string | null`
-
-#### useAnimation.ts
-**Purpose**: Animation state management
-**Returns**:
-- `triggerAnimation: () => void`
-- `animationState: AnimationState`
-
-## Data Models
-
-### Element Type
 ```typescript
 interface Element {
   symbol: string;
@@ -150,145 +48,146 @@ interface Element {
   category: ElementCategory;
   isReal: boolean;
 }
-```
 
-### NameResult Type
-```typescript
 interface NameResult {
   originalName: string;
-  elements: Element[];
+  orderedElements: Element[];
   fakeElements: FakeElement[];
-  totalElements: number;
-  realElementsCount: number;
 }
 ```
 
-### FakeElement Type
+### Algorithm
+
+Dynamic-programming approach over the name string:
+1. Normalize input (uppercase, strip non-alpha)
+2. For each position, try all possible real element symbol matches (length 1–2)
+3. Find the decomposition that maximizes real elements and minimizes fake ones
+4. Fill uncovered positions with fake elements from the curated database
+
+---
+
+## Phase 1 — UI Changes (Cartoonish Style)
+
+Pure CSS/Tailwind changes, no new dependencies.
+
+**ElementTile:**
+- `border-2 border-black` (or `border-3`) — bold outline
+- Saturated background colors per category (e.g. `bg-red-500` not `bg-red-100`)
+- `rounded-lg` corners
+- Symbol font: `font-black` + slightly oversized
+- Fake element: `border-dashed border-black` + shimmer/gradient background
+
+**Animations (CSS + Tailwind):**
+- Tile reveal: `@keyframes popIn` — scale from 0.6 + fade in, with JS-driven `animation-delay`
+- Periodic table highlight: `@keyframes pulse-glow` — box-shadow pulse
+- Exit animation: `opacity-0 scale-95` transition before clearing result
+
+---
+
+## Phase 2 — Social Sharing Architecture
+
+Still client-side only. No new backend needed.
+
+### Image Generation (Canvas API)
+
+```
+src/utils/ShareImageGenerator.ts
+  generateImage(result: NameResult, platform: 'twitter' | 'instagram'): Promise<Blob>
+  
+src/templates/imageTemplates.ts
+  twitterTemplate   — 1200×675, horizontal element strip
+  instagramTemplate — 1080×1080, centered grid layout
+```
+
+Rendering pipeline:
+1. Create off-screen `<canvas>` at target dimensions
+2. Draw background (solid or gradient matching app color scheme)
+3. Re-render each element tile using canvas `fillRect` + `fillText`
+4. Draw "periodicnames.com" branding
+5. `canvas.toBlob()` → PNG
+
+### Video Generation (MediaRecorder API)
+
+```
+src/utils/ReelGenerator.ts
+  recordAnimation(result: NameResult): Promise<Blob>  // returns MP4/WebM
+```
+
+Flow:
+1. Create off-screen canvas
+2. Use `requestAnimationFrame` to drive the tile-reveal animation on canvas
+3. `canvas.captureStream(30)` → `MediaRecorder` records to chunks
+4. Stop after animation completes → `Blob` of video
+5. Trigger download → user uploads to Instagram Reel / Twitter
+
+### Sharing Flows
+
+| Platform | Format | Mechanism |
+|---|---|---|
+| Twitter | PNG image + text | Download image + `twitter.com/intent/tweet?text=...` |
+| Instagram post | PNG image | Download + copyable caption instructions |
+| Instagram Reel | MP4 video | Download + instructions |
+| Mobile (any) | PNG or video | `navigator.share({ files: [...] })` Web Share API |
+
+### New Components (Phase 2)
+
+```
+src/components/SharePanel.tsx    — dropdown: Twitter · Instagram Post · Reel
+src/components/ShareModal.tsx    — instructions + copyable caption after download
+```
+
+---
+
+## Phase 3 — Print on Demand Architecture
+
+This phase requires a minimal backend to keep the Printful API key secure.
+
+### Backend
+
+- **Vercel Edge Function** (`/api/print/*`)
+  - `POST /api/print/mockup` — generates product mockup via Printful API
+  - `POST /api/print/order` — creates draft order, returns Printful checkout URL
+- API key stored in Vercel environment variables
+- No database needed (Printful handles order state)
+
+### Design Generation
+
+High-res PNG for print (minimum 2400×2400px):
+- Same Canvas API approach as Phase 2, scaled up
+- Print-safe colors (avoid pure #000000 → use #1a1a1a for black; avoid neon)
+- Exported as PNG blob → sent to Printful mockup API as base64 or direct upload
+
+### Printful Integration
+
 ```typescript
-interface FakeElement {
-  symbol: string;
-  name: string;
-  color: string;
-}
+// Simplified flow
+async function createMockup(designBlob: Blob, productId: string): Promise<MockupUrl>
+async function createOrder(designBlob: Blob, product: PrintProduct, shippingInfo: ShippingInfo): Promise<string> // returns checkout URL
 ```
 
-## Algorithm Strategy
+Products mapped to Printful catalog IDs at build time.
 
-### Element Matching Algorithm
-1. **Preprocessing**: Convert input to uppercase, remove spaces
-2. **Greedy Matching**: Try longest possible real element symbols first
-3. **Fallback Strategy**: Use shorter real elements when needed
-4. **Fake Elements**: Only as last resort, minimize count
-5. **Optimization**: Return combination with fewest total elements
+### New Components (Phase 3)
 
-### Implementation Approach
-```typescript
-function matchName(name: string): NameResult {
-  const normalizedName = name.toUpperCase().replace(/\s/g, '');
-  const realElements = getAllRealElements();
-  const fakeElements = getFakeElements();
-  
-  // Try to match with real elements first
-  let result = tryMatchWithRealElements(normalizedName, realElements);
-  
-  // Fill gaps with fake elements
-  result = fillGapsWithFakeElements(result, fakeElements);
-  
-  return result;
-}
 ```
+src/components/PrintPanel.tsx     — product picker (t-shirt / mug / coaster / poster)
+src/components/ProductMockup.tsx  — live mockup preview image
+src/pages/Checkout.tsx            — size/color/quantity → redirect to Printful checkout
+```
+
+---
 
 ## State Management
 
-### Local State (useState)
-- Current input value
-- Loading states
-- Animation states
-- Error states
+No global state manager (Zustand, Redux) needed through Phase 2. Local `useState` + prop drilling is sufficient.
 
-### No Global State Needed
-- Simple prop drilling sufficient for this app
-- No complex state management required
+Phase 3 may warrant a lightweight context for cart state if multi-product ordering is added.
 
-## Styling Strategy
+---
 
-### Tailwind Configuration
-- Custom color palette for element categories
-- Responsive breakpoints
-- Animation utilities
-- Custom element tile styling
+## Performance Notes
 
-### Element Categories Colors
-```typescript
-const categoryColors = {
-  alkali: 'bg-red-100',
-  alkaline: 'bg-orange-100',
-  transition: 'bg-yellow-100',
-  postTransition: 'bg-green-100',
-  metalloid: 'bg-blue-100',
-  nonmetal: 'bg-purple-100',
-  noble: 'bg-pink-100',
-  lanthanide: 'bg-indigo-100',
-  actinide: 'bg-gray-100',
-  fake: 'bg-gray-200 border-dashed'
-};
-```
-
-## Performance Considerations
-
-### Optimization Strategies
-- **Memoization**: Cache element matching results
-- **Lazy Loading**: Load fake elements on demand
-- **Virtual Scrolling**: For large periodic table (if needed)
-- **Image Optimization**: Use SVGs for element symbols
-
-### Bundle Size
-- Tree-shaking for unused elements
-- Code splitting for animations
-- Optimized element data structure
-
-## Testing Strategy
-
-### Unit Tests
-- Element matching algorithm
-- Utility functions
-- Component rendering
-
-### Integration Tests
-- End-to-end name transformation
-- Animation flows
-- Responsive behavior
-
-### Manual Testing
-- Cross-browser compatibility
-- Mobile responsiveness
-- Animation performance
-
-## Deployment Pipeline
-
-### Development
-- `npm run dev` - Vite dev server
-- `npm run test` - Unit tests
-- `npm run build` - Production build
-
-### Production
-- Vercel automatic deployment
-- Custom domain configuration
-- Analytics integration (optional)
-
-## Future Considerations
-
-### Print-on-Demand Integration
-- API endpoints for result sharing
-- Image generation for products
-- Payment processing integration
-
-### Analytics
-- User interaction tracking
-- Popular names analysis
-- Performance monitoring
-
-### SEO
-- Meta tags for social sharing
-- Structured data for search engines
-- Sitemap generation 
+- Element data (~118 real + ~30 fake) is a static JSON import — negligible bundle impact
+- Canvas image generation: target < 2s on mid-range mobile
+- Video recording: 3–5s clip, target < 10s total generation time
+- No server-side rendering needed (pure SPA is fine for this use case)

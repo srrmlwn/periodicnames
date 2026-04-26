@@ -6,25 +6,28 @@ import PeriodicTable from './components/PeriodicTable';
 import { matchNameToElements } from './utils/elementMatcher';
 import type { NameResult } from './types';
 
+type AnimationPhase = 'input' | 'processing' | 'results';
+
 function App() {
   const [result, setResult] = useState<NameResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [highlightedElements, setHighlightedElements] = useState<string[]>([]);
+  const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
 
   const handleNameSubmit = (name: string) => {
     setIsLoading(true);
     setIsVisible(false);
     setHighlightedElements([]);
-    
-    // Simulate a small delay for better UX
+    setAnimationPhase('processing');
+
     setTimeout(() => {
       const nameResult = matchNameToElements(name);
       setResult(nameResult);
       setIsVisible(true);
       setIsLoading(false);
-      
-      // Highlight the elements used in the result
+      setAnimationPhase('results');
+
       const usedElements = [
         ...nameResult.elements.map((e: { symbol: string }) => e.symbol),
         ...nameResult.fakeElements.map((e: { symbol: string }) => e.symbol)
@@ -33,18 +36,52 @@ function App() {
     }, 500);
   };
 
+  const handleRefresh = () => {
+    setResult(null);
+    setIsVisible(false);
+    setHighlightedElements([]);
+    setAnimationPhase('input');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-4">
       <div className="container mx-auto px-4">
         <Header />
-        <div className="mb-4">
-          <PeriodicTable 
-            highlightedElements={highlightedElements}
-          />
+
+        {/* Periodic Table - hidden only during processing */}
+        <div className={`transition-all duration-500 ease-in-out mb-4 ${
+          animationPhase === 'processing' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        }`}>
+          <PeriodicTable highlightedElements={highlightedElements} />
         </div>
-        <div className="mb-4">
+
+        {/* Processing spinner */}
+        {animationPhase === 'processing' && (
+          <div className="flex justify-center items-center py-4">
+            <div className="inline-flex items-center space-x-2 text-gray-600">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">Finding elements...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Name input + refresh button */}
+        <div className="flex items-center justify-center space-x-2 mb-4">
           <NameInput onSubmit={handleNameSubmit} isLoading={isLoading} />
+          {animationPhase === 'results' && (
+            <button
+              onClick={handleRefresh}
+              className="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200 rounded-lg hover:bg-gray-100"
+              title="Try a new name"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          )}
         </div>
+
         <ResultDisplay result={result} isVisible={isVisible} />
       </div>
     </div>

@@ -1,69 +1,48 @@
-# React + TypeScript + Vite
+# Periodic Names
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Spell your name using elements from the periodic table.
 
-Currently, two official plugins are available:
+Enter any name and watch it transform into a sequence of element tiles — real elements where possible, invented ones where not. The result can be shared to social media or printed on a mug, t-shirt, or coaster.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Live**: periodicnames.com
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## What it does
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. You type a name (e.g. `Sriram`)
+2. The app finds the best combination of real periodic table elements (`Sr + Ir + Am`)
+3. If a letter sequence can't be covered by real elements, a fun made-up element fills the gap
+4. Results animate onto the screen as bold, cartoonish element tiles
+5. You can share the result or order it printed on merchandise
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Name spelling** — greedy matching algorithm prioritizes real elements, minimizes fake ones
+- **Fake elements** — a curated database of fun invented elements (e.g. `Lx` → "Luxium") for letters with no real match
+- **Cartoonish UI** — bright category colors, bold black borders, playful typography
+- **Slick animations** — letters dissolve into element tiles with staggered timing
+- **Interactive periodic table** — highlights the elements used in your result
+- **Social sharing** — download a shareable image or video for Twitter / Instagram _(Phase 2)_
+- **Print on demand** — order your name on a t-shirt, mug, or coaster via Printful _(Phase 3)_
+
+## Stack
+
+- React 18 + TypeScript
+- Tailwind CSS
+- Vite
+- Deployed on Vercel
+
+## Development
+
+```bash
+npm install
+npm run dev      # dev server at localhost:5173
+npm run build    # production build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Docs
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- [`docs/roadmap.md`](docs/roadmap.md) — 3-phase feature roadmap
+- [`docs/tech-architecture.md`](docs/tech-architecture.md) — technical design
+- [`docs/idea.md`](docs/idea.md) — original vision and design decisions
