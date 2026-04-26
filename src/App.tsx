@@ -62,9 +62,6 @@ function App() {
             compact={isCompact}
           />
         </div>
-        {animationPhase !== 'results' && (
-          <p className="text-xs text-gray-400 text-center mb-2 md:hidden">← scroll to see full table →</p>
-        )}
 
         {animationPhase === 'processing' && (
           <div className="flex justify-center items-center py-3">
