@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface NameInputProps {
   onSubmit: (name: string) => void;
@@ -7,18 +7,6 @@ interface NameInputProps {
 
 const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
   const [name, setName] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-
-  // Typing animation
-  useEffect(() => {
-    if (name.length > 0) {
-      setIsTyping(true);
-      const timer = setTimeout(() => setIsTyping(false), 300);
-      return () => clearTimeout(timer);
-    } else {
-      setIsTyping(false);
-    }
-  }, [name]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,9 +31,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter your name..."
-            className={`w-full px-4 pr-12 py-2 text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out ${
-              isTyping ? 'scale-105 shadow-lg' : ''
-            }`}
+            className="w-full px-4 pr-12 py-2 text-center border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out"
             disabled={isLoading}
           />
           
@@ -79,16 +65,6 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, isLoading }) => {
         </div>
       </form>
       
-      {/* Character count with animation */}
-      {name.length > 0 && (
-        <div className="mt-2 text-center">
-          <span className={`text-xs text-slate-500 transition-all duration-300 ${
-            isTyping ? 'scale-110 text-emerald-500' : ''
-          }`}>
-            {name.length} character{name.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
