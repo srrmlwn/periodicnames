@@ -1,5 +1,6 @@
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
+import { getAllElements } from '../data/elements';
 import { createElementLayout } from './elementRenderer';
 import type { ElementRenderItem } from './elementRenderer';
 import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
@@ -11,9 +12,31 @@ const HOLD_MS = 1000;
 const CANVAS_SIZE = 1080;
 const FPS = 30;
 
+// [symbol, row (0-8), col (0-17)]; rows 7-8 are lanthanides/actinides with a half-cell gap below row 6
+const ELEMENT_POSITIONS: [string, number, number][] = [
+  ['H', 0, 0], ['He', 0, 17],
+  ['Li', 1, 0], ['Be', 1, 1], ['B', 1, 12], ['C', 1, 13], ['N', 1, 14], ['O', 1, 15], ['F', 1, 16], ['Ne', 1, 17],
+  ['Na', 2, 0], ['Mg', 2, 1], ['Al', 2, 12], ['Si', 2, 13], ['P', 2, 14], ['S', 2, 15], ['Cl', 2, 16], ['Ar', 2, 17],
+  ['K', 3, 0], ['Ca', 3, 1], ['Sc', 3, 2], ['Ti', 3, 3], ['V', 3, 4], ['Cr', 3, 5], ['Mn', 3, 6],
+  ['Fe', 3, 7], ['Co', 3, 8], ['Ni', 3, 9], ['Cu', 3, 10], ['Zn', 3, 11], ['Ga', 3, 12], ['Ge', 3, 13],
+  ['As', 3, 14], ['Se', 3, 15], ['Br', 3, 16], ['Kr', 3, 17],
+  ['Rb', 4, 0], ['Sr', 4, 1], ['Y', 4, 2], ['Zr', 4, 3], ['Nb', 4, 4], ['Mo', 4, 5], ['Tc', 4, 6],
+  ['Ru', 4, 7], ['Rh', 4, 8], ['Pd', 4, 9], ['Ag', 4, 10], ['Cd', 4, 11], ['In', 4, 12], ['Sn', 4, 13],
+  ['Sb', 4, 14], ['Te', 4, 15], ['I', 4, 16], ['Xe', 4, 17],
+  ['Cs', 5, 0], ['Ba', 5, 1], ['Hf', 5, 3], ['Ta', 5, 4], ['W', 5, 5], ['Re', 5, 6], ['Os', 5, 7],
+  ['Ir', 5, 8], ['Pt', 5, 9], ['Au', 5, 10], ['Hg', 5, 11], ['Tl', 5, 12], ['Pb', 5, 13], ['Bi', 5, 14],
+  ['Po', 5, 15], ['At', 5, 16], ['Rn', 5, 17],
+  ['Fr', 6, 0], ['Ra', 6, 1], ['Rf', 6, 3], ['Db', 6, 4], ['Sg', 6, 5], ['Bh', 6, 6], ['Hs', 6, 7],
+  ['Mt', 6, 8], ['Ds', 6, 9], ['Rg', 6, 10], ['Cn', 6, 11], ['Nh', 6, 12], ['Fl', 6, 13], ['Mc', 6, 14],
+  ['Lv', 6, 15], ['Ts', 6, 16], ['Og', 6, 17],
+  ['La', 7, 2], ['Ce', 7, 3], ['Pr', 7, 4], ['Nd', 7, 5], ['Pm', 7, 6], ['Sm', 7, 7], ['Eu', 7, 8],
+  ['Gd', 7, 9], ['Tb', 7, 10], ['Dy', 7, 11], ['Ho', 7, 12], ['Er', 7, 13], ['Tm', 7, 14], ['Yb', 7, 15], ['Lu', 7, 16],
+  ['Ac', 8, 2], ['Th', 8, 3], ['Pa', 8, 4], ['U', 8, 5], ['Np', 8, 6], ['Pu', 8, 7], ['Am', 8, 8],
+  ['Cm', 8, 9], ['Bk', 8, 10], ['Cf', 8, 11], ['Es', 8, 12], ['Fm', 8, 13], ['Md', 8, 14], ['No', 8, 15], ['Lr', 8, 16],
+];
+
 interface TileAnim { scale: number; opacity: number; dy: number }
 
-// Replicates the tilePop CSS keyframes: 0% 0.5/0/8, 60% 1.1/1/-2, 80% 0.95/1/0, 100% 1/1/0
 function animForProgress(t: number): TileAnim {
   if (t <= 0) return { scale: 0.5, opacity: 0, dy: 8 };
   if (t >= 1) return { scale: 1, opacity: 1, dy: 0 };
@@ -96,35 +119,37 @@ export class ShareVideoGenerator {
     const rows = this.buildWordRows(layout.items, tileSize, tileGap, wordGap, usableWidth);
     const totalRowsHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
 
-    // Assign stagger start times per tile (non-space only)
+    // Pre-render the faded periodic table background once
+    const bgCanvas = document.createElement('canvas');
+    bgCanvas.width = CANVAS_SIZE;
+    bgCanvas.height = CANVAS_SIZE;
+    this.drawPeriodicTableBackground(bgCanvas.getContext('2d')!, CANVAS_SIZE, CANVAS_SIZE);
+
     const tileStarts = new Map<ElementRenderItem, number>();
     let idx = 0;
     layout.items.forEach(item => {
-      if (item.type !== 'space') { tileStarts.set(item, idx++ * STAGGER_MS); }
+      if (item.type !== 'space') tileStarts.set(item, idx++ * STAGGER_MS);
     });
 
+    const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
     const startEpoch = performance.now();
 
     const frame = (now: number) => {
       const elapsed = now - startEpoch;
 
-      ctx.fillStyle = '#f8fafc';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      ctx.drawImage(bgCanvas, 0, 0);
 
       const titleSize = 68;
       const titleY = padding + titleSize;
       this.drawColorfulTitle(ctx, 'Periodic Names', CANVAS_SIZE / 2, titleY, titleSize);
 
-      const subtitleSize = 34;
-      const subtitleY = titleY + titleSize * 0.15 + subtitleSize + 16;
-      ctx.font = `700 ${subtitleSize}px "Nunito", Arial, sans-serif`;
-      ctx.fillStyle = '#64748b';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(result.originalName, CANVAS_SIZE / 2, subtitleY);
-
-      const topUsed = subtitleY + subtitleSize * 0.3 + 36;
-      const tilesStartY = topUsed + Math.max(0, (CANVAS_SIZE - 60 - topUsed - totalRowsHeight) / 2);
+      const urlSize = 26;
+      const urlBaselineY = CANVAS_SIZE - 40;
+      const contentTop = titleY + titleSize * 0.2 + 24;
+      const contentBottom = urlBaselineY - urlSize - 16;
+      const tilesStartY = contentTop + Math.max(0, (contentBottom - contentTop - totalRowsHeight) / 2);
 
       rows.forEach((row, ri) => {
         let rowWidth = 0;
@@ -132,28 +157,25 @@ export class ShareVideoGenerator {
           if (wi > 0) rowWidth += wordGap;
           rowWidth += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
         });
-
         let x = (CANVAS_SIZE - rowWidth) / 2;
         const y = tilesStartY + ri * (tileSize + rowGap);
-
         row.forEach((word, wi) => {
           if (wi > 0) x += wordGap;
           word.forEach((item, ti) => {
             if (ti > 0) x += tileGap;
             const start = tileStarts.get(item) ?? 0;
             const progress = Math.min(1, Math.max(0, (elapsed - start) / POP_MS));
-            const anim = animForProgress(progress);
-            this.drawAnimatedTile(ctx, item, x, y, tileSize, anim);
+            this.drawAnimatedTile(ctx, item, x, y, tileSize, animForProgress(progress));
             x += tileSize;
           });
         });
       });
 
-      ctx.font = `600 22px "Nunito", Arial, sans-serif`;
-      ctx.fillStyle = '#94a3b8';
+      ctx.font = `700 ${urlSize}px "Nunito", Arial, sans-serif`;
+      ctx.fillStyle = '#475569';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText('periodicnames.com', CANVAS_SIZE / 2, CANVAS_SIZE - 28);
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(`periodicnames.com/${slug}`, CANVAS_SIZE / 2, urlBaselineY);
 
       onProgress?.(Math.min(1, elapsed / totalDuration));
 
@@ -165,6 +187,26 @@ export class ShareVideoGenerator {
     };
 
     requestAnimationFrame(frame);
+  }
+
+  private drawPeriodicTableBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const categoryMap = new Map(getAllElements().map(e => [e.symbol, e.category]));
+    const cellSize = width / 18;
+    const tableHeight = 9.5 * cellSize;
+    const tableStartY = (height - tableHeight) / 2;
+    const pad = cellSize * 0.05;
+
+    ctx.globalAlpha = 0.09;
+    for (const [symbol, row, col] of ELEMENT_POSITIONS) {
+      const category = categoryMap.get(symbol);
+      if (!category) continue;
+      const x = col * cellSize;
+      const y = tableStartY + (row <= 6 ? row : row + 0.5) * cellSize;
+      this.roundRectPath(ctx, x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2, cellSize * 0.1);
+      ctx.fillStyle = getCategoryColor(category);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   private buildWordRows(
