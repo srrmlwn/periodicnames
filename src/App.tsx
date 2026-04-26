@@ -45,22 +45,29 @@ function App() {
     setInputKey(k => k + 1);
   };
 
+  const isCompact = animationPhase === 'results';
+
   return (
     <div className="min-h-screen bg-slate-100 py-4">
       <div className="container mx-auto px-4">
         <Header />
 
-        {/* Periodic Table - hidden only during processing */}
-        <div className={`transition-all duration-500 ease-in-out mb-4 ${
-          animationPhase === 'processing' ? 'opacity-50' : 'opacity-100'
-        }`}>
-          <PeriodicTable highlightedElements={highlightedElements} />
+        {/* Periodic table — compact (28px) in results phase on desktop; hidden on mobile when results show */}
+        <div className={`transition-all duration-500 ease-in-out mb-3
+          ${animationPhase === 'processing' ? 'opacity-50' : 'opacity-100'}
+          ${animationPhase === 'results' ? 'hidden md:block' : ''}
+        `}>
+          <PeriodicTable
+            highlightedElements={highlightedElements}
+            compact={isCompact}
+          />
         </div>
-        <p className="text-xs text-gray-400 text-center mt-1 md:hidden">← scroll to see full table →</p>
+        {animationPhase !== 'results' && (
+          <p className="text-xs text-gray-400 text-center mb-2 md:hidden">← scroll to see full table →</p>
+        )}
 
-        {/* Processing spinner */}
         {animationPhase === 'processing' && (
-          <div className="flex justify-center items-center py-4">
+          <div className="flex justify-center items-center py-3">
             <div className="inline-flex items-center space-x-2 text-gray-600">
               <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-sm">Finding elements...</span>
@@ -68,8 +75,7 @@ function App() {
           </div>
         )}
 
-        {/* Name input + refresh button */}
-        <div className="flex items-center justify-center space-x-2 mb-4">
+        <div className="flex items-center justify-center space-x-2 mb-3">
           <NameInput key={inputKey} onSubmit={handleNameSubmit} isLoading={isLoading} />
           {animationPhase === 'results' && (
             <button

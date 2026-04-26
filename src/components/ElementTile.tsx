@@ -9,7 +9,7 @@ interface ElementTileProps {
   isHighlighted?: boolean;
   onClick?: () => void;
   animationDelay?: number;
-  size?: 'sm' | 'lg';
+  size?: 'xs' | 'sm' | 'lg';
 }
 
 const ElementTile: React.FC<ElementTileProps> = ({
@@ -77,7 +77,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
   const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
 
   const atomicNumberClass = size === 'lg' ? 'text-xs' : 'text-[5px]';
-  const symbolClass = size === 'lg' ? 'text-2xl font-black' : 'text-sm font-bold';
+  const symbolClass = size === 'lg' ? 'text-2xl font-black' : size === 'xs' ? 'text-[9px] font-bold' : 'text-sm font-bold';
   const nameClass = size === 'lg' ? 'text-[9px]' : 'text-[6px]';
 
   return (
@@ -92,11 +92,13 @@ const ElementTile: React.FC<ElementTileProps> = ({
         transitionDelay: `${animationDelay}ms`
       }}
     >
-      <div className={`absolute top-0 left-0.5 ${atomicNumberClass} text-white/80 font-normal`}>
-        {element?.atomicNumber || '?'}
-      </div>
+      {size !== 'xs' && (
+        <div className={`absolute top-0 left-0.5 ${atomicNumberClass} text-white/80 font-normal`}>
+          {element?.atomicNumber || '?'}
+        </div>
+      )}
 
-      {element?.atomicMass && (
+      {size !== 'xs' && element?.atomicMass && (
         <div className={`absolute top-0 right-0.5 ${atomicNumberClass} text-white/70 font-normal transition-opacity duration-300 ${
           isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
         }`}>
@@ -108,13 +110,15 @@ const ElementTile: React.FC<ElementTileProps> = ({
         {displayElement.symbol}
       </div>
 
-      <div className={`absolute bottom-0.5 left-0.5 right-0.5 ${nameClass} text-center leading-tight font-normal transition-all duration-300 ${
-        isHighlighted ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
-      }`}>
-        <span className="block truncate">
-          {displayElement.name}
-        </span>
-      </div>
+      {size !== 'xs' && (
+        <div className={`absolute bottom-0.5 left-0.5 right-0.5 ${nameClass} text-center leading-tight font-normal transition-all duration-300 ${
+          isHighlighted ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
+        }`}>
+          <span className="block truncate">
+            {displayElement.name}
+          </span>
+        </div>
+      )}
 
       {isHighlighted && showPulse && (
         <div className="absolute inset-0 rounded-md bg-white opacity-20 element-glow-pulse"

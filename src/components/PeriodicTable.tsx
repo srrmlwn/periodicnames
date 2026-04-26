@@ -4,9 +4,10 @@ import { getAllElements } from '../data/elements';
 
 interface PeriodicTableProps {
   highlightedElements: string[];
+  compact?: boolean;
 }
 
-const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) => {
+const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements, compact = false }) => {
   const realElements = getAllElements();
 
   const isHighlighted = (symbol: string) => highlightedElements.includes(symbol);
@@ -15,6 +16,9 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) =>
     const index = highlightedElements.indexOf(symbol);
     return index >= 0 ? index * 200 : 0;
   };
+
+  const tileClass = compact ? 'w-7 h-7 transition-all duration-500' : 'w-10 h-10 transition-all duration-500';
+  const tileSize = compact ? 'xs' as const : 'sm' as const;
 
   const renderPeriodicTable = () => {
     const row1 = new Array(18).fill(null);
@@ -160,15 +164,16 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) =>
     return allRows.map((row, rowIndex) => (
       <div key={rowIndex} className="flex gap-0.5 mb-0.5">
         {row.map((element, colIndex) => (
-          <div key={colIndex} className="w-10 h-10">
+          <div key={colIndex} className={tileClass}>
             {element ? (
               <ElementTile
                 element={element}
                 isHighlighted={isHighlighted(element.symbol)}
                 animationDelay={getAnimationDelay(element.symbol)}
+                size={tileSize}
               />
             ) : (
-              <div className="w-10 h-10"></div>
+              <div className={tileClass}></div>
             )}
           </div>
         ))}
@@ -177,9 +182,9 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedElements }) =>
   };
 
   return (
-    <div className="w-full p-2">
-      <div className="bg-white rounded-lg shadow-lg p-4 overflow-x-auto">
-        <div className="flex flex-col gap-0.5 w-fit mx-auto p-2">
+    <div className="p-2 flex justify-center">
+      <div className="bg-white rounded-lg shadow-lg p-4 overflow-x-auto w-fit max-w-full">
+        <div className="flex flex-col gap-0.5 w-fit p-2">
           {renderPeriodicTable()}
         </div>
       </div>
