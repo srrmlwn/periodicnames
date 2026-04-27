@@ -14,20 +14,19 @@ export interface PrintProduct {
   designPlacement: string;
 }
 
-// NOTE: replace with real Printful variant IDs from GET /v2/catalog/products/71/variants
 const TSHIRT_VARIANTS: PrintVariant[] = [
-  { id: 4012, label: 'White / S', color: '#FFFFFF', size: 'S' },
-  { id: 4013, label: 'White / M', color: '#FFFFFF', size: 'M' },
-  { id: 4014, label: 'White / L', color: '#FFFFFF', size: 'L' },
-  { id: 4015, label: 'White / XL', color: '#FFFFFF', size: 'XL' },
-  { id: 4017, label: 'Black / S', color: '#1a1a1a', size: 'S' },
-  { id: 4018, label: 'Black / M', color: '#1a1a1a', size: 'M' },
-  { id: 4019, label: 'Black / L', color: '#1a1a1a', size: 'L' },
-  { id: 4020, label: 'Black / XL', color: '#1a1a1a', size: 'XL' },
-  { id: 4021, label: 'Navy / S', color: '#1a2a4a', size: 'S' },
-  { id: 4022, label: 'Navy / M', color: '#1a2a4a', size: 'M' },
-  { id: 4023, label: 'Navy / L', color: '#1a2a4a', size: 'L' },
-  { id: 4024, label: 'Navy / XL', color: '#1a2a4a', size: 'XL' },
+  { id: 4011, label: 'White / S',  color: '#FFFFFF', size: 'S' },
+  { id: 4012, label: 'White / M',  color: '#FFFFFF', size: 'M' },
+  { id: 4013, label: 'White / L',  color: '#FFFFFF', size: 'L' },
+  { id: 4014, label: 'White / XL', color: '#FFFFFF', size: 'XL' },
+  { id: 4016, label: 'Black / S',  color: '#1a1a1a', size: 'S' },
+  { id: 4017, label: 'Black / M',  color: '#1a1a1a', size: 'M' },
+  { id: 4018, label: 'Black / L',  color: '#1a1a1a', size: 'L' },
+  { id: 4019, label: 'Black / XL', color: '#1a1a1a', size: 'XL' },
+  { id: 4111, label: 'Navy / S',   color: '#1a2a4a', size: 'S' },
+  { id: 4112, label: 'Navy / M',   color: '#1a2a4a', size: 'M' },
+  { id: 4113, label: 'Navy / L',   color: '#1a2a4a', size: 'L' },
+  { id: 4114, label: 'Navy / XL',  color: '#1a2a4a', size: 'XL' },
 ];
 
 export const PRINT_PRODUCTS: PrintProduct[] = [
@@ -45,9 +44,9 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     slug: 'mug',
     description: '11oz ceramic mug, dishwasher safe.',
     variants: [
-      { id: 1791, label: 'White', color: '#FFFFFF' },
+      { id: 1320, label: 'White', color: '#FFFFFF' },
     ],
-    designPlacement: 'print_area',
+    designPlacement: 'front',
   },
   {
     id: 1,
@@ -55,7 +54,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     slug: 'poster',
     description: '18×24in matte poster, museum-quality print.',
     variants: [
-      { id: 2459, label: 'Matte / 18×24in' },
+      { id: 1, label: 'Matte / 18×24in' },
     ],
     designPlacement: 'front',
   },
