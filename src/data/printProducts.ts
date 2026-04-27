@@ -10,6 +10,7 @@ export interface PrintProduct {
   name: string;
   slug: 'tshirt' | 'mug' | 'poster';
   description: string;
+  priceUsd: number;
   variants: PrintVariant[];
   designPlacement: string;
 }
@@ -35,6 +36,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Unisex T-Shirt',
     slug: 'tshirt',
     description: 'Bella+Canvas 3001 unisex jersey tee, soft and pre-shrunk.',
+    priceUsd: 29.99,
     variants: TSHIRT_VARIANTS,
     designPlacement: 'front',
   },
@@ -43,6 +45,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     name: '11oz Mug',
     slug: 'mug',
     description: '11oz ceramic mug, dishwasher safe.',
+    priceUsd: 22.99,
     variants: [
       { id: 1320, label: 'White', color: '#FFFFFF' },
     ],
@@ -53,6 +56,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Poster',
     slug: 'poster',
     description: '18×24in matte poster, museum-quality print.',
+    priceUsd: 32.99,
     variants: [
       { id: 1, label: 'Matte / 18×24in' },
     ],

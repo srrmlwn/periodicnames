@@ -2,5 +2,8 @@
   "framework": "vite",
   "devCommand": "vite",
   "buildCommand": "tsc -b && vite build",
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/" }]
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/" }],
+  "functions": {
+    "api/stripe/webhook.ts": { "maxDuration": 30 }
+  }
 }

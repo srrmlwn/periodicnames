@@ -6,7 +6,7 @@ interface ProductMockupProps {
   product: PrintProduct;
   variantId: number;
   onBack: () => void;
-  onOrder: () => Promise<void>;
+  onOrder: () => void;
   isOrdering: boolean;
 }
 
@@ -42,25 +42,15 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
         {variant && (
           <p className="text-xs text-gray-500 mt-0.5">{variant.label}</p>
         )}
+        <p className="text-sm font-semibold text-gray-800 mt-1">${product.priceUsd.toFixed(2)}</p>
       </div>
 
       <button
-        onClick={() => { void onOrder(); }}
+        onClick={onOrder}
         disabled={isOrdering}
-        className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 flex items-center justify-center gap-2 ${
-          isOrdering
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'bg-slate-800 text-white hover:bg-slate-700'
-        }`}
+        className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 bg-slate-800 text-white hover:bg-slate-700"
       >
-        {isOrdering ? (
-          <>
-            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-            <span>Processing…</span>
-          </>
-        ) : (
-          'Order'
-        )}
+        Buy — ${product.priceUsd.toFixed(2)}
       </button>
     </>
   );
