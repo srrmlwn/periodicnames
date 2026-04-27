@@ -110,8 +110,9 @@ const ElementTile: React.FC<ElementTileProps> = ({
         </div>
       )}
 
-      <div className={`${symbolClass} leading-none`}>
-        {displayElement.symbol}
+      <div className={`${symbolClass} leading-none flex items-start`}>
+        <span>{displayElement.symbol}</span>
+        {isFake && <span className="text-[0.45em] font-bold text-amber-300">*</span>}
       </div>
 
       {size !== 'xs' && (

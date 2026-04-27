@@ -100,7 +100,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
       </div>
 
       {isDone && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex flex-col items-center gap-2">
           <button
             onClick={() => setIsShareModalOpen(true)}
             className="px-5 py-2.5 bg-slate-800 text-white font-semibold text-sm rounded-xl hover:bg-slate-700 transition-colors duration-200 flex items-center gap-2"
@@ -111,6 +111,9 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
             </svg>
             Share
           </button>
+          {result.fakeElements.some(fe => fe.symbol !== ' ') && (
+            <p className="text-xs text-slate-400">* fictional element</p>
+          )}
         </div>
       )}
 
