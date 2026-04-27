@@ -12,7 +12,7 @@ type AnimationPhase = 'input' | 'revealing' | 'done';
 const TABLE_W = 754; // 18*40 + 17*2
 const TABLE_H = 376; // 9*40 + 8*2
 const TABLE_INSET = 48; // px breathing room on each side (desktop only)
-const TABLE_MAX_SCALE = 1.3; // cap tile size so table never overwhelms the UI
+const TABLE_MAX_SCALE = 1.5; // cap tile size so table never overwhelms the UI
 
 function getTableScale() {
   const vw = window.innerWidth;
@@ -121,7 +121,7 @@ function App() {
     : [];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Fixed full-screen periodic table background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
         <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'center center' }}>
@@ -135,7 +135,7 @@ function App() {
           <Header />
         </div>
         {/* Single column: input at ~45% from top, results grow downward without moving input */}
-        <div className="flex flex-col items-center px-4 pb-8 gap-4" style={{ paddingTop: 'max(24px, calc(45vh - 80px))' }}>
+        <div className="content-wrap flex flex-col items-center px-4 pb-8 gap-4">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}

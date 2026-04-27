@@ -56,7 +56,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
     w-full h-full rounded-md border-2 shadow-sm
     flex flex-col items-center justify-center
     cursor-pointer font-bold relative overflow-hidden
-    transition-all duration-300 ease-out hover-lift
+    transition-all duration-300 ease-out hover:-translate-y-0.5
   `;
 
   const animationClasses = isHighlighted
@@ -72,7 +72,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
     `;
 
   const fakeClasses = isFake
-    ? `text-amber-200 ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
+    ? `text-amber-200 hover:brightness-110 ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
     : 'text-white';
 
   const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
@@ -82,7 +82,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
 
   const atomicNumberClass = size === 'lg' ? 'text-xs' : 'text-[5px]';
   const symbolClass = size === 'lg' ? 'text-2xl font-black' : size === 'xs' ? 'text-[9px] font-bold' : 'text-sm font-bold';
-  const nameClass = size === 'lg' ? 'text-[9px]' : 'text-[6px]';
+  const nameClass = size === 'lg' ? 'text-[6px] sm:text-[8px]' : 'text-[6px]';
 
   return (
     <div
@@ -97,16 +97,15 @@ const ElementTile: React.FC<ElementTileProps> = ({
       }}
     >
       {size !== 'xs' && (
-        <div className={`absolute top-0 left-0.5 ${atomicNumberClass} text-white/80 font-normal`}>
-          {fakeAtomicNumber ?? element?.atomicNumber}
-        </div>
-      )}
-
-      {size !== 'xs' && element?.atomicMass && (
-        <div className={`absolute top-0 right-0.5 ${atomicNumberClass} text-white/70 font-normal transition-opacity duration-300 ${
-          isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-        }`}>
-          {element.atomicMass}
+        <div className={`absolute top-0 left-0.5 flex flex-col leading-none ${atomicNumberClass} font-normal`}>
+          <span className="text-white/80">{fakeAtomicNumber ?? element?.atomicNumber}</span>
+          {element?.atomicMass && (
+            <span className={`text-white/70 transition-opacity duration-300 ${
+              isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}>
+              {element.atomicMass}
+            </span>
+          )}
         </div>
       )}
 
