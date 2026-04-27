@@ -38,11 +38,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     body: JSON.stringify({
       variant_ids: variantIds,
       files: [{ placement: 'front', url: designUrl }],
+      format: 'jpg',
     }),
   });
 
+  if (!createRes.ok) {
+    const errorBody = await createRes.text();
+    console.error('Printful create-task failed', createRes.status, errorBody);
+    res.status(502).json({ error: 'Mockup task creation failed', detail: errorBody });
+    return;
+  }
+
   const createData = (await createRes.json()) as PrintfulResponse<{ task_key: string }>;
-  const taskKey = createData.result.task_key;
+  const taskKey = createData.result?.task_key;
+
+  if (!taskKey) {
+    console.error('No task_key in Printful response', JSON.stringify(createData));
+    res.status(502).json({ error: 'No task key returned from Printful' });
+    return;
+  }
 
   for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
     await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
