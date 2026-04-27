@@ -19,9 +19,20 @@ interface PrintfulResponse<T> {
   result: T;
 }
 
-interface PrintfilePlacement {
+interface Printfile {
+  printfile_id: number;
   width: number;
   height: number;
+}
+
+interface VariantPrintfile {
+  variant_id: number;
+  placements: Record<string, number>;
+}
+
+interface PrintfilesResult {
+  printfiles: Printfile[];
+  variant_printfiles: VariantPrintfile[];
 }
 
 function log(label: string, data?: unknown) {
@@ -58,17 +69,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   let areaHeight = 2400;
   try {
     const variantId = Array.isArray(variantIds) ? variantIds[0] : variantIds;
-    const printfiles = await printfulGet<{ available_placements: Record<string, PrintfilePlacement> }>(
+    const pf = await printfulGet<PrintfilesResult>(
       `/mockup-generator/printfiles/${productId}?variant_ids[]=${variantId}`,
       authHeader,
     );
-    const area = printfiles.available_placements?.[placement as string];
-    if (area) {
-      areaWidth = area.width;
-      areaHeight = area.height;
-      log('print area', { placement, areaWidth, areaHeight });
+    const variantEntry = pf.variant_printfiles?.find(vp => vp.variant_id === variantId);
+    const printfileId = variantEntry?.placements?.[placement as string];
+    const printfile = pf.printfiles?.find(p => p.printfile_id === printfileId);
+    if (printfile) {
+      areaWidth = printfile.width;
+      areaHeight = printfile.height;
+      log('print area', { placement, printfileId, areaWidth, areaHeight });
     } else {
-      log('placement not found in printfiles, using defaults', { available: Object.keys(printfiles.available_placements ?? {}) });
+      log('placement printfile not found, using defaults', { variantEntry, printfileId });
     }
   } catch (err) {
     log('printfiles fetch failed, using defaults', String(err));
@@ -79,14 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     files: [{
       placement,
       url: designUrl,
-      position: {
-        area_width: areaWidth,
-        area_height: areaHeight,
-        width: areaWidth,
-        height: areaHeight,
-        top: 0,
-        left: 0,
-      },
+      position: { area_width: areaWidth, area_height: areaHeight, width: areaWidth, height: areaHeight, top: 0, left: 0 },
     }],
     format: 'jpg',
   };
