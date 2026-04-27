@@ -35,11 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     confirm: false,
     recipient: {
       name: 'Pending',
-      address1: '1 Placeholder St',
-      city: 'Anytown',
-      state_code: 'CA',
+      address1: '1600 Pennsylvania Ave NW',
+      city: 'Washington',
+      state_code: 'DC',
       country_code: 'US',
-      zip: '00000',
+      zip: '20500',
     },
     items: [{ variant_id: variantId, quantity: 1, files: [{ url: designUrl }] }],
   };
