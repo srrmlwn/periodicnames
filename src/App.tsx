@@ -130,11 +130,12 @@ function App() {
       </div>
 
       {/* Content layer */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        <div className="px-4 pt-4">
+      <div className="relative z-10 flex flex-col" style={{ minHeight: '100dvh' }}>
+        <div className="px-4 pt-4 shrink-0">
           <Header />
         </div>
-        <div className="flex flex-col items-center px-4 pb-8 gap-6" style={{ paddingTop: 'max(32px, calc(50vh - 200px))' }}>
+        {/* Input panel: vertically centered in remaining space, never repositions */}
+        <div className="flex-1 shrink-0 flex items-center justify-center px-4 py-6">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
@@ -142,6 +143,9 @@ function App() {
             onRefresh={handleRefresh}
             initialValue={inputKey === 0 ? urlName : ''}
           />
+        </div>
+        {/* Results panel: flows below the input panel */}
+        <div className="flex flex-col items-center px-4 pb-8">
           <ResultDisplay
             result={result}
             isVisible={animationPhase !== 'input'}
