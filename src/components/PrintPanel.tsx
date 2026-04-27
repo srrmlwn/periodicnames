@@ -29,6 +29,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [designUrl, setDesignUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isOrdering, setIsOrdering] = useState(false);
+  const [customText, setCustomText] = useState('');
 
   if (!isOpen) return null;
 
@@ -77,7 +78,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     const flow = async () => {
       setLoadingStatus('Generating design…');
       const generator = new PrintDesignGenerator();
-      const blob = await generator.generatePrintDesign(result);
+      const blob = await generator.generatePrintDesign(result, customText.trim() || undefined);
 
       setLoadingStatus('Uploading…');
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -203,7 +204,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                         key={color}
                         onClick={() => handleColorSelect(color)}
                         className={`w-6 h-6 rounded-full border-2 transition-all duration-150 ${
-                          selectedColor === color ? 'border-slate-800 scale-110' : 'border-transparent'
+                          selectedColor === color ? 'border-slate-800 scale-110' : 'border-gray-300'
                         }`}
                         style={{ backgroundColor: color }}
                         aria-label={color}
@@ -238,6 +239,18 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                 Ready to preview
               </div>
             )}
+
+            <div className="mt-4">
+              <p className="text-xs text-gray-500 font-medium mb-1.5">Caption (optional)</p>
+              <input
+                type="text"
+                value={customText}
+                onChange={e => setCustomText(e.target.value)}
+                placeholder="My name is…"
+                maxLength={60}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
+              />
+            </div>
 
             <button
               onClick={handlePreview}
