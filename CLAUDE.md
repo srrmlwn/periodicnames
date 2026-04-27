@@ -134,6 +134,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
+  PrintDesignGenerator.ts — Canvas API PNG (4500×4500) for print on demand
 ```
 
 - `getFakeElementBySymbol(symbol, exclude?)` returns a random variant per letter, avoiding names in the optional `exclude` set — always use this, never `.find()`. Pass a shared `Set<string>` across the full name match to prevent duplicate variants for repeated letters.
