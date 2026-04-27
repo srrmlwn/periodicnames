@@ -33,6 +33,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const authHeader = `Bearer ${process.env.PRINTFUL_API_KEY}`;
   const orderBody = {
     confirm: false,
+    recipient: {
+      name: 'Pending',
+      address1: '1 Placeholder St',
+      city: 'Anytown',
+      country_code: 'US',
+      zip: '00000',
+    },
     items: [{ variant_id: variantId, quantity: 1, files: [{ url: designUrl }] }],
   };
 
