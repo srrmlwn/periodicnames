@@ -127,6 +127,7 @@ src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
+  printProducts.ts     — PRINT_PRODUCTS catalog + getPrintProduct(slug); PrintProduct/PrintVariant types
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
@@ -134,6 +135,12 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
+
+api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
+  upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
+  mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling
+  order.ts              — POST /api/print/order: creates draft Printful order, returns { orderId, checkoutUrl }
+  tsconfig.json         — separate tsconfig for api/ (commonjs target)
 ```
 
 - `getFakeElementBySymbol(symbol, exclude?)` returns a random variant per letter, avoiding names in the optional `exclude` set — always use this, never `.find()`. Pass a shared `Set<string>` across the full name match to prevent duplicate variants for repeated letters.
@@ -218,13 +225,13 @@ Remaining Phase 2:
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
 
-Phase 3 — Print on Demand (planned, not started):
+Phase 3 — Print on Demand (in progress):
 - Provider: Printful API (API key secured in Vercel env vars)
-- Backend: Vercel Functions at `/api/print/*` (upload → blob, mockup, order)
-- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome, print-safe colors
-- File handoff: client → `POST /api/print/upload` → Vercel Blob → Printful mockup/order API
-- Products to launch: unisex t-shirt (Bella+Canvas 3001), 11oz mug, 18×24in poster
-- UX: "Print on merch" button in `done` state → `PrintPanel.tsx` modal → product/variant picker → mockup preview → Printful hosted checkout
+- Backend: Vercel Functions at `/api/print/*` ✅ (`upload` → Vercel Blob, `mockup` → Printful task, `order` → draft order)
+- Product catalog: `src/data/printProducts.ts` ✅ — t-shirt (Bella+Canvas 3001), 11oz mug, 18×24in poster; placeholder Printful variant IDs (must be replaced with real IDs from Printful catalog)
+- Design: `PrintDesignGenerator.ts` ✅ — square 4500×4500px canvas, faded table bg + element tiles, no UI chrome, print-safe colors
+- UI: `PrintPanel.tsx` ✅ (product picker + variant selector + async flow), `ProductMockup.tsx` ✅ (mockup preview + order CTA)
+- Remaining: wire "Print on merch" button into `App.tsx` + replace placeholder Printful variant IDs
 
 See `docs/phase1-tasks.md` for Phase 1–2 task checklist.
 See `docs/phase3-tasks.md` for full Phase 3 task breakdown.
