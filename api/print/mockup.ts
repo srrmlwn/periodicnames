@@ -15,11 +15,25 @@ interface PrintfulTaskResult {
 }
 
 interface PrintfulResponse<T> {
+  code: number;
   result: T;
+}
+
+interface PrintfilePlacement {
+  width: number;
+  height: number;
 }
 
 function log(label: string, data?: unknown) {
   console.log(`[mockup] ${label}`, data !== undefined ? JSON.stringify(data) : '');
+}
+
+async function printfulGet<T>(path: string, authHeader: string): Promise<T> {
+  const res = await fetch(`${PRINTFUL_BASE}${path}`, { headers: { Authorization: authHeader } });
+  const raw = await res.text();
+  log(`GET ${path} ←`, { status: res.status, body: raw });
+  if (!res.ok) throw new Error(`Printful GET ${path} failed: ${raw}`);
+  return (JSON.parse(raw) as PrintfulResponse<T>).result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -28,18 +42,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const { productId, variantIds, designUrl } = req.body as {
+  const { productId, variantIds, designUrl, placement = 'front' } = req.body as {
     productId?: unknown;
     variantIds?: unknown;
     designUrl?: unknown;
+    placement?: string;
   };
 
-  log('request', { productId, variantIds, designUrl });
+  log('request', { productId, variantIds, designUrl, placement });
 
   const authHeader = `Bearer ${process.env.PRINTFUL_API_KEY}`;
+
+  // Fetch print area dimensions for this product so we can populate position correctly
+  let areaWidth = 1800;
+  let areaHeight = 2400;
+  try {
+    const variantId = Array.isArray(variantIds) ? variantIds[0] : variantIds;
+    const printfiles = await printfulGet<{ available_placements: Record<string, PrintfilePlacement> }>(
+      `/mockup-generator/printfiles/${productId}?variant_ids[]=${variantId}`,
+      authHeader,
+    );
+    const area = printfiles.available_placements?.[placement as string];
+    if (area) {
+      areaWidth = area.width;
+      areaHeight = area.height;
+      log('print area', { placement, areaWidth, areaHeight });
+    } else {
+      log('placement not found in printfiles, using defaults', { available: Object.keys(printfiles.available_placements ?? {}) });
+    }
+  } catch (err) {
+    log('printfiles fetch failed, using defaults', String(err));
+  }
+
   const taskBody = {
     variant_ids: variantIds,
-    files: [{ placement: 'front', url: designUrl }],
+    files: [{
+      placement,
+      url: designUrl,
+      position: {
+        area_width: areaWidth,
+        area_height: areaHeight,
+        width: areaWidth,
+        height: areaHeight,
+        top: 0,
+        left: 0,
+      },
+    }],
     format: 'jpg',
   };
 
@@ -91,11 +139,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     if (status === 'completed' && mockups) {
       log('completed', { mockupCount: mockups.length });
-      const result = mockups.map((m) => ({
-        variantId: m.variant_ids[0],
-        mockupUrl: m.mockup_url,
-      }));
-      res.status(200).json({ mockups: result });
+      res.status(200).json({
+        mockups: mockups.map((m) => ({ variantId: m.variant_ids[0], mockupUrl: m.mockup_url })),
+      });
       return;
     }
 

@@ -102,8 +102,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           productId: selectedProduct.id,
-          variantIds: [selectedVariantId!],
+          variantIds: [selectedVariantId ?? selectedProduct.variants[0].id],
           designUrl: uploadedDesignUrl,
+          placement: selectedProduct.designPlacement,
         }),
       });
       if (!mockupRes.ok) throw new Error('Mockup generation failed');
