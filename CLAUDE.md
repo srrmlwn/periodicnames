@@ -135,6 +135,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
+  PrintDesignGenerator.ts — Canvas API PNG (4500×4500) for print on demand
 
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
