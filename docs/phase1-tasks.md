@@ -111,6 +111,25 @@ Remaining optional polish items are in Phase 1d below.
 
 ---
 
+### Fake Element Polish (Complete)
+
+- [x] **Dark matter color scheme** (`src/utils/colorSchemes.ts`)
+  Fake elements: stone-900 background (`#1C1917`) + amber border (`#F59E0B`). Removed gold shimmer gradient.
+
+- [x] **Name-derived atomic number** (`src/components/ElementTile.tsx`)
+  Atomic number = sum of char codes of element name. Unique per variant, clearly non-real (e.g. "Awesomium" → 951).
+
+- [x] **Asterisk superscript on symbol** (`src/components/ElementTile.tsx`)
+  Small amber `*` at top-right of symbol via flex/items-start. No absolute positioning.
+
+- [x] **Deduplication for repeated letters** (`src/data/fakeElements.ts`, `src/utils/elementMatcher.ts`)
+  `getFakeElementBySymbol` accepts an `exclude: Set<string>`. Matcher threads a shared set across the full name so repeated letters pick distinct variants.
+
+- [x] **Fictional element footnote** (`src/components/ResultDisplay.tsx`)
+  `* fictional element` appears below Share button when result contains fake elements.
+
+---
+
 ### Optional Polish (Low Priority)
 
 - [ ] **Keyboard accessibility** — `tabIndex`, `role="img"`, `aria-label` on ElementTile; `onKeyDown` for Enter/Space.

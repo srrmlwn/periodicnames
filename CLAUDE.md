@@ -45,14 +45,21 @@ npm run build    # must pass — this also type-checks
 
 If the dev server is running, visually verify the change in the browser at `http://localhost:5173`. For animation work, test the full input → reveal → done flow.
 
-### 4. Commit
+### 4. Update docs
+
+Before committing, update `CLAUDE.md` and any relevant file in `docs/` to reflect the change:
+- New components or utilities → add to the file structure and Data/Utils sections
+- Behaviour or visual changes → update the relevant convention section or Current Work
+- Completed tasks → check them off in `docs/phase1-tasks.md`
+
+### 5. Commit
 
 ```bash
 git add <specific files>   # never `git add .` — avoids accidentally staging env files
 git commit -m "<type>(<scope>): <what changed and why>"
 ```
 
-### 5. Push and open PR
+### 6. Push and open PR
 
 ```bash
 git push -u origin <branch>
@@ -129,7 +136,7 @@ src/utils/
   ShareVideoGenerator.ts — MediaRecorder API reel video
 ```
 
-- `getFakeElementBySymbol(symbol)` returns a random variant per letter — always use this, not `.find()`.
+- `getFakeElementBySymbol(symbol, exclude?)` returns a random variant per letter, avoiding names in the optional `exclude` set — always use this, never `.find()`. Pass a shared `Set<string>` across the full name match to prevent duplicate variants for repeated letters.
 - `orderedElements` is the source of truth for rendering result tiles.
 - A `FakeElement` is identified by `!('atomicNumber' in element)`.
 
@@ -183,6 +190,19 @@ Content (Header, NameInput, ResultDisplay) is in a `relative z-10` layer on top.
 
 ---
 
+## Fake Element Appearance
+
+Fake elements are visually distinct from real elements:
+- **Background:** `#1C1917` (stone-900) — dark, vs. the vivid saturated colors of real elements
+- **Border:** `#F59E0B` (amber-400) — solid, 2px
+- **Text:** `text-amber-200` for symbol/name; `text-amber-300` for the `*` superscript
+- **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951) — clearly non-real, unique per variant
+- **Symbol:** rendered with a small amber `*` superscript (flex + items-start, not absolute positioning)
+- **Entry animation:** `fake-wobble` keyframe (wobble/bounce on first appearance)
+- **Footer:** `* fictional element` appears below the Share button when any fake elements are in the result
+
+---
+
 ## Current Work
 
 Active phase: **Phase 2 — Social Sharing** (Phase 1 complete)
@@ -197,5 +217,13 @@ Remaining Phase 2:
 - Instagram Reel upload instructions modal
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
+
+Phase 3 — Print on Demand (planned):
+- Provider: Printful API (API key secured in Vercel env vars)
+- Backend: Vercel Functions at `/api/print/*`
+- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome
+- File handoff: client → `POST /api/print/upload` → Vercel Blob → Printful
+- Products to launch: unisex t-shirt, 11oz mug, poster
+- UX: "Print on merch" button in `done` state → `PrintPanel.tsx` modal → mockup preview → Printful hosted checkout
 
 See `docs/phase1-tasks.md` for full task checklist.
