@@ -127,6 +127,7 @@ src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
+  printProducts.ts     — PrintProduct/PrintVariant types, PRINT_PRODUCTS list, getPrintProduct()
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
@@ -134,6 +135,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
+  PrintDesignGenerator.ts — Canvas print design (4500×4500px) — stub, to be implemented
 ```
 
 - `getFakeElementBySymbol(symbol, exclude?)` returns a random variant per letter, avoiding names in the optional `exclude` set — always use this, never `.find()`. Pass a shared `Set<string>` across the full name match to prevent duplicate variants for repeated letters.
@@ -218,12 +220,15 @@ Remaining Phase 2:
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
 
-Phase 3 — Print on Demand (planned):
+Phase 3 — Print on Demand (in progress):
 - Provider: Printful API (API key secured in Vercel env vars)
 - Backend: Vercel Functions at `/api/print/*`
-- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome
+- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome — stub only
 - File handoff: client → `POST /api/print/upload` → Vercel Blob → Printful
-- Products to launch: unisex t-shirt, 11oz mug, poster
+- Products to launch: unisex t-shirt, 11oz mug, poster — defined in `src/data/printProducts.ts`
 - UX: "Print on merch" button in `done` state → `PrintPanel.tsx` modal → mockup preview → Printful hosted checkout
+- `PrintPanel.tsx` — step-machine modal (products → variants → loading → mockup → error) ✅
+- `ProductMockup.tsx` — mockup image + Order CTA ✅
+- Remaining: wire "Print on merch" button in App.tsx, implement PrintDesignGenerator.ts, add Vercel API routes, populate PRINT_PRODUCTS
 
 See `docs/phase1-tasks.md` for full task checklist.
