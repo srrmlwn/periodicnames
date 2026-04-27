@@ -188,13 +188,16 @@
 .animate-stagger-4 { animation-delay: 0.4s; }
 .animate-stagger-5 { animation-delay: 0.5s; }
 
-/* Responsive content padding: input sits at ~45vh on portrait, compressed on short landscape */
+/* Responsive content padding: dvh accounts for mobile browser chrome so the
+   input sits at ~45% of the actual visible area, not the full screen height */
 .content-wrap {
   padding-top: max(24px, calc(45vh - 80px));
+  padding-top: max(24px, calc(45dvh - 80px));
 }
 @media (max-height: 500px) {
   .content-wrap {
     padding-top: max(12px, calc(28vh - 30px));
+    padding-top: max(12px, calc(28dvh - 30px));
   }
 }
 
