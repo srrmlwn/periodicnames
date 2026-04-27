@@ -10,7 +10,8 @@ function titleCase(s: string): string {
 
 function matchWordToElements(
   word: string,
-  realElements: ReturnType<typeof getAllElements>
+  realElements: ReturnType<typeof getAllElements>,
+  usedFakeNames: Set<string>
 ): (ReturnType<typeof getAllElements>[number] | FakeElement)[] {
   const n = word.length;
 
@@ -57,8 +58,11 @@ function matchWordToElements(
       const el = realElements.find(el => el.symbol === candidate);
       if (el) ordered.push(el);
     } else {
-      const fakeEl = getFakeElementBySymbol(word[pos]);
-      if (fakeEl) ordered.push(fakeEl);
+      const fakeEl = getFakeElementBySymbol(word[pos], usedFakeNames);
+      if (fakeEl) {
+        usedFakeNames.add(fakeEl.name);
+        ordered.push(fakeEl);
+      }
     }
     pos += len;
   }
@@ -81,6 +85,7 @@ export function matchNameToElements(name: string): NameResult {
 
   const spaceElement: FakeElement = { symbol: ' ', name: 'Space', color: '#FFFFFF' };
   const words = name.toUpperCase().split(' ');
+  const usedFakeNames = new Set<string>();
 
   words.forEach((word, wordIndex) => {
     if (wordIndex > 0) {
@@ -88,7 +93,7 @@ export function matchNameToElements(name: string): NameResult {
       result.orderedElements.push(spaceElement);
     }
 
-    const wordElements = matchWordToElements(word, realElements);
+    const wordElements = matchWordToElements(word, realElements, usedFakeNames);
 
     for (const el of wordElements) {
       if ('atomicNumber' in el) {

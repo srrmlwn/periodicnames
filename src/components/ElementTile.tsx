@@ -34,11 +34,23 @@ const ElementTile: React.FC<ElementTileProps> = ({
     }
   }, [isHighlighted, animationDelay]);
 
+  useEffect(() => {
+    if (isFake) {
+      requestAnimationFrame(() => {
+        setHasWobbled(false);
+      });
+    }
+  }, [isFake]);
+
   if (!displayElement) return null;
 
   const fakeAtomicNumber = isFake
     ? [...fakeElement!.name].reduce((sum, c) => sum + c.charCodeAt(0), 0)
     : undefined;
+
+  const handleClick = () => {
+    if (onClick) onClick();
+  };
 
   const baseClasses = `
     w-full h-full rounded-md border-2 shadow-sm
@@ -60,7 +72,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
     `;
 
   const fakeClasses = isFake
-    ? `text-amber-200 ${!hasWobbled ? 'fake-wobble' : ''}`
+    ? `text-amber-200 ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
     : 'text-white';
 
   const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
@@ -70,18 +82,13 @@ const ElementTile: React.FC<ElementTileProps> = ({
 
   const atomicNumberClass = size === 'lg' ? 'text-xs' : 'text-[5px]';
   const symbolClass = size === 'lg' ? 'text-2xl font-black' : size === 'xs' ? 'text-[9px] font-bold' : 'text-sm font-bold';
-  const nameClass = size === 'lg' ? 'text-[8px]' : 'text-[6px]';
-
-  const displayAtomicNumber = fakeAtomicNumber ?? element?.atomicNumber;
+  const nameClass = size === 'lg' ? 'text-[9px]' : 'text-[6px]';
 
   return (
     <div
       className={`${classes} group`}
-      onClick={onClick}
+      onClick={handleClick}
       title={`${displayElement.name} (${displayElement.symbol})`}
-      onAnimationEnd={(e) => {
-        if (e.animationName === 'fakeWobble') setHasWobbled(true);
-      }}
       style={{
         backgroundColor,
         borderColor,
@@ -91,13 +98,20 @@ const ElementTile: React.FC<ElementTileProps> = ({
     >
       {size !== 'xs' && (
         <div className={`absolute top-0 left-0.5 ${atomicNumberClass} text-white/80 font-normal`}>
-          {displayAtomicNumber}
+          {fakeAtomicNumber ?? element?.atomicNumber}
         </div>
       )}
 
-      <div className={`${symbolClass} leading-none relative`}>
+      {size !== 'xs' && element?.atomicMass && (
+        <div className={`absolute top-0 right-0.5 ${atomicNumberClass} text-white/70 font-normal transition-opacity duration-300 ${
+          isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}>
+          {element.atomicMass}
+        </div>
+      )}
+
+      <div className={`${symbolClass} leading-none`}>
         {displayElement.symbol}
-        {isFake && <sup className="absolute -top-1 -right-2 text-[0.5em] font-bold text-amber-300">*</sup>}
       </div>
 
       {size !== 'xs' && (

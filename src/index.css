@@ -109,11 +109,6 @@
   }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 @keyframes fakeWobble {
   0%, 100% { transform: rotate(0deg) scale(1); }
   20% { transform: rotate(-5deg) scale(1.06); }
@@ -167,12 +162,6 @@
 
 .results-fade-in {
   animation: resultsFadeIn 0.5s ease-out;
-}
-
-.fake-shimmer {
-  background: linear-gradient(90deg, #f59e0b 25%, #fef3c7 50%, #f59e0b 75%) !important;
-  background-size: 200% 100% !important;
-  animation: shimmer 2s linear infinite;
 }
 
 .fake-wobble {

@@ -134,8 +134,8 @@ function App() {
         <div className="px-4 pt-4 shrink-0">
           <Header />
         </div>
-        {/* Input panel: vertically centered in remaining space, never repositions */}
-        <div className="flex-1 shrink-0 flex items-center justify-center px-4 py-6">
+        {/* Single column: input at ~45% from top, results grow downward without moving input */}
+        <div className="flex flex-col items-center px-4 pb-8 gap-4" style={{ paddingTop: 'max(24px, calc(45vh - 80px))' }}>
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
@@ -143,9 +143,6 @@ function App() {
             onRefresh={handleRefresh}
             initialValue={inputKey === 0 ? urlName : ''}
           />
-        </div>
-        {/* Results panel: flows below the input panel */}
-        <div className="flex flex-col items-center px-4 pb-8">
           <ResultDisplay
             result={result}
             isVisible={animationPhase !== 'input'}

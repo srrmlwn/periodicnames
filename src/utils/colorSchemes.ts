@@ -40,7 +40,7 @@ export const defaultColorScheme: ColorScheme = {
     noble: '#db2777',
     lanthanide: '#4338ca',
     actinide: '#475569',
-    fake: '#fbbf24', // amber-400
+    fake: '#1C1917', // stone-900
   },
   borders: {
     alkali: '#b91c1c',
@@ -52,7 +52,7 @@ export const defaultColorScheme: ColorScheme = {
     noble: '#be185d',
     lanthanide: '#3730a3',
     actinide: '#334155',
-    fake: '#111111',
+    fake: '#F59E0B', // amber-400
   },
 };
 

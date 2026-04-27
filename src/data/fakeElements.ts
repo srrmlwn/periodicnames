@@ -85,18 +85,13 @@ export const fakeElements: FakeElement[] = [
   { symbol: 'Z', name: 'Zombium', color: '#E5E7EB' },
 ];
 
-export const getFakeElementBySymbol = (symbol: string): FakeElement | undefined => {
-  const matchingElements = fakeElements.filter(element => 
-    element.symbol.toLowerCase() === symbol.toLowerCase()
-  );
-  
-  if (matchingElements.length === 0) {
-    return undefined;
-  }
-  
-  // Randomly select one of the available options for this letter
-  const randomIndex = Math.floor(Math.random() * matchingElements.length);
-  return matchingElements[randomIndex];
+export const getFakeElementBySymbol = (symbol: string, exclude?: Set<string>): FakeElement | undefined => {
+  const matches = fakeElements.filter(el => el.symbol.toLowerCase() === symbol.toLowerCase());
+  if (matches.length === 0) return undefined;
+
+  const available = exclude ? matches.filter(el => !exclude.has(el.name)) : matches;
+  const pool = available.length > 0 ? available : matches;
+  return pool[Math.floor(Math.random() * pool.length)];
 };
 
 export const getAllFakeElements = (): FakeElement[] => {

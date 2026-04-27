@@ -99,12 +99,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
         })}
       </div>
 
-      {isDone && result.fakeElements.some(fe => fe.symbol !== ' ') && (
-        <p className="mt-3 text-xs text-slate-400 text-center tracking-wide">
-          * fictional element
-        </p>
-      )}
-
       {isDone && (
         <div className="mt-4 flex justify-center">
           <button
