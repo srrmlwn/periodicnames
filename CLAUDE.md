@@ -137,6 +137,11 @@ src/utils/
   ShareVideoGenerator.ts — MediaRecorder API reel video
   PrintDesignGenerator.ts — Canvas API PNG (4500×4500) for print on demand
 
+src/components/
+  ...
+  PrintPanel.tsx        — print-on-demand modal: product picker → variant selector → mockup flow
+  ProductMockup.tsx     — mockup image preview + Order CTA
+
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
   mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling
