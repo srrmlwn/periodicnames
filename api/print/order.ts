@@ -37,6 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       name: 'Pending',
       address1: '1 Placeholder St',
       city: 'Anytown',
+      state_code: 'CA',
       country_code: 'US',
       zip: '00000',
     },
