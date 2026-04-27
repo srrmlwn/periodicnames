@@ -218,12 +218,13 @@ Remaining Phase 2:
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
 
-Phase 3 — Print on Demand (planned):
+Phase 3 — Print on Demand (planned, not started):
 - Provider: Printful API (API key secured in Vercel env vars)
-- Backend: Vercel Functions at `/api/print/*`
-- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome
-- File handoff: client → `POST /api/print/upload` → Vercel Blob → Printful
-- Products to launch: unisex t-shirt, 11oz mug, poster
-- UX: "Print on merch" button in `done` state → `PrintPanel.tsx` modal → mockup preview → Printful hosted checkout
+- Backend: Vercel Functions at `/api/print/*` (upload → blob, mockup, order)
+- Design: `PrintDesignGenerator.ts` — square 4500×4500px canvas, same aesthetic as app (faded table bg + element tiles), no UI chrome, print-safe colors
+- File handoff: client → `POST /api/print/upload` → Vercel Blob → Printful mockup/order API
+- Products to launch: unisex t-shirt (Bella+Canvas 3001), 11oz mug, 18×24in poster
+- UX: "Print on merch" button in `done` state → `PrintPanel.tsx` modal → product/variant picker → mockup preview → Printful hosted checkout
 
-See `docs/phase1-tasks.md` for full task checklist.
+See `docs/phase1-tasks.md` for Phase 1–2 task checklist.
+See `docs/phase3-tasks.md` for full Phase 3 task breakdown.

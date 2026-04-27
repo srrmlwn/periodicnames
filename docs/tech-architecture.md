@@ -194,20 +194,37 @@ SPA routing via `history.pushState`:
 
 ## Phase 3 — Print on Demand
 
-Requires a minimal backend to keep the Printful API key secure.
+Requires a minimal backend to keep the Printful API key secure. Full task breakdown: `docs/phase3-tasks.md`.
+
+**Flow**: user clicks "Print on merch" → picks product/variant → design generated client-side → uploaded to Vercel Blob → Printful fetches design URL for mockup → user previews → Printful hosted checkout.
 
 **Backend**: Vercel Functions (`/api/print/*`)
-- `POST /api/print/mockup` — generates product mockup via Printful API
-- `POST /api/print/order` — creates draft order, returns Printful checkout URL
-- API key stored in Vercel environment variables
+- `POST /api/print/upload` — receives PNG blob, stores in Vercel Blob (public), returns URL
+- `POST /api/print/mockup` — calls Printful mockup task API, polls for result, returns mockup image URL
+- `POST /api/print/order` — creates Printful draft order, returns hosted checkout URL
+- `PRINTFUL_API_KEY` stored in Vercel environment variables; no PII touches the backend
 
-**Design generation**: Same Canvas approach as Phase 2, scaled to ≥2400×2400px for print. Print-safe colors (no pure `#000000`, no neon).
+**Design generation** (`src/utils/PrintDesignGenerator.ts`):
+- 4500×4500px square canvas (print-quality)
+- Same aesthetic as app: faded periodic table background + centered element tiles
+- No UI chrome (no URL footer, no header)
+- Print-safe colors: category colors softened away from pure black/neon
+- Exports `Promise<Blob>` (PNG)
 
-**New components**:
+**Product catalog** (`src/data/printProducts.ts`):
+- Unisex t-shirt (Bella+Canvas 3001) — S–2XL, white/black/navy/heather
+- 11oz mug — white, one size
+- 18×24in poster — matte, one size
+
+**New files**:
 ```
-src/components/PrintPanel.tsx     — product picker (t-shirt / mug / poster)
-src/components/ProductMockup.tsx  — live mockup preview
-src/pages/Checkout.tsx            — redirect to Printful checkout
+src/utils/PrintDesignGenerator.ts  — 4500×4500 print canvas
+src/data/printProducts.ts          — Printful product + variant definitions
+src/components/PrintPanel.tsx      — product picker modal (full-screen overlay)
+src/components/ProductMockup.tsx   — mockup preview + order CTA
+api/print/upload.ts                — Vercel Function: blob upload
+api/print/mockup.ts                — Vercel Function: Printful mockup task
+api/print/order.ts                 — Vercel Function: Printful draft order
 ```
 
 ---
