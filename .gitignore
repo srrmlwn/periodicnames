@@ -25,3 +25,8 @@ dist-ssr
 .vercel
 
 .env.local
+
+# Local dev scratch files
+ux-test*
+.claude/
+products_*.json

@@ -39,7 +39,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [designUrl, setDesignUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [recipient, setRecipient] = useState<Recipient>(EMPTY_RECIPIENT);
-  const [isOrdering, setIsOrdering] = useState(false);
   const [customText, setCustomText] = useState('');
 
   if (!isOpen) return null;
