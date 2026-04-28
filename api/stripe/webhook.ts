@@ -1,13 +1,27 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
+export const config = { api: { bodyParser: false } };
+
 const PRINTFUL_BASE = 'https://api.printful.com';
 
 function log(label: string, data?: unknown) {
   console.log(`[webhook] ${label}`, data !== undefined ? JSON.stringify(data) : '');
 }
 
-async function createPrintfulOrder(metadata: Record<string, string>): Promise<void> {
+function getRawBody(req: VercelRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+async function createPrintfulOrder(
+  metadata: Record<string, string>,
+  customerEmail: string | null,
+): Promise<void> {
   const {
     variant_id, design_url,
     recipient_name, recipient_address1, recipient_city,
@@ -23,8 +37,9 @@ async function createPrintfulOrder(metadata: Record<string, string>): Promise<vo
       state_code: recipient_state_code,
       zip: recipient_zip,
       country_code: recipient_country_code,
+      ...(customerEmail ? { email: customerEmail } : {}),
     },
-    items: [{ variant_id: Number(variant_id), quantity: 1, files: [{ url: design_url }] }],
+    items: [{ variant_id: Number(variant_id), quantity: 1, files: [{ type: 'front', url: design_url }] }],
   };
 
   log('POST /orders →', body);
@@ -56,11 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   let event: Stripe.Event;
   try {
-    // Vercel parses the body by default; reconstruct raw bytes for signature verification.
-    // The body shape is stable since Stripe sends JSON.
-    const rawBody = Buffer.isBuffer(req.body)
-      ? req.body
-      : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
+    const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, sig as string, secret);
   } catch (err) {
     log('signature verification failed', String(err));
@@ -73,8 +84,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     if (session.payment_status === 'paid' && session.metadata) {
+      const customerEmail = session.customer_details?.email ?? null;
       try {
-        await createPrintfulOrder(session.metadata as Record<string, string>);
+        await createPrintfulOrder(session.metadata as Record<string, string>, customerEmail);
         log('order created for session', session.id);
       } catch (err) {
         log('order creation failed', String(err));

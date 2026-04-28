@@ -45,6 +45,9 @@ function App() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [inputKey, setInputKey] = useState(0);
   const [tableScale, setTableScale] = useState(getTableScale);
+  const [orderSuccess, setOrderSuccess] = useState(
+    () => new URLSearchParams(window.location.search).get('order') === 'success'
+  );
   const revealTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const revealDelayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialized = useRef(false);
@@ -70,6 +73,12 @@ function App() {
     initialized.current = true;
     handleNameSubmit(urlName);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (orderSuccess) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }, [orderSuccess]);
 
   useEffect(() => {
     const handleResize = () => setTableScale(getTableScale());
@@ -122,6 +131,19 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {orderSuccess && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-lg">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+          Order placed — you'll get a shipping confirmation soon!
+          <button onClick={() => setOrderSuccess(false)} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       {/* Fixed full-screen periodic table background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
         <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'center center' }}>
