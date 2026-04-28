@@ -1,6 +1,5 @@
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
-import { getAllElements } from '../data/elements';
 import { createElementLayout } from './elementRenderer';
 import type { ElementLayout, ElementRenderItem } from './elementRenderer';
 import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
@@ -233,24 +232,29 @@ export class PrintDesignGenerator {
 
   private drawPeriodicTableBackground(width: number, height: number): void {
     const ctx = this.ctx;
-    const categoryMap = new Map(getAllElements().map(e => [e.symbol, e.category]));
 
     const cellSize = width / 18;
     const tableHeight = 9.5 * cellSize;
     const tableStartY = (height - tableHeight) / 2;
-    const pad = cellSize * 0.05;
+    const pad = cellSize * 0.06;
 
-    ctx.globalAlpha = 0.09;
     for (const [symbol, row, col] of ELEMENT_POSITIONS) {
-      const category = categoryMap.get(symbol);
-      if (!category) continue;
       const x = col * cellSize;
       const y = tableStartY + (row <= 6 ? row : row + 0.5) * cellSize;
-      this.roundRectPath(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2, cellSize * 0.1);
-      ctx.fillStyle = getCategoryColor(category);
-      ctx.fill();
+      const rSize = cellSize - pad * 2;
+
+      this.roundRectPath(x + pad, y + pad, rSize, rSize, rSize * 0.1);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+      ctx.lineWidth = Math.max(2, cellSize * 0.03);
+      ctx.setLineDash([]);
+      ctx.stroke();
+
+      ctx.font = `700 ${cellSize * 0.32}px "Nunito", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.22)';
+      ctx.fillText(symbol, x + cellSize / 2, y + cellSize * 0.55);
     }
-    ctx.globalAlpha = 1;
   }
 
   private roundRectPath(x: number, y: number, w: number, h: number, r: number): void {
