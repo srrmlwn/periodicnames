@@ -1,5 +1,4 @@
 import React from 'react';
-import ElementTile from './ElementTile';
 import { getAllElements } from '../data/elements';
 
 interface PeriodicTableProps {
@@ -155,17 +154,27 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedSymbols = [] }
         {row.map((element, colIndex) => {
           const isLit = !!element && highlightedSymbols.includes(element.symbol);
           return (
-            <div
-              key={colIndex}
-              className={`w-10 h-10 table-bg-tile${isLit ? ' table-bg-tile-lit' : ''}`}
-            >
+            <div key={colIndex} className="w-10 h-10 table-bg-tile">
               {element ? (
-                <ElementTile
-                  element={element}
-                  isHighlighted={false}
-                  animationDelay={0}
-                  size="sm"
-                />
+                <div
+                  className="w-full h-full rounded-md flex flex-col items-center justify-center relative overflow-hidden"
+                  style={{
+                    border: `1px solid rgba(148,163,184,${isLit ? 0.45 : 0.18})`,
+                  }}
+                >
+                  <span
+                    className="absolute top-0 left-0.5 text-[5px] font-normal leading-none"
+                    style={{ color: `rgba(148,163,184,${isLit ? 0.6 : 0.3})` }}
+                  >
+                    {element.atomicNumber}
+                  </span>
+                  <span
+                    className="text-sm font-bold leading-none"
+                    style={{ color: `rgba(148,163,184,${isLit ? 0.6 : 0.3})` }}
+                  >
+                    {element.symbol}
+                  </span>
+                </div>
               ) : (
                 <div className="w-10 h-10" />
               )}

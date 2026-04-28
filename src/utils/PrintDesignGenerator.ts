@@ -38,7 +38,7 @@ export class PrintDesignGenerator {
     this.ctx = this.canvas.getContext('2d')!;
   }
 
-  async generatePrintDesign(result: NameResult): Promise<Blob> {
+  async generatePrintDesign(result: NameResult, customText?: string): Promise<Blob> {
     await document.fonts.ready;
 
     const size = 4500;
@@ -52,8 +52,9 @@ export class PrintDesignGenerator {
     this.drawPeriodicTableBackground(size, size);
 
     const padding = 300;
+    const textReserved = customText ? 380 : 0;
     const availableWidth = size - padding * 2;
-    const availableHeight = size - padding * 2;
+    const availableHeight = size - padding * 2 - textReserved;
 
     const layout = createElementLayout(result);
     const { tileSize, rows, tileGap, wordGap, rowGap } =
@@ -63,6 +64,15 @@ export class PrintDesignGenerator {
     const tilesStartY = padding + Math.max(0, (availableHeight - totalTilesHeight) / 2);
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size);
+
+    if (customText) {
+      const textY = tilesStartY + totalTilesHeight + 140;
+      ctx.font = `600 200px "Nunito", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#374151';
+      ctx.fillText(customText, size / 2, textY, availableWidth);
+    }
 
     return new Promise(resolve => {
       this.canvas.toBlob(blob => resolve(blob!), 'image/png', 0.95);
