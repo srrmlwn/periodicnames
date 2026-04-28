@@ -3,9 +3,9 @@ import type { Element } from '../data/elements';
 import { getAllElements } from '../data/elements';
 import { createElementLayout } from './elementRenderer';
 import type { ElementRenderItem } from './elementRenderer';
-import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
+import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
-const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
+const NAME_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
 const STAGGER_MS = 500;
 const POP_MS = 200;
 const HOLD_MS = 1500;
@@ -160,7 +160,11 @@ export class ShareVideoGenerator {
       ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
       ctx.drawImage(bgCanvas, 0, 0);
 
-      this.drawColorfulTitle(ctx, 'Periodic Names', CANVAS_SIZE / 2, titleY, titleSize);
+      ctx.font = `700 ${titleSize}px "Nunito", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('Periodic Names', CANVAS_SIZE / 2, titleY);
 
       // Text intro phase
       const nameOpacity = elapsed < TEXT_FADE_IN_END
@@ -201,8 +205,8 @@ export class ShareVideoGenerator {
         });
       });
 
-      ctx.font = `700 ${urlSize}px "Nunito", Arial, sans-serif`;
-      ctx.fillStyle = '#475569';
+      ctx.font = `600 ${urlSize}px "Nunito", Arial, sans-serif`;
+      ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(`periodicnames.com/${slug}`, CANVAS_SIZE / 2, urlBaselineY);
@@ -273,7 +277,7 @@ export class ShareVideoGenerator {
     let ci = 0;
     for (const { ch, w } of chars) {
       if (ch !== ' ') {
-        const color = TITLE_COLORS[ci++ % TITLE_COLORS.length];
+        const color = NAME_COLORS[ci++ % NAME_COLORS.length];
         ctx.lineWidth = fontSize * 0.065;
         ctx.lineJoin = 'round';
         ctx.strokeStyle = '#111111';
@@ -364,7 +368,7 @@ export class ShareVideoGenerator {
     if (!el) return;
 
     const bgColor = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
-    const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor((el as Element).category);
+    const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
     const radius = size * 0.1;
     const borderWidth = Math.max(2, size * 0.03);
 
@@ -402,28 +406,6 @@ export class ShareVideoGenerator {
     while (ctx.measureText(name).width > maxNameW && name.length > 1) name = name.slice(0, -1);
     if (name.length < el.name.length) name = name.slice(0, -1) + '…';
     ctx.fillText(name, x + size / 2, y + size * 0.94);
-  }
-
-  private drawColorfulTitle(ctx: CanvasRenderingContext2D, text: string, centerX: number, baselineY: number, fontSize: number): void {
-    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
-    ctx.textBaseline = 'alphabetic';
-    const chars = text.split('').map(ch => ({ ch, w: ctx.measureText(ch).width, isSpace: ch === ' ' }));
-    const totalWidth = chars.reduce((s, c) => s + c.w, 0);
-    let x = centerX - totalWidth / 2;
-    let ci = 0;
-    for (const { ch, w, isSpace } of chars) {
-      if (!isSpace) {
-        const color = TITLE_COLORS[ci++ % TITLE_COLORS.length];
-        ctx.lineWidth = fontSize * 0.065;
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#111111';
-        ctx.textAlign = 'left';
-        ctx.strokeText(ch, x, baselineY);
-        ctx.fillStyle = color;
-        ctx.fillText(ch, x, baselineY);
-      }
-      x += w;
-    }
   }
 
   private roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {

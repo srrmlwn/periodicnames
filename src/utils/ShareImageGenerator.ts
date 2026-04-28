@@ -5,9 +5,7 @@ import { getAllElements } from '../data/elements';
 import { getDimensions } from '../templates/imageTemplates';
 import { createElementLayout } from './elementRenderer';
 import type { ElementLayout, ElementRenderItem } from './elementRenderer';
-import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
-
-const TITLE_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
+import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
 // [symbol, row (0-8), col (0-17)]
 // Rows 7-8 are lanthanides/actinides, rendered with a gap below row 6
@@ -76,15 +74,18 @@ export class ShareImageGenerator {
     this.drawPeriodicTableBackground(width, height);
 
     const padding = isX ? 60 : 80;
+    const titleSize = isX ? 42 : 54;
+    const titleY = padding + titleSize;
 
-    const titleSize = isX ? 54 : 68;
-    const titleBaselineY = padding + titleSize;
-    this.drawColorfulTitle('Periodic Names', width / 2, titleBaselineY, titleSize);
+    ctx.font = `700 ${titleSize}px "Nunito", Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('Periodic Names', width / 2, titleY);
 
-    const urlSize = isX ? 24 : 30;
-    const urlBaselineY = height - (isX ? 38 : 50);
-
-    const contentTop = titleBaselineY + titleSize * 0.2 + 24;
+    const urlSize = isX ? 22 : 28;
+    const urlBaselineY = height - (isX ? 36 : 48);
+    const contentTop = titleY + titleSize * 0.3 + 20;
     const contentBottom = urlBaselineY - urlSize - 16;
 
     const layout = createElementLayout(result);
@@ -96,12 +97,11 @@ export class ShareImageGenerator {
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, width);
 
-    const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
-    ctx.font = `700 ${urlSize}px "Nunito", Arial, sans-serif`;
-    ctx.fillStyle = '#475569';
+    ctx.font = `600 ${urlSize}px "Nunito", Arial, sans-serif`;
+    ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(`periodicnames.com/${slug}`, width / 2, urlBaselineY);
+    ctx.fillText(`periodicnames.com/${result.originalName.toLowerCase().replace(/\s+/g, '-')}`, width / 2, urlBaselineY);
 
     return new Promise(resolve => {
       this.canvas.toBlob(blob => resolve(blob!), 'image/png', 0.95);
@@ -113,7 +113,6 @@ export class ShareImageGenerator {
     const categoryMap = new Map(getAllElements().map(e => [e.symbol, e.category]));
 
     const cellSize = width / 18;
-    // 7 main rows (0-6) + 0.5 gap row + 2 lanthanide/actinide rows = 9.5 rows
     const tableHeight = 9.5 * cellSize;
     const tableStartY = (height - tableHeight) / 2;
     const pad = cellSize * 0.05;
@@ -131,35 +130,11 @@ export class ShareImageGenerator {
     ctx.globalAlpha = 1;
   }
 
-  private drawColorfulTitle(text: string, centerX: number, baselineY: number, fontSize: number): void {
-    const ctx = this.ctx;
-    ctx.font = `900 ${fontSize}px "Nunito", "Arial Black", sans-serif`;
-    ctx.textBaseline = 'alphabetic';
-    const chars = text.split('').map(ch => ({ ch, w: ctx.measureText(ch).width, isSpace: ch === ' ' }));
-    const totalWidth = chars.reduce((s, c) => s + c.w, 0);
-    let x = centerX - totalWidth / 2;
-    let ci = 0;
-    for (const { ch, w, isSpace } of chars) {
-      if (!isSpace) {
-        const color = TITLE_COLORS[ci++ % TITLE_COLORS.length];
-        ctx.lineWidth = fontSize * 0.065;
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#111111';
-        ctx.textAlign = 'left';
-        ctx.strokeText(ch, x, baselineY);
-        ctx.fillStyle = color;
-        ctx.fillText(ch, x, baselineY);
-      }
-      x += w;
-    }
-  }
-
   private computeOptimalLayout(
     layout: ElementLayout,
     availableWidth: number,
     availableHeight: number
   ): { tileSize: number; rows: ElementRenderItem[][][]; tileGap: number; wordGap: number; rowGap: number } {
-    // Pre-compute max word length (tile count) — words never wrap, so this is the hard width constraint
     const words: ElementRenderItem[][] = [];
     let cur: ElementRenderItem[] = [];
     for (const item of layout.items) {
@@ -170,12 +145,11 @@ export class ShareImageGenerator {
     if (cur.length > 0) words.push(cur);
     const maxWordLen = Math.max(1, ...words.map(w => w.length));
 
-    for (let tileSize = 140; tileSize >= 48; tileSize -= 4) {
+    for (let tileSize = 160; tileSize >= 48; tileSize -= 4) {
       const tileGap = Math.round(tileSize * 0.09);
       const wordGap = Math.round(tileSize * 0.20);
-      const rowGap = Math.round(tileSize * 0.12);
+      const rowGap = Math.round(tileSize * 0.14);
 
-      // Widest single word must fit in one row
       if (maxWordLen * tileSize + (maxWordLen - 1) * tileGap > availableWidth) continue;
 
       const rows = this.buildWordRows(layout, tileSize, tileGap, wordGap, availableWidth);
@@ -183,7 +157,6 @@ export class ShareImageGenerator {
       if (totalHeight <= availableHeight) return { tileSize, rows, tileGap, wordGap, rowGap };
     }
 
-    // Absolute fallback
     const tileSize = 48;
     return {
       tileSize,
@@ -261,7 +234,7 @@ export class ShareImageGenerator {
     if (!el) return;
 
     const bgColor = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
-    const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor((el as Element).category);
+    const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
     const radius = size * 0.1;
     const borderWidth = Math.max(2, size * 0.03);
 
