@@ -1,14 +1,12 @@
-# Printify Product Catalog Reference
+# Printful Product Catalog Reference
 
-These variant IDs were fetched from the Printify API and are the IDs to use when wiring up `printProducts.ts` if switching from Printful to Printify.
-
-> **Note:** The current codebase (`printProducts.ts`, `api/print/*`) targets **Printful**. These IDs are for **Printify** and are not interchangeable. A provider switch would require updating the API layer.
+Variant IDs fetched from the Printful API for use in `printProducts.ts` and `api/print/*`.
 
 ---
 
-## Blueprint IDs
+## Product IDs (Printful product IDs)
 
-| Product | Blueprint ID |
+| Product | Printful Product ID |
 |---|---|
 | Enhanced Matte Paper Poster | 1 |
 | White Glossy Mug | 19 |
@@ -16,7 +14,7 @@ These variant IDs were fetched from the Printify API and are the IDs to use when
 
 ---
 
-## Blueprint 1 — Enhanced Matte Paper Poster (variant IDs)
+## Product 1 — Enhanced Matte Paper Poster (variant IDs)
 
 | Size | Variant ID |
 |---|---|
@@ -39,7 +37,7 @@ These variant IDs were fetched from the Printify API and are the IDs to use when
 
 ---
 
-## Blueprint 19 — White Glossy Mug (variant IDs)
+## Product 19 — White Glossy Mug (variant IDs)
 
 | Size | Variant ID |
 |---|---|
@@ -49,14 +47,14 @@ These variant IDs were fetched from the Printify API and are the IDs to use when
 
 ---
 
-## Blueprint 71 — Bella + Canvas 3001 T-Shirt
+## Product 71 — Bella + Canvas 3001 T-Shirt
 
 590 total variants (83 colors × up to 9 sizes). Sizes available: XS, S, M, L, XL, 2XL, 3XL, 4XL, 5XL.
 
-The full variant list lives in `products_71.json` (gitignored). To look up a specific variant ID, query the Printify API:
+The full variant list lives in `products_71.json` (gitignored). To look up a specific variant ID, query the Printful API:
 
 ```
-GET https://api.printify.com/v1/catalog/blueprints/71/print_providers/<provider_id>/variants.json
+GET https://api.printful.com/products/71
 ```
 
 ### Colors available (83 total)
@@ -65,7 +63,7 @@ Aqua, Army, Ash, Asphalt, Athletic Heather, Autumn, Baby Blue, Berry, Black, Bla
 
 ### Common colors for the UI color picker (suggested subset)
 
-| Color name | Printify name |
+| Display name | Printful color name |
 |---|---|
 | White | White |
 | Black | Black |
