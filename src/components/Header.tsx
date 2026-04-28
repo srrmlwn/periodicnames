@@ -1,5 +1,6 @@
 import React from 'react';
 import { matchNameToElements } from '../utils/elementMatcher';
+import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from '../utils/colorSchemes';
 
 type AnyElement = ReturnType<typeof matchNameToElements>['orderedElements'][number];
 
@@ -32,20 +33,28 @@ const Header: React.FC = () => (
     <div className="flex flex-col items-center gap-1 mb-2">
       {WORDS.map((word, wi) => (
         <div key={wi} className="flex gap-0.5">
-          {word.map((el, ei) => (
-            <div
-              key={`${wi}-${ei}`}
-              className="relative w-7 h-7 sm:w-8 sm:h-8 rounded border-2 border-slate-700 flex items-center justify-center"
-              title={el.name}
-            >
-              <span className="absolute top-0 left-0.5 text-[5px] sm:text-[6px] font-normal text-slate-700 leading-none">
-                {getAtomicNumber(el)}
-              </span>
-              <span className="text-[11px] sm:text-xs font-bold text-slate-700 leading-none">
-                {el.symbol}
-              </span>
-            </div>
-          ))}
+          {word.map((el, ei) => {
+            const isFake = !('atomicNumber' in el);
+            const bgColor = isFake ? getFakeElementColor() : getCategoryColor('category' in el ? el.category : '');
+            const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor('category' in el ? el.category : '');
+            const textClass = isFake ? 'text-amber-200' : 'text-white';
+            const numClass = isFake ? 'text-amber-300' : 'text-white/80';
+            return (
+              <div
+                key={`${wi}-${ei}`}
+                className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded border-2 flex items-center justify-center ${textClass}`}
+                style={{ backgroundColor: bgColor, borderColor }}
+                title={el.name}
+              >
+                <span className={`absolute top-0 left-0.5 text-[5px] sm:text-[6px] font-normal leading-none ${numClass}`}>
+                  {getAtomicNumber(el)}
+                </span>
+                <span className="text-[11px] sm:text-xs font-bold leading-none">
+                  {el.symbol}
+                </span>
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
