@@ -5,15 +5,7 @@ type AnyElement = ReturnType<typeof matchNameToElements>['orderedElements'][numb
 
 const TITLE_RESULT = matchNameToElements('Periodic Names');
 
-const HEADER_PALETTE = [
-  { bg: '#e03030', border: '#b91c1c' }, // red
-  { bg: '#f97316', border: '#c2410c' }, // orange
-  { bg: '#f59e0b', border: '#b45309' }, // amber
-  { bg: '#16a34a', border: '#15803d' }, // green
-  { bg: '#0891b2', border: '#0e7490' }, // cyan
-  { bg: '#7c3aed', border: '#6d28d9' }, // purple
-  { bg: '#db2777', border: '#be185d' }, // pink
-];
+const HEADER_PALETTE = ['#e03030', '#f97316', '#f59e0b', '#16a34a', '#0891b2', '#7c3aed', '#db2777'];
 
 function splitIntoWords(elements: AnyElement[]): AnyElement[][] {
   const words: AnyElement[][] = [];
@@ -45,12 +37,12 @@ const Header: React.FC = () => {
         {WORDS.map((word, wi) => (
           <div key={wi} className="flex gap-0.5">
             {word.map((el, ei) => {
-              const { bg, border } = HEADER_PALETTE[tileIndex++ % HEADER_PALETTE.length];
+              const bg = HEADER_PALETTE[tileIndex++ % HEADER_PALETTE.length];
               return (
                 <div
                   key={`${wi}-${ei}`}
-                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded border-2 flex items-center justify-center text-white"
-                  style={{ backgroundColor: bg, borderColor: border }}
+                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded border-2 border-black flex items-center justify-center text-white"
+                  style={{ backgroundColor: bg }}
                   title={el.name}
                 >
                   <span className="absolute top-0 left-0.5 text-[5px] sm:text-[6px] font-normal leading-none text-white/80">
