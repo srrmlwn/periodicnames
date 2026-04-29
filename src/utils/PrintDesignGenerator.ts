@@ -57,36 +57,42 @@ export class PrintDesignGenerator {
     this.drawPeriodicTableBackground(size, size);
 
     const padding = 300;
-    const captionReserved = 380;
     const hasCaption = !!customText && printLayout !== 'tiles-only';
+    const captionFontHeight = 200;
+    const captionGap = 120; // space between caption baseline and tile top
     const availableWidth = size - padding * 2;
-
-    const tilesTop = padding + (hasCaption && printLayout === 'caption-above' ? captionReserved : 0);
-    const tilesBottom = size - padding - (hasCaption && printLayout === 'caption-below' ? captionReserved : 0);
-    const availableHeight = tilesBottom - tilesTop;
+    // Reserve caption height when computing max tile size so nothing overflows
+    const tileAvailableHeight = size - padding * 2 - (hasCaption ? captionFontHeight + captionGap : 0);
 
     const elementLayout = createElementLayout(result);
     const { tileSize, rows, tileGap, wordGap, rowGap } =
-      this.computePrintLayout(elementLayout, availableWidth, availableHeight);
+      this.computePrintLayout(elementLayout, availableWidth, tileAvailableHeight);
 
     const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
-    const tilesStartY = tilesTop + Math.max(0, (availableHeight - totalTilesHeight) / 2);
+
+    // Center the whole composition (caption + gap + tiles) as one block
+    const compositionHeight = totalTilesHeight + (hasCaption ? captionFontHeight + captionGap : 0);
+    const compositionStartY = padding + Math.max(0, (size - padding * 2 - compositionHeight) / 2);
+
+    const tilesStartY = printLayout === 'caption-above' && hasCaption
+      ? compositionStartY + captionFontHeight + captionGap
+      : compositionStartY;
+    const captionY = printLayout === 'caption-above'
+      ? compositionStartY
+      : compositionStartY + totalTilesHeight + captionGap;
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size);
 
     if (hasCaption && customText) {
-      const textY = printLayout === 'caption-above'
-        ? padding + Math.round((captionReserved - 200) / 2)
-        : tilesStartY + totalTilesHeight + 140;
-      ctx.font = `600 200px "Nunito", Arial, sans-serif`;
+      ctx.font = `600 ${captionFontHeight}px "Nunito", Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
       ctx.lineWidth = 12;
       ctx.lineJoin = 'round';
-      ctx.strokeText(customText, size / 2, textY, availableWidth);
+      ctx.strokeText(customText, size / 2, captionY, availableWidth);
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(customText, size / 2, textY, availableWidth);
+      ctx.fillText(customText, size / 2, captionY, availableWidth);
     }
 
     return new Promise(resolve => {
