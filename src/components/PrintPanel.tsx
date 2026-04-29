@@ -281,7 +281,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               </div>
             )}
 
-            <div className="mt-4">
+            {selectedProduct.slug !== 'mug' && <div className="mt-4">
               <p className="text-xs text-gray-500 font-medium mb-2">Layout</p>
               <div className="grid grid-cols-3 gap-2">
                 {LAYOUT_PRESETS.map(({ value, label }) => {
@@ -316,9 +316,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                   );
                 })}
               </div>
-            </div>
+            </div>}
 
-            {printLayout !== 'tiles-only' && (
+            {selectedProduct.slug !== 'mug' && printLayout !== 'tiles-only' && (
               <div className="mt-3">
                 <p className="text-xs text-gray-500 font-medium mb-1.5">Caption (optional)</p>
                 <input
