@@ -29,6 +29,8 @@ const ELEMENT_POSITIONS: [string, number, number][] = [
   ['Cm', 8, 9], ['Bk', 8, 10], ['Cf', 8, 11], ['Es', 8, 12], ['Fm', 8, 13], ['Md', 8, 14], ['No', 8, 15], ['Lr', 8, 16],
 ];
 
+export type PrintLayout = 'caption-above' | 'caption-below' | 'tiles-only';
+
 export class PrintDesignGenerator {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -38,7 +40,11 @@ export class PrintDesignGenerator {
     this.ctx = this.canvas.getContext('2d')!;
   }
 
-  async generatePrintDesign(result: NameResult, customText?: string): Promise<Blob> {
+  async generatePrintDesign(
+    result: NameResult,
+    customText?: string,
+    printLayout: PrintLayout = 'caption-above',
+  ): Promise<Blob> {
     await document.fonts.ready;
 
     const size = 4500;
@@ -51,21 +57,27 @@ export class PrintDesignGenerator {
     this.drawPeriodicTableBackground(size, size);
 
     const padding = 300;
-    const textReserved = customText ? 380 : 0;
+    const captionReserved = 380;
+    const hasCaption = !!customText && printLayout !== 'tiles-only';
     const availableWidth = size - padding * 2;
-    const availableHeight = size - padding * 2 - textReserved;
 
-    const layout = createElementLayout(result);
+    const tilesTop = padding + (hasCaption && printLayout === 'caption-above' ? captionReserved : 0);
+    const tilesBottom = size - padding - (hasCaption && printLayout === 'caption-below' ? captionReserved : 0);
+    const availableHeight = tilesBottom - tilesTop;
+
+    const elementLayout = createElementLayout(result);
     const { tileSize, rows, tileGap, wordGap, rowGap } =
-      this.computePrintLayout(layout, availableWidth, availableHeight);
+      this.computePrintLayout(elementLayout, availableWidth, availableHeight);
 
     const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
-    const tilesStartY = padding + Math.max(0, (availableHeight - totalTilesHeight) / 2);
+    const tilesStartY = tilesTop + Math.max(0, (availableHeight - totalTilesHeight) / 2);
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size);
 
-    if (customText) {
-      const textY = tilesStartY + totalTilesHeight + 140;
+    if (hasCaption && customText) {
+      const textY = printLayout === 'caption-above'
+        ? padding + Math.round((captionReserved - 200) / 2)
+        : tilesStartY + totalTilesHeight + 140;
       ctx.font = `600 200px "Nunito", Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';

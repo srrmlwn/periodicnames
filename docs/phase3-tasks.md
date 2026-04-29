@@ -11,7 +11,8 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 ## What's done
 
 ### Design generation
-- `src/utils/PrintDesignGenerator.ts` — 4500×4500px canvas, faded table background, element tiles, optional caption, exports `Promise<Blob>`
+- `src/utils/PrintDesignGenerator.ts` — 4500×4500px canvas, transparent background, faded table watermark, element tiles, optional caption; exports `Promise<Blob>`
+- `PrintLayout` type (`'caption-above' | 'caption-below' | 'tiles-only'`) — controls caption placement; default is `caption-above`
 
 ### Backend (Vercel Functions)
 - `api/print/upload.ts` — accepts base64 PNG, uploads to Vercel Blob (public), returns `{ url }`
@@ -27,7 +28,7 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
   - Poster (product 1): 18×24in matte, variant ID 1
 
 ### UI
-- `src/components/PrintPanel.tsx` — product picker → variant picker → design gen → upload → mockup → address → Stripe checkout
+- `src/components/PrintPanel.tsx` — product picker → variant picker → layout presets → design gen → upload → mockup → address → Stripe checkout
 - `src/components/ProductMockup.tsx` — mockup image + Buy CTA
 - `src/components/ResultDisplay.tsx` — "Print on merch" button wired, opens PrintPanel in `done` phase
 - `src/App.tsx` — detects `?order=success` on load, shows dismissable green success banner, clears param from URL
@@ -63,3 +64,26 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 - [ ] Design caching — skip re-upload if user previews same product twice
 - [ ] Live price fetch from Printful catalog
 - [ ] Color accuracy pass against real printed samples
+
+---
+
+## Future Work — Drag-and-Drop Design Canvas
+
+**Goal:** Replace the fixed layout presets with a fully interactive WYSIWYG canvas inside the print modal, so users can freely reposition the element tiles, caption text, and background toggle before generating the print image.
+
+**Why it's non-trivial:**
+- The modal preview is ~380px wide; the generated image is 4500×4500px. Accurately mapping drag-and-drop screen coordinates to print canvas coordinates requires a stable scale transform and anchor model.
+- Dragging the _tile group_ as a unit (not individual tiles) is straightforward. Dragging individual tiles would require breaking the layout abstraction in `createElementLayout`.
+- A plain React drag implementation works, but a canvas-native approach (Konva.js or Fabric.js) feels far more responsive and handles multi-touch naturally — at the cost of a real dependency.
+
+**Recommended scope when we get here:**
+1. Draggable tile group (all tiles move together) and draggable caption text — two independent handles.
+2. Toggle to show/hide the periodic table watermark background.
+3. Optionally: font size slider for caption.
+4. Keep the preset buttons as starting points; dragging overrides them.
+
+**Implementation sketch:**
+- Add a `<DesignCanvas>` component (React + pointer events, no library) that renders a scaled-down preview of the 4500px canvas.
+- Store `{ tilesOffset: {x, y}, captionOffset: {x, y} }` in `PrintPanel` state.
+- Pass offsets into `PrintDesignGenerator.generatePrintDesign` and apply them at the print scale.
+- The WYSIWYG preview can be a `<canvas>` element re-rendered on every drag event (or an HTML layer with `transform` for responsiveness, then re-render on pointer-up).
