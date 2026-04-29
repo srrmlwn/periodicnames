@@ -12,15 +12,7 @@ interface PrintPanelProps {
   result: NameResult;
 }
 
-interface Recipient {
-  name: string;
-  address1: string;
-  city: string;
-  state: string;
-  zip: string;
-}
-
-type Step = 'products' | 'variants' | 'loading' | 'mockup' | 'address' | 'redirecting' | 'error';
+type Step = 'products' | 'variants' | 'loading' | 'mockup' | 'redirecting' | 'error';
 
 const PRODUCT_ICONS: Record<string, string> = {
   tshirt: '👕',
@@ -34,8 +26,6 @@ const LAYOUT_PRESETS: { value: PrintLayout; label: string }[] = [
   { value: 'tiles-only',   label: 'Tiles only' },
 ];
 
-const EMPTY_RECIPIENT: Recipient = { name: '', address1: '', city: '', state: '', zip: '' };
-
 const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [step, setStep] = useState<Step>('products');
   const [selectedProduct, setSelectedProduct] = useState<PrintProduct | null>(null);
@@ -45,7 +35,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [mockupUrl, setMockupUrl] = useState<string | null>(null);
   const [designUrl, setDesignUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [recipient, setRecipient] = useState<Recipient>(EMPTY_RECIPIENT);
   const [customText, setCustomText] = useState('');
   const [printLayout, setPrintLayout] = useState<PrintLayout>('caption-above');
 
@@ -127,15 +116,8 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     });
   };
 
-  const recipientValid =
-    recipient.name.trim() !== '' &&
-    recipient.address1.trim() !== '' &&
-    recipient.city.trim() !== '' &&
-    recipient.state.trim() !== '' &&
-    recipient.zip.trim() !== '';
-
   const handleCheckout = async () => {
-    if (!selectedProduct || !selectedVariantId || !designUrl || !recipientValid) return;
+    if (!selectedProduct || !selectedVariantId || !designUrl) return;
     setStep('redirecting');
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -147,14 +129,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           variantId: selectedVariantId,
           designUrl,
           priceUsd: selectedProduct.priceUsd,
-          recipient: {
-            name: recipient.name,
-            address1: recipient.address1,
-            city: recipient.city,
-            state_code: recipient.state,
-            zip: recipient.zip,
-            country_code: 'US',
-          },
         }),
       });
       if (!res.ok) throw new Error('Checkout session creation failed');
@@ -165,24 +139,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
       setStep('error');
     }
   };
-
-  const field = (
-    label: string,
-    key: keyof Recipient,
-    placeholder: string,
-    opts?: { className?: string },
-  ) => (
-    <div className={opts?.className}>
-      <label className="block text-xs text-gray-500 font-medium mb-1">{label}</label>
-      <input
-        type="text"
-        value={recipient[key]}
-        onChange={e => setRecipient(r => ({ ...r, [key]: e.target.value }))}
-        placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-slate-400"
-      />
-    </div>
-  );
 
   return (
     <div
@@ -281,42 +237,44 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               </div>
             )}
 
-            {selectedProduct.slug !== 'mug' && <div className="mt-4">
-              <p className="text-xs text-gray-500 font-medium mb-2">Layout</p>
-              <div className="grid grid-cols-3 gap-2">
-                {LAYOUT_PRESETS.map(({ value, label }) => {
-                  const selected = printLayout === value;
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => setPrintLayout(value)}
-                      className={`flex flex-col items-center gap-2 rounded-xl border-2 py-3 px-2 text-center transition-colors duration-150 ${
-                        selected
-                          ? 'border-slate-800 bg-slate-50'
-                          : 'border-gray-100 hover:border-slate-200'
-                      }`}
-                    >
-                      <div className={`flex flex-col gap-0.5 w-7 ${selected ? 'text-slate-800' : 'text-gray-300'}`}>
-                        {value === 'caption-above' && <>
-                          <div className="h-1.5 rounded bg-current opacity-60" />
-                          <div className="h-4 rounded bg-current" />
-                        </>}
-                        {value === 'caption-below' && <>
-                          <div className="h-4 rounded bg-current" />
-                          <div className="h-1.5 rounded bg-current opacity-60" />
-                        </>}
-                        {value === 'tiles-only' && (
-                          <div className="h-5 rounded bg-current" />
-                        )}
-                      </div>
-                      <span className={`text-[10px] font-semibold leading-tight ${selected ? 'text-slate-800' : 'text-gray-400'}`}>
-                        {label}
-                      </span>
-                    </button>
-                  );
-                })}
+            {selectedProduct.slug !== 'mug' && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-500 font-medium mb-2">Layout</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {LAYOUT_PRESETS.map(({ value, label }) => {
+                    const selected = printLayout === value;
+                    return (
+                      <button
+                        key={value}
+                        onClick={() => setPrintLayout(value)}
+                        className={`flex flex-col items-center gap-2 rounded-xl border-2 py-3 px-2 text-center transition-colors duration-150 ${
+                          selected
+                            ? 'border-slate-800 bg-slate-50'
+                            : 'border-gray-100 hover:border-slate-200'
+                        }`}
+                      >
+                        <div className={`flex flex-col gap-0.5 w-7 ${selected ? 'text-slate-800' : 'text-gray-300'}`}>
+                          {value === 'caption-above' && <>
+                            <div className="h-1.5 rounded bg-current opacity-60" />
+                            <div className="h-4 rounded bg-current" />
+                          </>}
+                          {value === 'caption-below' && <>
+                            <div className="h-4 rounded bg-current" />
+                            <div className="h-1.5 rounded bg-current opacity-60" />
+                          </>}
+                          {value === 'tiles-only' && (
+                            <div className="h-5 rounded bg-current" />
+                          )}
+                        </div>
+                        <span className={`text-[10px] font-semibold leading-tight ${selected ? 'text-slate-800' : 'text-gray-400'}`}>
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>}
+            )}
 
             {selectedProduct.slug !== 'mug' && printLayout !== 'tiles-only' && (
               <div className="mt-3">
@@ -359,51 +317,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             product={selectedProduct}
             variantId={selectedVariantId}
             onBack={() => setStep('variants')}
-            onOrder={() => setStep('address')}
+            onOrder={handleCheckout}
             isOrdering={false}
           />
-        )}
-
-        {step === 'address' && selectedProduct && (
-          <>
-            <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={() => setStep('mockup')}
-                className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-base leading-none"
-              >
-                ‹
-              </button>
-              <h2 className="text-base font-bold text-gray-800">Shipping address</h2>
-            </div>
-
-            <div className="space-y-3">
-              {field('Full name', 'name', 'Jane Smith')}
-              {field('Address', 'address1', '123 Main St')}
-              <div className="grid grid-cols-2 gap-3">
-                {field('City', 'city', 'New York')}
-                {field('State', 'state', 'NY')}
-              </div>
-              {field('ZIP code', 'zip', '10001')}
-              <p className="text-xs text-gray-400">US addresses only.</p>
-            </div>
-
-            <div className="mt-5 border-t border-gray-100 pt-4 flex items-center justify-between">
-              <span className="text-sm text-gray-500">
-                {selectedProduct.name} · ${selectedProduct.priceUsd.toFixed(2)}
-              </span>
-              <button
-                onClick={handleCheckout}
-                disabled={!recipientValid}
-                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors duration-150 ${
-                  recipientValid
-                    ? 'bg-slate-800 text-white hover:bg-slate-700'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                Pay ${selectedProduct.priceUsd.toFixed(2)}
-              </button>
-            </div>
-          </>
         )}
 
         {step === 'redirecting' && (

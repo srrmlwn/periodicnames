@@ -28,7 +28,7 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
   - Poster (product 1): 18×24in matte, variant ID 1
 
 ### UI
-- `src/components/PrintPanel.tsx` — product picker → variant picker → layout presets → design gen → upload → mockup → address → Stripe checkout
+- `src/components/PrintPanel.tsx` — product picker → variant picker → layout presets → design gen → upload → mockup → Stripe checkout (no address form; Stripe collects it)
 - `src/components/ProductMockup.tsx` — mockup image + Buy CTA
 - `src/components/ResultDisplay.tsx` — "Print on merch" button wired, opens PrintPanel in `done` phase
 - `src/App.tsx` — detects `?order=success` on load, shows dismissable green success banner, clears param from URL
@@ -38,10 +38,10 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 2. `PrintDesignGenerator` renders 4500×4500px canvas client-side
 3. `POST /api/print/upload` → Vercel Blob → `designUrl`
 4. `POST /api/print/mockup` → Printful mockup task (polls ~5–15s) → `mockupUrl`
-5. User sees mockup, enters shipping address → "Pay"
-6. `POST /api/stripe/checkout` → Stripe session → redirect to Stripe hosted checkout
-7. User pays on Stripe → redirected back to `/?order=success`
-8. Stripe fires `checkout.session.completed` webhook → `api/stripe/webhook` → confirmed Printful order with `type:'front'` file placement and customer email
+5. User sees mockup → clicks "Buy" → `POST /api/stripe/checkout` → redirect to Stripe hosted checkout
+6. Stripe collects shipping address (US only) + payment
+7. User redirected back to `/?order=success`; success banner shown
+8. Stripe fires `checkout.session.completed` → `api/stripe/webhook` → reads address from `session.shipping_details` → confirmed Printful order with `type:'front'` file + customer email forwarded
 
 ---
 

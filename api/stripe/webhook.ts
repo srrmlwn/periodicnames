@@ -20,23 +20,20 @@ function getRawBody(req: VercelRequest): Promise<Buffer> {
 
 async function createPrintfulOrder(
   metadata: Record<string, string>,
+  shipping: Stripe.Checkout.Session.ShippingDetails,
   customerEmail: string | null,
 ): Promise<void> {
-  const {
-    variant_id, design_url,
-    recipient_name, recipient_address1, recipient_city,
-    recipient_state_code, recipient_zip, recipient_country_code,
-  } = metadata;
+  const { variant_id, design_url } = metadata;
 
   const body = {
     confirm: true,
     recipient: {
-      name: recipient_name,
-      address1: recipient_address1,
-      city: recipient_city,
-      state_code: recipient_state_code,
-      zip: recipient_zip,
-      country_code: recipient_country_code,
+      name: shipping.name ?? '',
+      address1: shipping.address?.line1 ?? '',
+      city: shipping.address?.city ?? '',
+      state_code: shipping.address?.state ?? '',
+      zip: shipping.address?.postal_code ?? '',
+      country_code: shipping.address?.country ?? 'US',
       ...(customerEmail ? { email: customerEmail } : {}),
     },
     items: [{ variant_id: Number(variant_id), quantity: 1, files: [{ type: 'front', url: design_url }] }],
@@ -83,10 +80,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    if (session.payment_status === 'paid' && session.metadata) {
+    if (session.payment_status === 'paid' && session.metadata && session.shipping_details) {
       const customerEmail = session.customer_details?.email ?? null;
       try {
-        await createPrintfulOrder(session.metadata as Record<string, string>, customerEmail);
+        await createPrintfulOrder(
+          session.metadata as Record<string, string>,
+          session.shipping_details,
+          customerEmail,
+        );
         log('order created for session', session.id);
       } catch (err) {
         log('order creation failed', String(err));

@@ -232,7 +232,7 @@ Phase 2 — remaining:
 - OG meta tags for URL link previews
 
 Phase 3 — Print on Demand (**code complete, pending external setup**):
-- Full order flow: PrintPanel → design gen → Vercel Blob → Printful mockup → Stripe checkout → Stripe webhook → confirmed Printful order
+- Full order flow: PrintPanel → design gen → Vercel Blob → Printful mockup → Stripe checkout (collects address + payment) → Stripe webhook → confirmed Printful order
 - Product catalog: t-shirt (BC3001, 16 real variant IDs verified), 11oz mug, 18×24in poster
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
 - Success: `?order=success` param shows dismissable banner in App.tsx
