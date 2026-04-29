@@ -99,13 +99,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
       {size !== 'xs' && (
         <div className={`absolute top-0 left-0.5 flex flex-col leading-none ${atomicNumberClass} font-normal`}>
           <span className="text-white/80">{fakeAtomicNumber ?? element?.atomicNumber}</span>
-          {element?.atomicMass && (
-            <span className={`text-white/70 transition-opacity duration-300 ${
-              isHighlighted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            }`}>
-              {element.atomicMass}
-            </span>
-          )}
         </div>
       )}
 
