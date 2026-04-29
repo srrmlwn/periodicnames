@@ -3,7 +3,7 @@ import type { Element } from '../data/elements';
 import { getAllElements } from '../data/elements';
 import { createElementLayout } from './elementRenderer';
 import type { ElementLayout, ElementRenderItem } from './elementRenderer';
-import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
+import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
 // [symbol, row (0-8), col (0-17)]
 // Rows 7-8 are lanthanides/actinides, rendered with a gap below row 6
@@ -46,8 +46,7 @@ export class PrintDesignGenerator {
     this.canvas.height = size;
 
     const ctx = this.ctx;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
+    ctx.clearRect(0, 0, size, size);
 
     this.drawPeriodicTableBackground(size, size);
 
@@ -70,7 +69,11 @@ export class PrintDesignGenerator {
       ctx.font = `600 200px "Nunito", Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillStyle = '#374151';
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = 12;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(customText, size / 2, textY, availableWidth);
+      ctx.fillStyle = '#ffffff';
       ctx.fillText(customText, size / 2, textY, availableWidth);
     }
 
@@ -183,7 +186,7 @@ export class PrintDesignGenerator {
     if (!el) return;
 
     const bgColor = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
-    const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor((el as Element).category);
+    const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
     const radius = size * 0.1;
     const borderWidth = Math.max(4, size * 0.03);
 
