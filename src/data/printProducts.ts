@@ -53,7 +53,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     variants: [
       { id: 1320, label: 'White', color: '#FFFFFF' },
     ],
-    designPlacement: 'front',
+    designPlacement: 'default',
   },
   {
     id: 1,
@@ -64,7 +64,7 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     variants: [
       { id: 1, label: 'Matte / 18×24in' },
     ],
-    designPlacement: 'front',
+    designPlacement: 'default',
   },
 ];
 
