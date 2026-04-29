@@ -218,26 +218,27 @@ Fake elements are visually distinct from real elements:
 
 ## Current Work
 
-Active phase: **Phase 2 — Social Sharing** (Phase 1 complete)
+Active phase: **Phase 3 — Print on Demand** (Phase 1 complete, Phase 2 partially complete)
 
-What's done in Phase 2:
+Phase 2 — what's done:
 - Share image generator (`ShareImageGenerator.ts`) — Canvas PNG, 1200×630
 - Share video/reel generator (`ShareVideoGenerator.ts`) — MediaRecorder, 500ms stagger
 - Share preview modal (`SharePreviewModal.tsx`)
 
-Remaining Phase 2:
+Phase 2 — remaining:
 - Twitter/X intent URL share
 - Instagram Reel upload instructions modal
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
 
-Phase 3 — Print on Demand (in progress):
-- Provider: Printful API (API key secured in Vercel env vars)
-- Backend: Vercel Functions at `/api/print/*` ✅ (`upload` → Vercel Blob, `mockup` → Printful task, `order` → draft order)
-- Product catalog: `src/data/printProducts.ts` ✅ — t-shirt (Bella+Canvas 3001), 11oz mug, 18×24in poster; placeholder Printful variant IDs (must be replaced with real IDs from Printful catalog)
-- Design: `PrintDesignGenerator.ts` ✅ — square 4500×4500px canvas, faded table bg + element tiles, no UI chrome, print-safe colors
-- UI: `PrintPanel.tsx` ✅ (product picker + variant selector + async flow), `ProductMockup.tsx` ✅ (mockup preview + order CTA)
-- Remaining: wire "Print on merch" button into `App.tsx` + replace placeholder Printful variant IDs
+Phase 3 — Print on Demand (**code complete, pending external setup**):
+- Full order flow: PrintPanel → design gen → Vercel Blob → Printful mockup → Stripe checkout → Stripe webhook → confirmed Printful order
+- Product catalog: t-shirt (BC3001, 16 real variant IDs verified), 11oz mug, 18×24in poster
+- Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
+- Success: `?order=success` param shows dismissable banner in App.tsx
+- **Pending external setup only** (no code changes needed):
+  - Set `PRINTFUL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Vercel env vars
+  - Register `checkout.session.completed` webhook in Stripe dashboard → `https://periodicnames.com/api/stripe/webhook`
 
 See `docs/phase1-tasks.md` for Phase 1–2 task checklist.
-See `docs/phase3-tasks.md` for full Phase 3 task breakdown.
+See `docs/phase3-tasks.md` for full Phase 3 breakdown and pending setup steps.
