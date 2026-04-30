@@ -157,7 +157,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative max-h-[92vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative flex flex-col h-[600px] max-h-[90vh]"
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
@@ -173,7 +173,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
         {/* Progress bar */}
         {step !== 'error' && (
-          <div className="flex items-center px-6 pt-5 pb-1 pr-12">
+          <div className="flex items-center px-6 pt-5 pb-1 pr-12 shrink-0">
             {PROGRESS_LABELS.map((label, i) => {
               const done = i < progressStep;
               const active = i === progressStep;
@@ -198,7 +198,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           </div>
         )}
 
-        <div className="px-6 pb-6 pt-3">
+        <div className="px-6 pb-6 pt-3 flex-1 overflow-y-auto">
 
           {/* ── Step 1: Design ── */}
           {step === 'design' && (
@@ -351,7 +351,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
           {/* Loading */}
           {step === 'loading' && (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm text-gray-500">{loadingStatus}</p>
             </div>
@@ -371,7 +371,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
           {/* Redirecting */}
           {step === 'redirecting' && (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm text-gray-500">Redirecting to checkout…</p>
             </div>
@@ -379,7 +379,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
           {/* Error */}
           {step === 'error' && (
-            <div className="flex flex-col items-center justify-center py-8 gap-4">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
               <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />

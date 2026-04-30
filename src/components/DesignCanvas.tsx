@@ -18,7 +18,7 @@ interface DesignCanvasProps {
   onCaptionOffsetChange: (o: Offset) => void;
 }
 
-const PREVIEW = 340;
+const PREVIEW = 280;
 const PRINT = 4500;
 const TO_PRINT = PRINT / PREVIEW;
 const PAD = 16;
