@@ -124,7 +124,13 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
       </div>
 
       {isDone && (
-        <div className="mt-6 flex flex-col items-center">
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <p
+            className="text-xs text-slate-500 transition-opacity duration-1000"
+            style={{ opacity: statsVisible ? 1 : 0 }}
+          >
+            {getFunStatsLine(result.realElementsCount, result.totalElements)}
+          </p>
           <div className="flex gap-2">
             <button
               onClick={() => setIsShareModalOpen(true)}
@@ -146,14 +152,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
               </svg>
               Print on merch
             </button>
-          </div>
-          <div className="mt-3 flex flex-col items-center gap-1">
-            <p
-              className="text-xs text-slate-500 transition-opacity duration-1000"
-              style={{ opacity: statsVisible ? 1 : 0 }}
-            >
-              {getFunStatsLine(result.realElementsCount, result.totalElements)}
-            </p>
           </div>
         </div>
       )}
