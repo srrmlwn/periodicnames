@@ -29,8 +29,6 @@ const ELEMENT_POSITIONS: [string, number, number][] = [
   ['Cm', 8, 9], ['Bk', 8, 10], ['Cf', 8, 11], ['Es', 8, 12], ['Fm', 8, 13], ['Md', 8, 14], ['No', 8, 15], ['Lr', 8, 16],
 ];
 
-export type PrintLayout = 'caption-above' | 'caption-below' | 'tiles-only';
-
 export class PrintDesignGenerator {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -43,7 +41,9 @@ export class PrintDesignGenerator {
   async generatePrintDesign(
     result: NameResult,
     customText?: string,
-    printLayout: PrintLayout = 'caption-above',
+    tilesOffset?: { x: number; y: number },
+    captionOffset?: { x: number; y: number },
+    showWatermark = true,
   ): Promise<Blob> {
     await document.fonts.ready;
 
@@ -54,15 +54,14 @@ export class PrintDesignGenerator {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, size, size);
 
-    this.drawPeriodicTableBackground(size, size);
+    if (showWatermark) this.drawPeriodicTableBackground(size, size);
 
     const padding = 300;
-    const hasCaption = !!customText && printLayout !== 'tiles-only';
+    const hasCaption = !!(customText?.trim());
     const captionFontHeight = 200;
-    const captionGap = 120; // space between caption baseline and tile top
+    const captionGap = 120;
     const availableWidth = size - padding * 2;
-    // Reserve caption height when computing max tile size so nothing overflows
-    const tileAvailableHeight = size - padding * 2 - (hasCaption ? captionFontHeight + captionGap : 0);
+    const tileAvailableHeight = size - padding * 2;
 
     const elementLayout = createElementLayout(result);
     const { tileSize, rows, tileGap, wordGap, rowGap } =
@@ -70,18 +69,15 @@ export class PrintDesignGenerator {
 
     const totalTilesHeight = rows.length * tileSize + Math.max(0, rows.length - 1) * rowGap;
 
-    // Center the whole composition (caption + gap + tiles) as one block
-    const compositionHeight = totalTilesHeight + (hasCaption ? captionFontHeight + captionGap : 0);
-    const compositionStartY = padding + Math.max(0, (size - padding * 2 - compositionHeight) / 2);
+    // Tiles centered vertically + free offset
+    const tilesStartY = size / 2 - totalTilesHeight / 2 + (tilesOffset?.y ?? 0);
+    const tilesXShift = tilesOffset?.x ?? 0;
 
-    const tilesStartY = printLayout === 'caption-above' && hasCaption
-      ? compositionStartY + captionFontHeight + captionGap
-      : compositionStartY;
-    const captionY = printLayout === 'caption-above'
-      ? compositionStartY
-      : compositionStartY + totalTilesHeight + captionGap;
+    // Caption defaults below tile group + free offset
+    const captionY = tilesStartY + totalTilesHeight + captionGap + (captionOffset?.y ?? 0);
+    const captionX = size / 2 + (captionOffset?.x ?? 0);
 
-    this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size);
+    this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size, tilesXShift);
 
     if (hasCaption && customText) {
       ctx.font = `600 ${captionFontHeight}px "Nunito", Arial, sans-serif`;
@@ -90,9 +86,9 @@ export class PrintDesignGenerator {
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
       ctx.lineWidth = 12;
       ctx.lineJoin = 'round';
-      ctx.strokeText(customText, size / 2, captionY, availableWidth);
+      ctx.strokeText(customText, captionX, captionY, availableWidth);
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(customText, size / 2, captionY, availableWidth);
+      ctx.fillText(customText, captionX, captionY, availableWidth);
     }
 
     return new Promise(resolve => {
@@ -176,7 +172,8 @@ export class PrintDesignGenerator {
     wordGap: number,
     rowGap: number,
     startY: number,
-    canvasWidth: number
+    canvasWidth: number,
+    xShift = 0,
   ): void {
     rows.forEach((row, ri) => {
       let rowWidth = 0;
@@ -184,7 +181,7 @@ export class PrintDesignGenerator {
         if (wi > 0) rowWidth += wordGap;
         rowWidth += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
       });
-      let x = (canvasWidth - rowWidth) / 2;
+      let x = (canvasWidth - rowWidth) / 2 + xShift;
       const y = startY + ri * (tileSize + rowGap);
       row.forEach((word, wi) => {
         if (wi > 0) x += wordGap;

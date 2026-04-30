@@ -67,23 +67,27 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 
 ---
 
-## Future Work — Drag-and-Drop Design Canvas
+## Design Canvas — Shipped
 
-**Goal:** Replace the fixed layout presets with a fully interactive WYSIWYG canvas inside the print modal, so users can freely reposition the element tiles, caption text, and background toggle before generating the print image.
+**Status: complete on `feat/design-canvas` branch**
 
-**Why it's non-trivial:**
-- The modal preview is ~380px wide; the generated image is 4500×4500px. Accurately mapping drag-and-drop screen coordinates to print canvas coordinates requires a stable scale transform and anchor model.
-- Dragging the _tile group_ as a unit (not individual tiles) is straightforward. Dragging individual tiles would require breaking the layout abstraction in `createElementLayout`.
-- A plain React drag implementation works, but a canvas-native approach (Konva.js or Fabric.js) feels far more responsive and handles multi-touch naturally — at the cost of a real dependency.
+Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML preview inside the print modal. Users drag the tile group and caption text independently before generating the print image.
 
-**Recommended scope when we get here:**
-1. Draggable tile group (all tiles move together) and draggable caption text — two independent handles.
-2. Toggle to show/hide the periodic table watermark background.
-3. Optionally: font size slider for caption.
-4. Keep the preset buttons as starting points; dragging overrides them.
+**Design choices:**
 
-**Implementation sketch:**
-- Add a `<DesignCanvas>` component (React + pointer events, no library) that renders a scaled-down preview of the 4500px canvas.
-- Store `{ tilesOffset: {x, y}, captionOffset: {x, y} }` in `PrintPanel` state.
-- Pass offsets into `PrintDesignGenerator.generatePrintDesign` and apply them at the print scale.
-- The WYSIWYG preview can be a `<canvas>` element re-rendered on every drag event (or an HTML layer with `transform` for responsiveness, then re-render on pointer-up).
+- **HTML-based preview, not canvas.** Tiles rendered as styled `<div>` elements at a computed small size (18–44px). Avoids duplicating the Canvas API drawing logic in `PrintDesignGenerator`; a minor visual discrepancy vs. the final print is acceptable because the Printful mockup always shows the real result.
+
+- **Coordinate model.** The preview is 340px; the print canvas is 4500px. Screen offsets (from drag) are stored in preview-pixels; they're multiplied by `4500/340 ≈ 13.2` to produce the print-space offsets passed to `PrintDesignGenerator`. Default position (zero offset) centers the tile group on the canvas with the caption directly below.
+
+- **Pointer capture.** Each drag handle calls `setPointerCapture` on `pointerdown`, so drag continues smoothly outside the element. `onPointerMove` lives on the container to handle pointer-cancel gracefully.
+
+- **Watermark preview not rendered in HTML.** The periodic table watermark is drawn by the Canvas API in `PrintDesignGenerator`; replicating it faithfully in HTML would require significant extra code. The toggle controls the actual print output; the preview shows a "drag to reposition" hint instead.
+
+- **Tiles default: centered; caption: below tiles.** When no caption is typed, the caption drag handle disappears. Switching products resets both offsets (via React `key` on `DesignCanvas`).
+
+- **`PrintLayout` type removed.** The three preset modes (caption-above / caption-below / tiles-only) are obsoleted by free drag. The layout determination is now purely positional.
+
+**Optional follow-ups:**
+- [ ] Caption font-size slider
+- [ ] Drag individual tiles (would require refactoring `createElementLayout`)
+- [ ] Watermark rendered as a faint SVG or HTML grid in the preview

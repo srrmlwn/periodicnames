@@ -3,14 +3,16 @@ import type { NameResult } from '../types';
 import { PRINT_PRODUCTS } from '../data/printProducts';
 import type { PrintProduct } from '../data/printProducts';
 import { PrintDesignGenerator } from '../utils/PrintDesignGenerator';
-import type { PrintLayout } from '../utils/PrintDesignGenerator';
 import ProductMockup from './ProductMockup';
+import DesignCanvas from './DesignCanvas';
 
 interface PrintPanelProps {
   isOpen: boolean;
   onClose: () => void;
   result: NameResult;
 }
+
+interface Offset { x: number; y: number }
 
 type Step = 'products' | 'variants' | 'loading' | 'mockup' | 'redirecting' | 'error';
 
@@ -19,12 +21,6 @@ const PRODUCT_ICONS: Record<string, string> = {
   mug: '☕',
   poster: '🖼',
 };
-
-const LAYOUT_PRESETS: { value: PrintLayout; label: string }[] = [
-  { value: 'caption-above', label: 'Caption above' },
-  { value: 'caption-below', label: 'Caption below' },
-  { value: 'tiles-only',   label: 'Tiles only' },
-];
 
 const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [step, setStep] = useState<Step>('products');
@@ -36,7 +32,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [designUrl, setDesignUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [customText, setCustomText] = useState('');
-  const [printLayout, setPrintLayout] = useState<PrintLayout>('caption-above');
+  const [tilesOffset, setTilesOffset] = useState<Offset>({ x: 0, y: 0 });
+  const [captionOffset, setCaptionOffset] = useState<Offset>({ x: 0, y: 0 });
+  const [showWatermark, setShowWatermark] = useState(true);
 
   if (!isOpen) return null;
 
@@ -44,6 +42,8 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     setSelectedProduct(product);
     setSelectedVariantId(null);
     setSelectedColor(null);
+    setTilesOffset({ x: 0, y: 0 });
+    setCaptionOffset({ x: 0, y: 0 });
     if (product.slug !== 'tshirt' && product.variants.length > 0) {
       setSelectedVariantId(product.variants[0].id);
     }
@@ -73,7 +73,13 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     const flow = async () => {
       setLoadingStatus('Generating design…');
       const generator = new PrintDesignGenerator();
-      const blob = await generator.generatePrintDesign(result, customText.trim() || undefined, printLayout);
+      const blob = await generator.generatePrintDesign(
+        result,
+        customText.trim() || undefined,
+        tilesOffset,
+        captionOffset,
+        showWatermark,
+      );
 
       setLoadingStatus('Uploading…');
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -239,54 +245,38 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
             {selectedProduct.slug !== 'mug' && (
               <div className="mt-4">
-                <p className="text-xs text-gray-500 font-medium mb-2">Layout</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {LAYOUT_PRESETS.map(({ value, label }) => {
-                    const selected = printLayout === value;
-                    return (
-                      <button
-                        key={value}
-                        onClick={() => setPrintLayout(value)}
-                        className={`flex flex-col items-center gap-2 rounded-xl border-2 py-3 px-2 text-center transition-colors duration-150 ${
-                          selected
-                            ? 'border-slate-800 bg-slate-50'
-                            : 'border-gray-100 hover:border-slate-200'
-                        }`}
-                      >
-                        <div className={`flex flex-col gap-0.5 w-7 ${selected ? 'text-slate-800' : 'text-gray-300'}`}>
-                          {value === 'caption-above' && <>
-                            <div className="h-1.5 rounded bg-current opacity-60" />
-                            <div className="h-4 rounded bg-current" />
-                          </>}
-                          {value === 'caption-below' && <>
-                            <div className="h-4 rounded bg-current" />
-                            <div className="h-1.5 rounded bg-current opacity-60" />
-                          </>}
-                          {value === 'tiles-only' && (
-                            <div className="h-5 rounded bg-current" />
-                          )}
-                        </div>
-                        <span className={`text-[10px] font-semibold leading-tight ${selected ? 'text-slate-800' : 'text-gray-400'}`}>
-                          {label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {selectedProduct.slug !== 'mug' && printLayout !== 'tiles-only' && (
-              <div className="mt-3">
-                <p className="text-xs text-gray-500 font-medium mb-1.5">Caption (optional)</p>
-                <input
-                  type="text"
-                  value={customText}
-                  onChange={e => setCustomText(e.target.value)}
-                  placeholder="My name is…"
-                  maxLength={60}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
+                <DesignCanvas
+                  key={selectedProduct.slug}
+                  result={result}
+                  customText={customText}
+                  onTilesOffsetChange={setTilesOffset}
+                  onCaptionOffsetChange={setCaptionOffset}
                 />
+
+                <div className="mt-3">
+                  <p className="text-xs text-gray-500 font-medium mb-1.5">Caption (optional)</p>
+                  <input
+                    type="text"
+                    value={customText}
+                    onChange={e => setCustomText(e.target.value)}
+                    placeholder="My name is…"
+                    maxLength={60}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
+                  />
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={showWatermark}
+                    onClick={() => setShowWatermark(v => !v)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none ${showWatermark ? 'bg-slate-700' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200 ${showWatermark ? 'translate-x-4' : 'translate-x-1'}`} />
+                  </button>
+                  <span className="text-xs text-gray-500">Periodic table watermark</span>
+                </div>
               </div>
             )}
 

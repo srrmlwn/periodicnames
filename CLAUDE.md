@@ -135,11 +135,12 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
-  PrintDesignGenerator.ts — Canvas API PNG (4500×4500) for print on demand
+  PrintDesignGenerator.ts — Canvas API PNG (4500×4500); accepts tilesOffset/captionOffset/showWatermark; no layout presets
 
 src/components/
   ...
-  PrintPanel.tsx        — print-on-demand modal: product picker → variant selector → mockup flow
+  PrintPanel.tsx        — print-on-demand modal: product picker → variant selector → design canvas → mockup flow
+  DesignCanvas.tsx      — 340×340 WYSIWYG preview; draggable tile group + caption; emits print-space offsets to PrintPanel
   ProductMockup.tsx     — mockup image preview + Order CTA
 
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
@@ -232,7 +233,8 @@ Phase 2 — remaining:
 - OG meta tags for URL link previews
 
 Phase 3 — Print on Demand (**code complete, pending external setup**):
-- Full order flow: PrintPanel → design gen → Vercel Blob → Printful mockup → Stripe checkout (collects address + payment) → Stripe webhook → confirmed Printful order
+- Full order flow: PrintPanel → DesignCanvas (WYSIWYG) → design gen → Vercel Blob → Printful mockup → Stripe checkout → Stripe webhook → confirmed Printful order
+- DesignCanvas: 340×340 HTML preview with draggable tile group + caption; free-position offsets passed to PrintDesignGenerator; watermark toggle
 - Product catalog: t-shirt (BC3001, 16 real variant IDs verified), 11oz mug, 18×24in poster
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
 - Success: `?order=success` param shows dismissable banner in App.tsx
