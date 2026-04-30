@@ -13,7 +13,8 @@ const TILES_START_MS = 2000; // starts after name text finishes fading out
 const TEXT_FADE_IN_END = 700;
 const TEXT_HOLD_END = 1600;
 const TEXT_FADE_OUT_END = 2000;
-const CANVAS_SIZE = 1080;
+const CANVAS_W = 1080;
+const CANVAS_H = 1920;
 const FPS = 30;
 
 // [symbol, row (0-8), col (0-17)]; rows 7-8 are lanthanides/actinides with a half-cell gap below row 6
@@ -69,8 +70,8 @@ export class ShareVideoGenerator {
     await document.fonts.ready;
 
     const canvas = document.createElement('canvas');
-    canvas.width = CANVAS_SIZE;
-    canvas.height = CANVAS_SIZE;
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
 
     const mimeType =
       ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(
@@ -110,10 +111,10 @@ export class ShareVideoGenerator {
     const titleSize = 68;
     const titleY = padding + titleSize;
     const urlSize = 26;
-    const urlBaselineY = CANVAS_SIZE - 40;
+    const urlBaselineY = CANVAS_H - 40;
     const contentTop = titleY + titleSize * 0.2 + 24;
     const contentBottom = urlBaselineY - urlSize - 16;
-    const availableWidth = CANVAS_SIZE - padding * 2;
+    const availableWidth = CANVAS_W - padding * 2;
     const availableHeight = contentBottom - contentTop;
 
     // Responsive tile layout: largest tiles that fit the available space
@@ -140,9 +141,9 @@ export class ShareVideoGenerator {
 
     // Pre-render the faded periodic table background once
     const bgCanvas = document.createElement('canvas');
-    bgCanvas.width = CANVAS_SIZE;
-    bgCanvas.height = CANVAS_SIZE;
-    this.drawPeriodicTableBackground(bgCanvas.getContext('2d')!, CANVAS_SIZE, CANVAS_SIZE);
+    bgCanvas.width = CANVAS_W;
+    bgCanvas.height = CANVAS_H;
+    this.drawPeriodicTableBackground(bgCanvas.getContext('2d')!, CANVAS_W, CANVAS_H);
 
     const tileStarts = new Map<ElementRenderItem, number>();
     let idx = 0;
@@ -157,14 +158,14 @@ export class ShareVideoGenerator {
       const elapsed = now - startEpoch;
 
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
       ctx.drawImage(bgCanvas, 0, 0);
 
       ctx.font = `700 ${titleSize}px "Nunito", Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = '#64748b';
-      ctx.fillText('Periodic Names', CANVAS_SIZE / 2, titleY);
+      ctx.fillText('Periodic Names', CANVAS_W / 2, titleY);
 
       // Text intro phase
       const nameOpacity = elapsed < TEXT_FADE_IN_END
@@ -191,7 +192,7 @@ export class ShareVideoGenerator {
           if (wi > 0) rowWidth += wordGap;
           rowWidth += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
         });
-        let x = (CANVAS_SIZE - rowWidth) / 2;
+        let x = (CANVAS_W - rowWidth) / 2;
         const y = tilesStartY + ri * (tileSize + rowGap);
         row.forEach((word, wi) => {
           if (wi > 0) x += wordGap;
@@ -209,7 +210,7 @@ export class ShareVideoGenerator {
       ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(`periodicnames.com/${slug}`, CANVAS_SIZE / 2, urlBaselineY);
+      ctx.fillText(`periodicnames.com/${slug}`, CANVAS_W / 2, urlBaselineY);
 
       onProgress?.(Math.min(1, elapsed / totalDuration));
 
@@ -270,7 +271,7 @@ export class ShareVideoGenerator {
 
     ctx.save();
     ctx.globalAlpha = opacity;
-    ctx.translate(CANVAS_SIZE / 2, centerY);
+    ctx.translate(CANVAS_W / 2, centerY);
     ctx.scale(scale, scale);
 
     let x = -totalWidth / 2;

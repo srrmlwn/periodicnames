@@ -1,6 +1,7 @@
 import type { NameResult } from './index';
 
-export type SharePlatform = 'x' | 'instagram' | 'story';
+export type ImagePlatform = 'x' | 'instagram' | 'story';
+export type SharePlatform = ImagePlatform | 'reel';
 
 export interface ShareButtonProps {
   platform: SharePlatform;
@@ -21,4 +22,4 @@ export interface ShareEvent {
   userAgent: string;
   customMessage?: string;
   imageGenerated: boolean;
-} 
+}
