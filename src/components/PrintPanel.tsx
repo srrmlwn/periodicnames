@@ -197,28 +197,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                   type="text"
                   value={customText}
                   onChange={e => setCustomText(e.target.value)}
-                  placeholder="Add a caption (optional)"
+                  placeholder="e.g. Born to be periodic"
                   maxLength={60}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
-                />
-              </div>
-
-              {/* Position */}
-              <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4M8 15l4 4 4-4" />
-                  </svg>
-                  Position
-                </p>
-                <DesignCanvas
-                  result={result}
-                  customText={customText}
-                  showWatermark={showWatermark}
-                  initialTilesOff={tilesOffset}
-                  initialCaptionOff={captionOffset}
-                  onTilesOffsetChange={setTilesOffset}
-                  onCaptionOffsetChange={setCaptionOffset}
                 />
               </div>
 
@@ -240,6 +221,25 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                 >
                   <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200 ${showWatermark ? 'translate-x-4' : 'translate-x-1'}`} />
                 </button>
+              </div>
+
+              {/* Position */}
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                  </svg>
+                  Position
+                </p>
+                <DesignCanvas
+                  result={result}
+                  customText={customText}
+                  showWatermark={showWatermark}
+                  initialTilesOff={tilesOffset}
+                  initialCaptionOff={captionOffset}
+                  onTilesOffsetChange={setTilesOffset}
+                  onCaptionOffsetChange={setCaptionOffset}
+                />
               </div>
 
               <button
