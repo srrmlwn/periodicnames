@@ -139,11 +139,11 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
               Print on merch
             </button>
           </div>
-          <p className="text-xs text-slate-400 italic">
+          <p className="text-xs text-slate-500">
             {getFunStatsLine(result.realElementsCount, result.totalElements)}
           </p>
           {result.fakeElements.some(fe => fe.symbol !== ' ') && (
-            <p className="text-xs text-slate-400">* fictional element</p>
+            <p className="text-xs text-slate-400 italic">* fictional element</p>
           )}
         </div>
       )}

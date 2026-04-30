@@ -56,7 +56,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             onChange={(e) => setName(e.target.value.slice(0, MAX_CHARS))}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full px-4 pr-12 py-2.5 text-center bg-white border-2 border-slate-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out placeholder:text-slate-400"
+            className="w-full px-4 pr-12 py-2.5 bg-white border-2 border-slate-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out placeholder:text-slate-400"
           />
           {name.length >= MAX_CHARS - 6 && !hasResult && (
             <span className={`absolute left-3 -bottom-5 text-xs ${name.length >= MAX_CHARS ? 'text-red-500' : 'text-slate-400'}`}>

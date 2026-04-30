@@ -106,7 +106,7 @@ export function matchNameToElements(name: string): NameResult {
     }
   });
 
-  result.totalElements = result.elements.length + result.fakeElements.length;
+  result.totalElements = result.elements.length + result.fakeElements.filter(fe => fe.symbol !== ' ').length;
 
   return result;
 }
