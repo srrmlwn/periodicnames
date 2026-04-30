@@ -360,7 +360,12 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         {/* Hint — fades once user drags */}
         {!hasMoved && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-            <span className="text-[10px] text-gray-300 font-medium tracking-wide">drag to reposition</span>
+            <span className="flex items-center gap-1 text-[10px] text-gray-400 font-medium tracking-wide bg-white/70 rounded-full px-2 py-0.5">
+              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+              </svg>
+              drag to reposition
+            </span>
           </div>
         )}
       </div>
