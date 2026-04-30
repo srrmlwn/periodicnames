@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { NameResult } from '../types';
 import { PRINT_PRODUCTS } from '../data/printProducts';
-import type { PrintProduct } from '../data/printProducts';
 import { PrintDesignGenerator } from '../utils/PrintDesignGenerator';
 import ProductMockup from './ProductMockup';
 import DesignCanvas from './DesignCanvas';
@@ -14,19 +13,14 @@ interface PrintPanelProps {
 
 interface Offset { x: number; y: number }
 
-type Step = 'design' | 'product' | 'variants' | 'loading' | 'mockup' | 'redirecting' | 'error';
+type Step = 'design' | 'variants' | 'loading' | 'mockup' | 'redirecting' | 'error';
 
-const PROGRESS_LABELS = ['Design', 'Product', 'Options', 'Preview'] as const;
+const PROGRESS_LABELS = ['Design', 'Customize', 'Preview'] as const;
 
-const PRODUCT_ICONS: Record<string, string> = {
-  tshirt: '👕',
-  mug: '☕',
-  poster: '🖼',
-};
+const PRODUCT = PRINT_PRODUCTS[0];
 
 const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [step, setStep] = useState<Step>('design');
-  const [selectedProduct, setSelectedProduct] = useState<PrintProduct | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>('');
@@ -40,7 +34,17 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   if (!isOpen) return null;
 
-  const startPreview = (product: PrintProduct, variantId: number) => {
+  const uniqueColors = [...new Set(
+    PRODUCT.variants.map(v => v.color).filter((c): c is string => c !== undefined)
+  )];
+
+  const sizesForColor = selectedColor
+    ? PRODUCT.variants.filter(v => v.color === selectedColor)
+    : [];
+
+  const canPreview = selectedVariantId !== null;
+
+  const startPreview = (variantId: number) => {
     setStep('loading');
     const flow = async () => {
       setLoadingStatus('Creating your design…');
@@ -75,10 +79,10 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productId: product.id,
+          productId: PRODUCT.id,
           variantIds: [variantId],
           designUrl: uploadedDesignUrl,
-          placement: product.designPlacement,
+          placement: PRODUCT.designPlacement,
         }),
       });
       if (!mockupRes.ok) throw new Error('Mockup generation failed');
@@ -94,59 +98,24 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     });
   };
 
-  // Non-tshirt products have no options — skip straight to loading
-  const handleSelectProduct = (product: PrintProduct) => {
-    setSelectedProduct(product);
-    setSelectedColor(null);
-    if (product.slug !== 'tshirt') {
-      const variantId = product.variants[0].id;
-      setSelectedVariantId(variantId);
-      startPreview(product, variantId);
-    } else {
-      setSelectedVariantId(null);
-      setStep('variants');
-    }
-  };
-
   const handlePreview = () => {
-    if (!selectedProduct) return;
-    startPreview(selectedProduct, selectedVariantId ?? selectedProduct.variants[0].id);
+    if (selectedVariantId === null) return;
+    startPreview(selectedVariantId);
   };
-
-  const progressStep =
-    step === 'design' ? 0 :
-    step === 'product' ? 1 :
-    step === 'variants' ? 2 : 3;
-
-  const uniqueColors = selectedProduct
-    ? [...new Set(
-        selectedProduct.variants
-          .map(v => v.color)
-          .filter((c): c is string => c !== undefined)
-      )]
-    : [];
-
-  const sizesForColor = selectedColor && selectedProduct
-    ? selectedProduct.variants.filter(v => v.color === selectedColor)
-    : [];
-
-  const canPreview =
-    selectedProduct !== null &&
-    (selectedProduct.slug !== 'tshirt' || selectedVariantId !== null);
 
   const handleCheckout = async () => {
-    if (!selectedProduct || !selectedVariantId || !designUrl) return;
+    if (selectedVariantId === null || !designUrl) return;
     setStep('redirecting');
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productName: selectedProduct.name,
-          productId: selectedProduct.id,
+          productName: PRODUCT.name,
+          productId: PRODUCT.id,
           variantId: selectedVariantId,
           designUrl,
-          priceUsd: selectedProduct.priceUsd,
+          priceUsd: PRODUCT.priceUsd,
         }),
       });
       if (!res.ok) throw new Error('Checkout session creation failed');
@@ -158,13 +127,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     }
   };
 
-  const designSummary = (
-    <div className="mb-4 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-      <span className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold shrink-0">Your design</span>
-      <span className="text-xs text-gray-700 font-medium truncate">{result.originalName}</span>
-      <span className="text-[10px] text-gray-400 ml-auto shrink-0">{result.totalElements} elements</span>
-    </div>
-  );
+  const progressStep =
+    step === 'design' ? 0 :
+    step === 'variants' ? 1 : 2;
 
   return (
     <div
@@ -218,7 +183,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           {/* ── Step 1: Design ── */}
           {step === 'design' && (
             <div className="space-y-3">
-              <h2 className="text-base font-bold text-gray-800">Design your merch</h2>
+              <h2 className="text-base font-bold text-gray-800">Design your t-shirt</h2>
 
               <input
                 type="text"
@@ -253,18 +218,18 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               </div>
 
               <button
-                onClick={() => setStep('product')}
+                onClick={() => setStep('variants')}
                 className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-colors duration-150"
               >
-                Next — choose product →
+                Next — pick size & color →
               </button>
             </div>
           )}
 
-          {/* ── Step 2: Product ── */}
-          {step === 'product' && (
-            <div>
-              <div className="flex items-center gap-2 mb-4">
+          {/* ── Step 2: Customize ── */}
+          {step === 'variants' && (
+            <>
+              <div className="flex items-center gap-2 mb-5">
                 <button
                   onClick={() => setStep('design')}
                   className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-sm flex items-center gap-0.5"
@@ -272,41 +237,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                   <span className="text-xl leading-none">‹</span>
                   <span>Design</span>
                 </button>
-                <h2 className="text-base font-bold text-gray-800 ml-1">Choose a product</h2>
+                <h2 className="text-base font-bold text-gray-800 ml-1">Size & color</h2>
+                <span className="ml-auto text-sm font-semibold text-gray-500">${PRODUCT.priceUsd.toFixed(2)}</span>
               </div>
-              {designSummary}
-              <div className="grid grid-cols-3 gap-3">
-                {PRINT_PRODUCTS.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSelectProduct(product)}
-                    className="rounded-xl border-2 border-gray-100 hover:border-slate-300 p-4 cursor-pointer text-center transition-colors"
-                  >
-                    <div className="text-2xl mb-2">{PRODUCT_ICONS[product.slug] ?? '📦'}</div>
-                    <p className="text-xs font-semibold text-gray-800">{product.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">${product.priceUsd.toFixed(2)}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 3: Customize (t-shirt only) ── */}
-          {step === 'variants' && selectedProduct && (
-            <>
-              <div className="flex items-center gap-2 mb-4">
-                <button
-                  onClick={() => setStep('product')}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-sm flex items-center gap-0.5"
-                >
-                  <span className="text-xl leading-none">‹</span>
-                  <span>Products</span>
-                </button>
-                <h2 className="text-base font-bold text-gray-800 ml-1">{selectedProduct.name}</h2>
-                <span className="ml-auto text-sm font-semibold text-gray-500">${selectedProduct.priceUsd.toFixed(2)}</span>
-              </div>
-
-              {designSummary}
 
               <div className="space-y-4">
                 <div>
@@ -376,12 +309,12 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           )}
 
           {/* Mockup */}
-          {step === 'mockup' && selectedProduct && selectedVariantId !== null && mockupUrl && (
+          {step === 'mockup' && selectedVariantId !== null && mockupUrl && (
             <ProductMockup
               mockupUrl={mockupUrl}
-              product={selectedProduct}
+              product={PRODUCT}
               variantId={selectedVariantId}
-              onBack={() => setStep(selectedProduct.slug !== 'tshirt' ? 'product' : 'variants')}
+              onBack={() => setStep('variants')}
               onOrder={handleCheckout}
               isOrdering={false}
             />
@@ -404,9 +337,9 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               </svg>
               <p className="text-sm text-gray-600 text-center">{errorMessage}</p>
               <div className="flex flex-col items-center gap-2">
-                {selectedProduct && selectedVariantId && (
+                {selectedVariantId !== null && (
                   <button
-                    onClick={() => startPreview(selectedProduct!, selectedVariantId!)}
+                    onClick={() => startPreview(selectedVariantId)}
                     className="px-5 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-colors duration-150"
                   >
                     Try again

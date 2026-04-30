@@ -22,23 +22,22 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 - `api/stripe/webhook.ts` — verifies Stripe signature (raw body, no body-parser), creates confirmed Printful order on `checkout.session.completed`; forwards customer email to Printful for shipping notifications
 
 ### Product catalog
-- `src/data/printProducts.ts` — 3 products with verified real Printful variant IDs:
+- `src/data/printProducts.ts` — 1 active product:
   - T-shirt (BC3001, product 71): White/Black/Navy/Athletic Heather × S/M/L/XL (16 variants, IDs confirmed via API)
-  - Mug (product 19): 11oz white, variant ID 1320
-  - Poster (product 1): 18×24in matte, variant ID 1
+- Mug and poster removed: square 4500×4500 design doesn't suit the mug's landscape wrap area; the default Printful mockup shows a partial/angled view. Both need product-specific canvas sizing and mockup style selection before they're shippable.
 
 ### UI
-- `src/components/PrintPanel.tsx` — product picker → variant picker → layout presets → design gen → upload → mockup → Stripe checkout (no address form; Stripe collects it)
-- `src/components/ProductMockup.tsx` — mockup image + Buy CTA
+- `src/components/PrintPanel.tsx` — 3-step flow: Design → Customize (size & color) → Preview; single product (t-shirt), no product picker step
+- `src/components/ProductMockup.tsx` — mockup image with click-to-enlarge lightbox + Buy CTA + Printful reassurance line
 - `src/components/ResultDisplay.tsx` — "Print on merch" button wired, opens PrintPanel in `done` phase
 - `src/App.tsx` — detects `?order=success` on load, shows dismissable green success banner, clears param from URL
 
 ### Order flow (end-to-end)
-1. User picks product + variant → "Preview"
+1. User designs t-shirt (caption, drag to reposition, watermark toggle) → picks color + size
 2. `PrintDesignGenerator` renders 4500×4500px canvas client-side
 3. `POST /api/print/upload` → Vercel Blob → `designUrl`
 4. `POST /api/print/mockup` → Printful mockup task (polls ~5–15s) → `mockupUrl`
-5. User sees mockup → clicks "Buy" → `POST /api/stripe/checkout` → redirect to Stripe hosted checkout
+5. User sees mockup (click to enlarge) → clicks "Buy" → `POST /api/stripe/checkout` → redirect to Stripe hosted checkout
 6. Stripe collects shipping address (US only) + payment
 7. User redirected back to `/?order=success`; success banner shown
 8. Stripe fires `checkout.session.completed` → `api/stripe/webhook` → reads address from `session.shipping_details` → confirmed Printful order with `type:'front'` file + customer email forwarded
@@ -61,9 +60,11 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 
 ## Optional / Polish (post-launch)
 
-- [ ] Design caching — skip re-upload if user previews same product twice
+- [ ] Design caching — skip re-upload if user previews same design twice
 - [ ] Live price fetch from Printful catalog
 - [ ] Color accuracy pass against real printed samples
+- [ ] Mug support — needs landscape canvas (≈2400×900px) + front-facing Printful mockup style ID
+- [ ] Poster support — needs portrait canvas + mockup style investigation
 
 ---
 

@@ -8,7 +8,7 @@ export interface PrintVariant {
 export interface PrintProduct {
   id: number;
   name: string;
-  slug: 'tshirt' | 'mug' | 'poster';
+  slug: string;
   description: string;
   priceUsd: number;
   variants: PrintVariant[];
@@ -24,14 +24,14 @@ const TSHIRT_VARIANTS: PrintVariant[] = [
   { id: 4017, label: 'Black / M',  color: '#1a1a1a', size: 'M' },
   { id: 4018, label: 'Black / L',  color: '#1a1a1a', size: 'L' },
   { id: 4019, label: 'Black / XL', color: '#1a1a1a', size: 'XL' },
-  { id: 4111, label: 'Navy / S',              color: '#1a2a4a', size: 'S' },
-  { id: 4112, label: 'Navy / M',              color: '#1a2a4a', size: 'M' },
-  { id: 4113, label: 'Navy / L',              color: '#1a2a4a', size: 'L' },
-  { id: 4114, label: 'Navy / XL',             color: '#1a2a4a', size: 'XL' },
-  { id: 6948, label: 'Athletic Heather / S',  color: '#cececc', size: 'S' },
-  { id: 6949, label: 'Athletic Heather / M',  color: '#cececc', size: 'M' },
-  { id: 6950, label: 'Athletic Heather / L',  color: '#cececc', size: 'L' },
-  { id: 6951, label: 'Athletic Heather / XL', color: '#cececc', size: 'XL' },
+  { id: 4111, label: 'Navy / S',             color: '#1a2a4a', size: 'S' },
+  { id: 4112, label: 'Navy / M',             color: '#1a2a4a', size: 'M' },
+  { id: 4113, label: 'Navy / L',             color: '#1a2a4a', size: 'L' },
+  { id: 4114, label: 'Navy / XL',            color: '#1a2a4a', size: 'XL' },
+  { id: 6948, label: 'Athletic Heather / S', color: '#cececc', size: 'S' },
+  { id: 6949, label: 'Athletic Heather / M', color: '#cececc', size: 'M' },
+  { id: 6950, label: 'Athletic Heather / L', color: '#cececc', size: 'L' },
+  { id: 6951, label: 'Athletic Heather / XL',color: '#cececc', size: 'XL' },
 ];
 
 export const PRINT_PRODUCTS: PrintProduct[] = [
@@ -43,28 +43,6 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     priceUsd: 29.99,
     variants: TSHIRT_VARIANTS,
     designPlacement: 'front',
-  },
-  {
-    id: 19,
-    name: '11oz Mug',
-    slug: 'mug',
-    description: '11oz ceramic mug, dishwasher safe.',
-    priceUsd: 22.99,
-    variants: [
-      { id: 1320, label: 'White', color: '#FFFFFF' },
-    ],
-    designPlacement: 'default',
-  },
-  {
-    id: 1,
-    name: 'Poster',
-    slug: 'poster',
-    description: '18×24in matte poster, museum-quality print.',
-    priceUsd: 32.99,
-    variants: [
-      { id: 1, label: 'Matte / 18×24in' },
-    ],
-    designPlacement: 'default',
   },
 ];
 

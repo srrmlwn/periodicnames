@@ -127,7 +127,7 @@ src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
-  printProducts.ts     — PRINT_PRODUCTS catalog + getPrintProduct(slug); PrintProduct/PrintVariant types
+  printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only; mug/poster removed pending design work) + getPrintProduct(slug); PrintProduct/PrintVariant types
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
@@ -139,9 +139,9 @@ src/utils/
 
 src/components/
   ...
-  PrintPanel.tsx        — print-on-demand modal: product picker → variant selector → design canvas → mockup flow
-  DesignCanvas.tsx      — 340×340 WYSIWYG preview; draggable tile group + caption; emits print-space offsets to PrintPanel
-  ProductMockup.tsx     — mockup image preview + Order CTA
+  PrintPanel.tsx        — print-on-demand modal: 3-step flow (Design → Customize → Preview) for t-shirt only; no product picker
+  DesignCanvas.tsx      — 280×280 WYSIWYG preview; draggable tile group + caption; emits print-space offsets to PrintPanel
+  ProductMockup.tsx     — mockup image with click-to-enlarge lightbox + Buy CTA + Printful reassurance line
 
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
@@ -232,10 +232,11 @@ Phase 2 — remaining:
 - `navigator.share({ files })` Web Share API for mobile native share
 - OG meta tags for URL link previews
 
-Phase 3 — Print on Demand (**code complete, pending external setup**):
-- Full order flow: PrintPanel → DesignCanvas (WYSIWYG) → design gen → Vercel Blob → Printful mockup → Stripe checkout → Stripe webhook → confirmed Printful order
-- DesignCanvas: 340×340 HTML preview with draggable tile group + caption; free-position offsets passed to PrintDesignGenerator; watermark toggle
-- Product catalog: t-shirt (BC3001, 16 real variant IDs verified), 11oz mug, 18×24in poster
+Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setup**):
+- Flow: Design → Customize (color + size) → Preview mockup → Stripe checkout → confirmed Printful order
+- DesignCanvas: 280×280 HTML WYSIWYG preview; draggable tile group + caption; watermark toggle
+- Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
+- ProductMockup: click-to-enlarge lightbox, reassurance copy under Buy button
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
 - Success: `?order=success` param shows dismissable banner in App.tsx
 - **Pending external setup only** (no code changes needed):
