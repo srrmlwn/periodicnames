@@ -40,14 +40,77 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   if (!isOpen) return null;
 
+  const startPreview = (product: PrintProduct, variantId: number) => {
+    setStep('loading');
+    const flow = async () => {
+      setLoadingStatus('Creating your design…');
+      const generator = new PrintDesignGenerator();
+      const blob = await generator.generatePrintDesign(
+        result,
+        customText.trim() || undefined,
+        tilesOffset,
+        captionOffset,
+        showWatermark,
+      );
+
+      setLoadingStatus('Sending to printer…');
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const uploadRes = await fetch('/api/print/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl }),
+      });
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const { url: uploadedDesignUrl } = await uploadRes.json() as { url: string };
+      setDesignUrl(uploadedDesignUrl);
+
+      setLoadingStatus('Generating preview…');
+      const mockupRes = await fetch('/api/print/mockup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          variantIds: [variantId],
+          designUrl: uploadedDesignUrl,
+          placement: product.designPlacement,
+        }),
+      });
+      if (!mockupRes.ok) throw new Error('Mockup generation failed');
+      const { mockups } = await mockupRes.json() as { mockups: { variantId: number; mockupUrl: string }[] };
+
+      setMockupUrl(mockups[0]?.mockupUrl ?? null);
+      setStep('mockup');
+    };
+
+    flow().catch(err => {
+      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong');
+      setStep('error');
+    });
+  };
+
+  // Non-tshirt products have no options — skip straight to loading
   const handleSelectProduct = (product: PrintProduct) => {
     setSelectedProduct(product);
-    setSelectedVariantId(null);
     setSelectedColor(null);
-    if (product.slug !== 'tshirt' && product.variants.length > 0) {
-      setSelectedVariantId(product.variants[0].id);
+    if (product.slug !== 'tshirt') {
+      const variantId = product.variants[0].id;
+      setSelectedVariantId(variantId);
+      startPreview(product, variantId);
+    } else {
+      setSelectedVariantId(null);
+      setStep('variants');
     }
-    setStep('variants');
+  };
+
+  const handlePreview = () => {
+    if (!selectedProduct) return;
+    startPreview(selectedProduct, selectedVariantId ?? selectedProduct.variants[0].id);
   };
 
   const progressStep =
@@ -70,62 +133,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const canPreview =
     selectedProduct !== null &&
     (selectedProduct.slug !== 'tshirt' || selectedVariantId !== null);
-
-  const handlePreview = () => {
-    if (!selectedProduct) return;
-    setStep('loading');
-
-    const flow = async () => {
-      setLoadingStatus('Generating design…');
-      const generator = new PrintDesignGenerator();
-      const blob = await generator.generatePrintDesign(
-        result,
-        customText.trim() || undefined,
-        tilesOffset,
-        captionOffset,
-        showWatermark,
-      );
-
-      setLoadingStatus('Uploading…');
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-
-      const uploadRes = await fetch('/api/print/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataUrl }),
-      });
-      if (!uploadRes.ok) throw new Error('Upload failed');
-      const { url: uploadedDesignUrl } = await uploadRes.json() as { url: string };
-      setDesignUrl(uploadedDesignUrl);
-
-      setLoadingStatus('Generating mockup…');
-      const mockupRes = await fetch('/api/print/mockup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: selectedProduct.id,
-          variantIds: [selectedVariantId ?? selectedProduct.variants[0].id],
-          designUrl: uploadedDesignUrl,
-          placement: selectedProduct.designPlacement,
-        }),
-      });
-      if (!mockupRes.ok) throw new Error('Mockup generation failed');
-      const { mockups } = await mockupRes.json() as { mockups: { variantId: number; mockupUrl: string }[] };
-
-      setMockupUrl(mockups[0]?.mockupUrl ?? null);
-      setStep('mockup');
-    };
-
-    flow().catch(err => {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong');
-      setStep('error');
-    });
-  };
 
   const handleCheckout = async () => {
     if (!selectedProduct || !selectedVariantId || !designUrl) return;
@@ -150,6 +157,14 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
       setStep('error');
     }
   };
+
+  const designSummary = (
+    <div className="mb-4 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+      <span className="text-[10px] text-gray-400 uppercase tracking-wide font-semibold shrink-0">Your design</span>
+      <span className="text-xs text-gray-700 font-medium truncate">{result.originalName}</span>
+      <span className="text-[10px] text-gray-400 ml-auto shrink-0">{result.totalElements} elements</span>
+    </div>
+  );
 
   return (
     <div
@@ -205,17 +220,14 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             <div className="space-y-3">
               <h2 className="text-base font-bold text-gray-800">Design your merch</h2>
 
-              <div>
-                <p className="text-xs text-gray-500 font-medium mb-1.5">Caption <span className="font-normal">(optional)</span></p>
-                <input
-                  type="text"
-                  value={customText}
-                  onChange={e => setCustomText(e.target.value)}
-                  placeholder="e.g. My name is…"
-                  maxLength={60}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
-                />
-              </div>
+              <input
+                type="text"
+                value={customText}
+                onChange={e => setCustomText(e.target.value)}
+                placeholder="Add a caption (optional)"
+                maxLength={60}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
+              />
 
               <DesignCanvas
                 result={result}
@@ -237,7 +249,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                 >
                   <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200 ${showWatermark ? 'translate-x-4' : 'translate-x-1'}`} />
                 </button>
-                <span className="text-xs text-gray-500">Periodic table watermark</span>
+                <span className="text-xs text-gray-500">Show background table</span>
               </div>
 
               <button
@@ -255,12 +267,14 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               <div className="flex items-center gap-2 mb-4">
                 <button
                   onClick={() => setStep('design')}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-xl leading-none"
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-sm flex items-center gap-0.5"
                 >
-                  ‹
+                  <span className="text-xl leading-none">‹</span>
+                  <span>Design</span>
                 </button>
-                <h2 className="text-base font-bold text-gray-800">Choose a product</h2>
+                <h2 className="text-base font-bold text-gray-800 ml-1">Choose a product</h2>
               </div>
+              {designSummary}
               <div className="grid grid-cols-3 gap-3">
                 {PRINT_PRODUCTS.map(product => (
                   <button
@@ -277,63 +291,62 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             </div>
           )}
 
-          {/* ── Step 3: Customize ── */}
+          {/* ── Step 3: Customize (t-shirt only) ── */}
           {step === 'variants' && selectedProduct && (
             <>
               <div className="flex items-center gap-2 mb-4">
                 <button
                   onClick={() => setStep('product')}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-xl leading-none"
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-150 text-sm flex items-center gap-0.5"
                 >
-                  ‹
+                  <span className="text-xl leading-none">‹</span>
+                  <span>Products</span>
                 </button>
-                <h2 className="text-base font-bold text-gray-800">{selectedProduct.name}</h2>
+                <h2 className="text-base font-bold text-gray-800 ml-1">{selectedProduct.name}</h2>
                 <span className="ml-auto text-sm font-semibold text-gray-500">${selectedProduct.priceUsd.toFixed(2)}</span>
               </div>
 
-              {selectedProduct.slug === 'tshirt' ? (
-                <div className="space-y-4">
+              {designSummary}
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-2">Color</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {uniqueColors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => { setSelectedColor(color); setSelectedVariantId(null); }}
+                        className={`w-6 h-6 rounded-full border-2 transition-all duration-150 ${
+                          selectedColor === color ? 'border-slate-800 scale-110' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        aria-label={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {selectedColor && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium mb-2">Color</p>
+                    <p className="text-xs text-gray-500 font-medium mb-2">Size</p>
                     <div className="flex gap-2 flex-wrap">
-                      {uniqueColors.map(color => (
+                      {sizesForColor.map(variant => (
                         <button
-                          key={color}
-                          onClick={() => { setSelectedColor(color); setSelectedVariantId(null); }}
-                          className={`w-6 h-6 rounded-full border-2 transition-all duration-150 ${
-                            selectedColor === color ? 'border-slate-800 scale-110' : 'border-gray-300'
+                          key={variant.id}
+                          onClick={() => setSelectedVariantId(variant.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-colors duration-150 ${
+                            selectedVariantId === variant.id
+                              ? 'bg-slate-800 text-white border-slate-800'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300'
                           }`}
-                          style={{ backgroundColor: color }}
-                          aria-label={color}
-                        />
+                        >
+                          {variant.size ?? variant.label}
+                        </button>
                       ))}
                     </div>
                   </div>
-
-                  {selectedColor && (
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium mb-2">Size</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {sizesForColor.map(variant => (
-                          <button
-                            key={variant.id}
-                            onClick={() => setSelectedVariantId(variant.id)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-colors duration-150 ${
-                              selectedVariantId === variant.id
-                                ? 'bg-slate-800 text-white border-slate-800'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300'
-                            }`}
-                          >
-                            {variant.size ?? variant.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="py-3 text-sm text-gray-500">Ready to preview — no options needed.</p>
-              )}
+                )}
+              </div>
 
               <button
                 onClick={handlePreview}
@@ -353,7 +366,12 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           {step === 'loading' && (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">{loadingStatus}</p>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">{loadingStatus}</p>
+                {loadingStatus.includes('preview') && (
+                  <p className="text-xs text-gray-400 mt-1">This usually takes about 10 seconds</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -363,7 +381,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
               mockupUrl={mockupUrl}
               product={selectedProduct}
               variantId={selectedVariantId}
-              onBack={() => setStep('variants')}
+              onBack={() => setStep(selectedProduct.slug !== 'tshirt' ? 'product' : 'variants')}
               onOrder={handleCheckout}
               isOrdering={false}
             />
@@ -385,12 +403,22 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                   d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               </svg>
               <p className="text-sm text-gray-600 text-center">{errorMessage}</p>
-              <button
-                onClick={() => setStep('variants')}
-                className="px-5 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-colors duration-150"
-              >
-                Try again
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                {selectedProduct && selectedVariantId && (
+                  <button
+                    onClick={() => startPreview(selectedProduct!, selectedVariantId!)}
+                    className="px-5 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-colors duration-150"
+                  >
+                    Try again
+                  </button>
+                )}
+                <button
+                  onClick={() => setStep('design')}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                >
+                  Start over
+                </button>
+              </div>
             </div>
           )}
 

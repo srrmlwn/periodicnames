@@ -368,7 +368,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       <button
         type="button"
         onClick={reset}
-        className="mt-1.5 text-[11px] text-gray-400 hover:text-gray-600 transition-colors duration-150"
+        className="mt-1.5 text-[12px] text-gray-500 hover:text-gray-700 transition-colors duration-150"
       >
         Reset layout
       </button>

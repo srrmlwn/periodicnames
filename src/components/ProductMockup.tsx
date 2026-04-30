@@ -52,6 +52,9 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
       >
         Buy — ${product.priceUsd.toFixed(2)}
       </button>
+      <p className="text-center text-[10px] text-gray-400 mt-2">
+        Printed & shipped by Printful · Ships in 3–5 days
+      </p>
     </>
   );
 };
