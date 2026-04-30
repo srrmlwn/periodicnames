@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { NameResult } from '../types';
 import { PRINT_PRODUCTS } from '../data/printProducts';
 import { PrintDesignGenerator } from '../utils/PrintDesignGenerator';
@@ -19,6 +19,15 @@ const PROGRESS_LABELS = ['Design', 'Customize', 'Preview'] as const;
 
 const PRODUCT = PRINT_PRODUCTS[0];
 
+const CAPTION_PLACEHOLDERS = [
+  'e.g. Born to be periodic',
+  'e.g. Elementally yours',
+  'e.g. Made of stardust',
+  'e.g. Periodic and proud',
+  'e.g. The element of surprise',
+  'e.g. My name is science',
+];
+
 const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [step, setStep] = useState<Step>('design');
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
@@ -31,6 +40,16 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [tilesOffset, setTilesOffset] = useState<Offset>({ x: 0, y: 0 });
   const [captionOffset, setCaptionOffset] = useState<Offset>({ x: 0, y: 0 });
   const [showWatermark, setShowWatermark] = useState(true);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+
+  useEffect(() => {
+    if (!isOpen || customText || step !== 'design') return;
+    const id = setInterval(
+      () => setPlaceholderIdx(i => (i + 1) % CAPTION_PLACEHOLDERS.length),
+      2500,
+    );
+    return () => clearInterval(id);
+  }, [isOpen, customText, step]);
 
   if (!isOpen) return null;
 
@@ -197,7 +216,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                   type="text"
                   value={customText}
                   onChange={e => setCustomText(e.target.value)}
-                  placeholder="e.g. Born to be periodic"
+                  placeholder={CAPTION_PLACEHOLDERS[placeholderIdx]}
                   maxLength={60}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
                 />
