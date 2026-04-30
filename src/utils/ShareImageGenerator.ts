@@ -1,5 +1,5 @@
 import type { NameResult } from '../types';
-import type { SharePlatform } from '../types/sharing';
+import type { ImagePlatform } from '../types/sharing';
 import type { Element } from '../data/elements';
 import { getAllElements } from '../data/elements';
 import { getDimensions } from '../templates/imageTemplates';
@@ -40,28 +40,28 @@ export class ShareImageGenerator {
     this.ctx = this.canvas.getContext('2d')!;
   }
 
-  async generateXImage(result: NameResult): Promise<Blob> {
+  async generateXImage(result: NameResult, caption?: string, showWatermark = true): Promise<Blob> {
     const { width, height } = getDimensions('x');
     this.canvas.width = width;
     this.canvas.height = height;
-    return this.render(result, 'x');
+    return this.render(result, 'x', caption, showWatermark);
   }
 
-  async generateInstagramImage(result: NameResult): Promise<Blob> {
+  async generateInstagramImage(result: NameResult, caption?: string, showWatermark = true): Promise<Blob> {
     const { width, height } = getDimensions('instagram');
     this.canvas.width = width;
     this.canvas.height = height;
-    return this.render(result, 'instagram');
+    return this.render(result, 'instagram', caption, showWatermark);
   }
 
-  async generateStoryImage(result: NameResult): Promise<Blob> {
+  async generateStoryImage(result: NameResult, caption?: string, showWatermark = true): Promise<Blob> {
     const { width, height } = getDimensions('story');
     this.canvas.width = width;
     this.canvas.height = height;
-    return this.render(result, 'story');
+    return this.render(result, 'story', caption, showWatermark);
   }
 
-  private async render(result: NameResult, platform: SharePlatform): Promise<Blob> {
+  private async render(result: NameResult, platform: ImagePlatform, caption?: string, showWatermark = true): Promise<Blob> {
     await document.fonts.ready;
 
     const { width, height } = this.canvas;
@@ -71,7 +71,7 @@ export class ShareImageGenerator {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    this.drawPeriodicTableBackground(width, height);
+    if (showWatermark) this.drawPeriodicTableBackground(width, height);
 
     const padding = isX ? 60 : 80;
     const titleSize = isX ? 42 : 54;
@@ -86,7 +86,9 @@ export class ShareImageGenerator {
     const urlSize = isX ? 22 : 28;
     const urlBaselineY = height - (isX ? 36 : 48);
     const contentTop = titleY + titleSize * 0.3 + 20;
-    const contentBottom = urlBaselineY - urlSize - 16;
+    const captionSize = isX ? 26 : 34;
+    const captionReserve = caption ? captionSize + 16 : 0;
+    const contentBottom = urlBaselineY - urlSize - 16 - captionReserve;
 
     const layout = createElementLayout(result);
     const { tileSize, rows, tileGap, wordGap, rowGap } =
@@ -96,6 +98,19 @@ export class ShareImageGenerator {
     const tilesStartY = contentTop + Math.max(0, (contentBottom - contentTop - totalTilesHeight) / 2);
 
     this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, width);
+
+    if (caption) {
+      const captionBaselineY = contentBottom + captionReserve / 2 + captionSize / 2;
+      ctx.font = `600 ${captionSize}px "Nunito", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#64748b';
+      let cap = caption;
+      const maxW = width - padding * 2;
+      while (ctx.measureText(cap).width > maxW && cap.length > 1) cap = cap.slice(0, -1);
+      if (cap.length < caption.length) cap = cap.slice(0, -1) + '…';
+      ctx.fillText(cap, width / 2, captionBaselineY);
+    }
 
     ctx.font = `600 ${urlSize}px "Nunito", Arial, sans-serif`;
     ctx.fillStyle = '#94a3b8';

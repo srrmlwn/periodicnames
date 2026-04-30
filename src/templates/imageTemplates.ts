@@ -1,11 +1,11 @@
-import type { SharePlatform } from '../types/sharing';
+import type { ImagePlatform } from '../types/sharing';
 
 export interface ImageDimensions {
   width: number;
   height: number;
 }
 
-export function getDimensions(platform: SharePlatform): ImageDimensions {
+export function getDimensions(platform: ImagePlatform): ImageDimensions {
   switch (platform) {
     case 'x':
       return { width: 1200, height: 675 };
@@ -16,4 +16,4 @@ export function getDimensions(platform: SharePlatform): ImageDimensions {
     default:
       return { width: 1200, height: 675 };
   }
-} 
+}
