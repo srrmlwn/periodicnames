@@ -91,6 +91,13 @@ export class PrintDesignGenerator {
       ctx.fillText(customText, captionX, captionY, availableWidth);
     }
 
+    // Brand watermark — bottom right, always present
+    ctx.font = `400 90px "Nunito", Arial, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(150,150,150,0.45)';
+    ctx.fillText('periodicnames.com', size - padding / 2, size - padding / 2);
+
     return new Promise(resolve => {
       this.canvas.toBlob(blob => resolve(blob!), 'image/png', 0.95);
     });

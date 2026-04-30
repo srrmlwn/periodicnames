@@ -81,13 +81,16 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
 
 - **Pointer capture.** Each drag handle calls `setPointerCapture` on `pointerdown`, so drag continues smoothly outside the element. `onPointerMove` lives on the container to handle pointer-cancel gracefully.
 
-- **Watermark preview not rendered in HTML.** The periodic table watermark is drawn by the Canvas API in `PrintDesignGenerator`; replicating it faithfully in HTML would require significant extra code. The toggle controls the actual print output; the preview shows a "drag to reposition" hint instead.
+- **Watermark preview.** `ELEMENT_POSITIONS` exported from `PrintDesignGenerator`; `DesignCanvas` draws a sync faint canvas layer using the same data. Opacity fades via CSS `transition` when the toggle is flipped.
 
-- **Tiles default: centered; caption: below tiles.** When no caption is typed, the caption drag handle disappears. Switching products resets both offsets (via React `key` on `DesignCanvas`).
+- **Tiles default: centered; caption: below tiles.** When no caption is typed, the caption drag handle disappears. Going back from Product → Design restores canvas state via `initialTilesOff`/`initialCaptionOff` props.
 
-- **`PrintLayout` type removed.** The three preset modes (caption-above / caption-below / tiles-only) are obsoleted by free drag. The layout determination is now purely positional.
+- **`PrintLayout` type removed.** The three preset modes obsoleted by free drag. Layout is now purely positional.
+
+- **Flow order: Design → Product → Customize.** 3-dot progress bar at top of modal. Design step (canvas + caption + watermark toggle) comes first so users customize before committing to a product. Caption input is above the canvas preview so text appears live as typed.
+
+- **Brand watermark.** `periodicnames.com` drawn bottom-right in print canvas (90px, rgba gray, always present). Same text shown in the HTML preview at 7px. Not user-togglable.
 
 **Optional follow-ups:**
 - [ ] Caption font-size slider
 - [ ] Drag individual tiles (would require refactoring `createElementLayout`)
-- [ ] Watermark rendered as a faint SVG or HTML grid in the preview

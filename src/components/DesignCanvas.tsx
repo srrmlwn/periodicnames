@@ -12,6 +12,8 @@ interface DesignCanvasProps {
   result: NameResult;
   customText: string;
   showWatermark: boolean;
+  initialTilesOff?: Offset;
+  initialCaptionOff?: Offset;
   onTilesOffsetChange: (o: Offset) => void;
   onCaptionOffsetChange: (o: Offset) => void;
 }
@@ -98,11 +100,13 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   result,
   customText,
   showWatermark,
+  initialTilesOff,
+  initialCaptionOff,
   onTilesOffsetChange,
   onCaptionOffsetChange,
 }) => {
-  const [tilesOff, setTilesOff] = useState<Offset>({ x: 0, y: 0 });
-  const [captionOff, setCaptionOff] = useState<Offset>({ x: 0, y: 0 });
+  const [tilesOff, setTilesOff] = useState<Offset>(initialTilesOff ?? { x: 0, y: 0 });
+  const [captionOff, setCaptionOff] = useState<Offset>(initialCaptionOff ?? { x: 0, y: 0 });
   const dragging = useRef<'tiles' | 'caption' | null>(null);
   const dragStart = useRef({ px: 0, py: 0, bx: 0, by: 0 });
   const watermarkRef = useRef<HTMLCanvasElement>(null);
@@ -333,6 +337,22 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             {customText}
           </div>
         )}
+
+        {/* Brand text — bottom right, always visible */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            bottom: 5,
+            right: 7,
+            fontSize: 7,
+            fontFamily: '"Nunito", sans-serif',
+            color: 'rgba(150,150,150,0.55)',
+            lineHeight: 1,
+            userSelect: 'none',
+          }}
+        >
+          periodicnames.com
+        </div>
 
         {/* Hint — fades once user drags */}
         {!hasMoved && (
