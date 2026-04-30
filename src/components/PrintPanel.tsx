@@ -16,7 +16,7 @@ interface Offset { x: number; y: number }
 
 type Step = 'design' | 'product' | 'variants' | 'loading' | 'mockup' | 'redirecting' | 'error';
 
-const PROGRESS_LABELS = ['Design', 'Product', 'Customize'] as const;
+const PROGRESS_LABELS = ['Design', 'Product', 'Options', 'Preview'] as const;
 
 const PRODUCT_ICONS: Record<string, string> = {
   tshirt: '👕',
@@ -52,7 +52,8 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   const progressStep =
     step === 'design' ? 0 :
-    step === 'product' ? 1 : 2;
+    step === 'product' ? 1 :
+    step === 'variants' ? 2 : 3;
 
   const uniqueColors = selectedProduct
     ? [...new Set(

@@ -73,11 +73,21 @@ export class PrintDesignGenerator {
     const tilesStartY = size / 2 - totalTilesHeight / 2 + (tilesOffset?.y ?? 0);
     const tilesXShift = tilesOffset?.x ?? 0;
 
-    // Caption defaults below tile group + free offset
-    const captionY = tilesStartY + totalTilesHeight + captionGap + (captionOffset?.y ?? 0);
-    const captionX = size / 2 + (captionOffset?.x ?? 0);
+    // Widest row — needed for brand text placement
+    const maxRowWidth = rows.reduce((m, row) => {
+      let rw = 0;
+      row.forEach((word, wi) => {
+        if (wi > 0) rw += wordGap;
+        rw += word.length * tileSize + Math.max(0, word.length - 1) * tileGap;
+      });
+      return Math.max(m, rw);
+    }, 0);
+    const tilesRightEdge = (size + maxRowWidth) / 2 + tilesXShift;
+    const tilesBottomEdge = tilesStartY + totalTilesHeight;
 
-    this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size, tilesXShift);
+    // Caption defaults ABOVE tile group + free offset
+    const captionY = tilesStartY - captionGap - captionFontHeight + (captionOffset?.y ?? 0);
+    const captionX = size / 2 + (captionOffset?.x ?? 0);
 
     if (hasCaption && customText) {
       ctx.font = `600 ${captionFontHeight}px "Nunito", Arial, sans-serif`;
@@ -91,12 +101,14 @@ export class PrintDesignGenerator {
       ctx.fillText(customText, captionX, captionY, availableWidth);
     }
 
-    // Brand watermark — bottom right, always present
+    this.drawWordRows(rows, tileSize, tileGap, wordGap, rowGap, tilesStartY, size, tilesXShift);
+
+    // Brand text — bottom-right of tile group, moves with tiles
     ctx.font = `400 90px "Nunito", Arial, sans-serif`;
     ctx.textAlign = 'right';
-    ctx.textBaseline = 'bottom';
+    ctx.textBaseline = 'top';
     ctx.fillStyle = 'rgba(150,150,150,0.45)';
-    ctx.fillText('periodicnames.com', size - padding / 2, size - padding / 2);
+    ctx.fillText('periodicnames.com', tilesRightEdge, tilesBottomEdge + 60);
 
     return new Promise(resolve => {
       this.canvas.toBlob(blob => resolve(blob!), 'image/png', 0.95);

@@ -176,7 +176,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const tileLeft = cx + tilesOff.x;
   const tileTop = cy + tilesOff.y - tilesH / 2;
   const captLeft = cx + captionOff.x;
-  const captTop = cy + tilesOff.y + tilesH / 2 + captGap + captionOff.y;
+  // Caption defaults ABOVE tile group
+  const captTop = cy + tilesOff.y - tilesH / 2 - captGap - captFontPx + captionOff.y;
   const hasMoved = tilesOff.x !== 0 || tilesOff.y !== 0 || captionOff.x !== 0 || captionOff.y !== 0;
 
   return (
@@ -222,7 +223,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                     const atomicNum = isFake ? fakeAtomicNum : (el as Element).atomicNumber;
 
                     return (
-                      <React.Fragment key={`${ti}-${el.symbol}`}>
+                      <React.Fragment key={`${el.symbol}-${ti}`}>
                         {ti > 0 && <div style={{ width: gap, flexShrink: 0 }} />}
                         <div
                           style={{
@@ -313,6 +314,24 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               ))}
             </div>
           ))}
+
+          {/* Brand text — anchored to bottom-right of tile group, moves with tiles */}
+          <div
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: tilesH + Math.round(sz * 0.12),
+              fontSize: Math.max(5, Math.round(sz * 0.13)),
+              fontFamily: '"Nunito", sans-serif',
+              color: 'rgba(150,150,150,0.6)',
+              lineHeight: 1,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            periodicnames.com
+          </div>
         </div>
 
         {/* Caption drag handle */}
@@ -337,22 +356,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
             {customText}
           </div>
         )}
-
-        {/* Brand text — bottom right, always visible */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            bottom: 5,
-            right: 7,
-            fontSize: 7,
-            fontFamily: '"Nunito", sans-serif',
-            color: 'rgba(150,150,150,0.55)',
-            lineHeight: 1,
-            userSelect: 'none',
-          }}
-        >
-          periodicnames.com
-        </div>
 
         {/* Hint — fades once user drags */}
         {!hasMoved && (
