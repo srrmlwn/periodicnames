@@ -31,8 +31,16 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
   const [isPrintPanelOpen, setIsPrintPanelOpen] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [statsVisible, setStatsVisible] = useState(false);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldRenderRef = useRef(false);
+
+  useEffect(() => {
+    if (!isDone) return;
+    setStatsVisible(true);
+    const id = setTimeout(() => setStatsVisible(false), 4000);
+    return () => clearTimeout(id);
+  }, [isDone]);
 
   useEffect(() => {
     if (isVisible) {
@@ -116,7 +124,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
       </div>
 
       {isDone && (
-        <div className="mt-4 flex flex-col items-center gap-2">
+        <div className="mt-6 flex flex-col items-center">
           <div className="flex gap-2">
             <button
               onClick={() => setIsShareModalOpen(true)}
@@ -139,12 +147,17 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
               Print on merch
             </button>
           </div>
-          <p className="text-xs text-slate-500">
-            {getFunStatsLine(result.realElementsCount, result.totalElements)}
-          </p>
-          {result.fakeElements.some(fe => fe.symbol !== ' ') && (
-            <p className="text-xs text-slate-400 italic">* fictional element</p>
-          )}
+          <div className="mt-3 flex flex-col items-center gap-1">
+            <p
+              className="text-xs text-slate-500 transition-opacity duration-1000"
+              style={{ opacity: statsVisible ? 1 : 0 }}
+            >
+              {getFunStatsLine(result.realElementsCount, result.totalElements)}
+            </p>
+            {result.fakeElements.some(fe => fe.symbol !== ' ') && (
+              <p className="text-xs text-slate-400 italic">* fictional element</p>
+            )}
+          </div>
         </div>
       )}
 
