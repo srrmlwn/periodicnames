@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface NameInputProps {
   onSubmit: (name: string) => void;
@@ -9,8 +9,29 @@ interface NameInputProps {
 
 const MAX_CHARS = 30;
 
+const PLACEHOLDER_CTAS = [
+  "what are you made of?",
+  "you might be gold",
+  "are you mostly noble gas?",
+  "discover your elements",
+  "see your chemistry",
+  "could you be plutonium?",
+  "every name tells a chemical story",
+];
+
 const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh, initialValue = '' }) => {
   const [name, setName] = useState(initialValue);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+
+  useEffect(() => {
+    if (name) return;
+    const id = setInterval(() => {
+      setPlaceholderIdx(i => (i + 1) % PLACEHOLDER_CTAS.length);
+    }, 2500);
+    return () => clearInterval(id);
+  }, [name]);
+
+  const placeholder = name ? '' : `Try your name: ${PLACEHOLDER_CTAS[placeholderIdx]}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +55,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             value={name}
             onChange={(e) => setName(e.target.value.slice(0, MAX_CHARS))}
             onKeyDown={handleKeyDown}
-            placeholder="Enter your name..."
+            placeholder={placeholder}
             className="w-full px-4 pr-12 py-2.5 text-center bg-white border-2 border-slate-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out placeholder:text-slate-400"
           />
           {name.length >= MAX_CHARS - 6 && !hasResult && (
@@ -42,7 +63,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
               {name.length}/{MAX_CHARS}
             </span>
           )}
-          
+
           {hasResult ? (
             <button
               type="button"
@@ -77,9 +98,9 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
           )}
         </div>
       </form>
-      
+
     </div>
   );
 };
 
-export default NameInput; 
+export default NameInput;

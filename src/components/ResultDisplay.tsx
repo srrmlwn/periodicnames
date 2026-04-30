@@ -5,6 +5,20 @@ import PrintPanel from './PrintPanel';
 import { createElementLayout } from '../utils/elementRenderer';
 import type { NameResult } from '../types';
 
+function getFunStatsLine(realCount: number, total: number): string {
+  if (total === 0) return '';
+  if (realCount === total) {
+    return total === 1
+      ? "100% real — the periodic table had you covered."
+      : `All ${total} real — the periodic table had you covered.`;
+  }
+  if (realCount === 0) return "Zero real elements — you're beyond the known periodic table.";
+  const pct = realCount / total;
+  if (pct >= 0.75) return `${realCount} of ${total} real — practically a chemist.`;
+  if (pct >= 0.5) return `${realCount} of ${total} real — more fact than fiction.`;
+  return `${realCount} of ${total} real — science is still catching up to you.`;
+}
+
 interface ResultDisplayProps {
   result: NameResult | null;
   isVisible: boolean;
@@ -125,6 +139,9 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
               Print on merch
             </button>
           </div>
+          <p className="text-xs text-slate-400 italic">
+            {getFunStatsLine(result.realElementsCount, result.totalElements)}
+          </p>
           {result.fakeElements.some(fe => fe.symbol !== ' ') && (
             <p className="text-xs text-slate-400">* fictional element</p>
           )}
