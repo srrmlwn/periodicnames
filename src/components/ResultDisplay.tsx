@@ -154,11 +154,14 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
             >
               {getFunStatsLine(result.realElementsCount, result.totalElements)}
             </p>
-            {result.fakeElements.some(fe => fe.symbol !== ' ') && (
-              <p className="text-xs text-slate-400 italic">* fictional element</p>
-            )}
           </div>
         </div>
+      )}
+
+      {isDone && result.fakeElements.some(fe => fe.symbol !== ' ') && (
+        <p className="fixed bottom-8 right-4 text-xs text-slate-400 italic transition-opacity duration-700 opacity-100">
+          * fictional element
+        </p>
       )}
 
       <SharePreviewModal
