@@ -5,7 +5,6 @@ import { createElementLayout } from './elementRenderer';
 import type { ElementRenderItem } from './elementRenderer';
 import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
 
-const NAME_COLORS = ['#e03030', '#f97316', '#2563eb', '#059669', '#7c3aed', '#0284c7', '#db2777'];
 const STAGGER_MS = 500;
 const POP_MS = 200;
 const HOLD_MS = 1500;
@@ -274,20 +273,13 @@ export class ShareVideoGenerator {
     ctx.translate(CANVAS_W / 2, centerY);
     ctx.scale(scale, scale);
 
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
     let x = -totalWidth / 2;
-    let ci = 0;
     for (const { ch, w } of chars) {
-      if (ch !== ' ') {
-        const color = NAME_COLORS[ci++ % NAME_COLORS.length];
-        ctx.lineWidth = fontSize * 0.065;
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#111111';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.strokeText(ch, x, 0);
-        ctx.fillStyle = color;
-        ctx.fillText(ch, x, 0);
-      }
+      if (ch !== ' ') ctx.fillText(ch, x, 0);
       x += w;
     }
 
