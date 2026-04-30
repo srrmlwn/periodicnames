@@ -7,7 +7,7 @@ import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from
 
 // [symbol, row (0-8), col (0-17)]
 // Rows 7-8 are lanthanides/actinides, rendered with a gap below row 6
-const ELEMENT_POSITIONS: [string, number, number][] = [
+export const ELEMENT_POSITIONS: [string, number, number][] = [
   ['H', 0, 0], ['He', 0, 17],
   ['Li', 1, 0], ['Be', 1, 1], ['B', 1, 12], ['C', 1, 13], ['N', 1, 14], ['O', 1, 15], ['F', 1, 16], ['Ne', 1, 17],
   ['Na', 2, 0], ['Mg', 2, 1], ['Al', 2, 12], ['Si', 2, 13], ['P', 2, 14], ['S', 2, 15], ['Cl', 2, 16], ['Ar', 2, 17],

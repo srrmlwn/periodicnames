@@ -244,34 +244,38 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             )}
 
             {selectedProduct.slug !== 'mug' && (
-              <div className="mt-4">
-                <DesignCanvas
-                  key={selectedProduct.slug}
-                  result={result}
-                  customText={customText}
-                  onTilesOffsetChange={setTilesOffset}
-                  onCaptionOffsetChange={setCaptionOffset}
-                />
-
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 font-medium mb-1.5">Caption (optional)</p>
+              <div className="mt-4 space-y-3">
+                {/* Caption first — appears live in the canvas below */}
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-1.5">Caption <span className="font-normal">(optional)</span></p>
                   <input
                     type="text"
                     value={customText}
                     onChange={e => setCustomText(e.target.value)}
-                    placeholder="My name is…"
+                    placeholder="e.g. My name is…"
                     maxLength={60}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
                   />
                 </div>
 
-                <div className="mt-2 flex items-center gap-2">
+                {/* Live design preview — drag tiles and caption to reposition */}
+                <DesignCanvas
+                  key={selectedProduct.slug}
+                  result={result}
+                  customText={customText}
+                  showWatermark={showWatermark}
+                  onTilesOffsetChange={setTilesOffset}
+                  onCaptionOffsetChange={setCaptionOffset}
+                />
+
+                {/* Watermark toggle */}
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     role="switch"
                     aria-checked={showWatermark}
                     onClick={() => setShowWatermark(v => !v)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none ${showWatermark ? 'bg-slate-700' : 'bg-gray-200'}`}
+                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${showWatermark ? 'bg-slate-700' : 'bg-gray-200'}`}
                   >
                     <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200 ${showWatermark ? 'translate-x-4' : 'translate-x-1'}`} />
                   </button>
