@@ -58,7 +58,7 @@ const PrivacyPage: React.FC = () => (
           </Section>
 
           <Section title="Contact">
-            <p>Questions about this policy? Email <a href="mailto:hello@periodicnames.com" className="text-slate-600 underline underline-offset-2">hello@periodicnames.com</a>.</p>
+            <p>Questions about this policy? Email <a href="mailto:periodicnames.com@gmail.com" className="text-slate-600 underline underline-offset-2">periodicnames.com@gmail.com</a>.</p>
           </Section>
         </div>
       </main>
