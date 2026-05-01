@@ -175,9 +175,9 @@ function App() {
         <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-400 space-y-1">
           <p>Turn your name into a custom t-shirt — printed &amp; shipped by Printful</p>
           <p>
-            <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+            <a href="/privacy.html" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
             <span className="mx-2">·</span>
-            <a href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+            <a href="/tos.html" className="hover:text-slate-600 transition-colors">Terms of Service</a>
           </p>
         </footer>
       </div>

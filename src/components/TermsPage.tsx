@@ -59,7 +59,7 @@ const TermsPage: React.FC = () => (
           </Section>
 
           <Section title="Changes to these terms">
-            <p>We may update these terms from time to time. The current version is always at periodicnames.com/terms. Continued use of the site after changes constitutes acceptance of the new terms.</p>
+            <p>We may update these terms from time to time. The current version is always at periodicnames.com/tos.html. Continued use of the site after changes constitutes acceptance of the new terms.</p>
           </Section>
 
           <Section title="Contact">
@@ -69,7 +69,7 @@ const TermsPage: React.FC = () => (
       </main>
 
       <footer className="px-4 py-4 text-center text-xs text-slate-400">
-        <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+        <a href="/privacy.html" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
         <span className="mx-2">·</span>
         <a href="/" className="hover:text-slate-600 transition-colors">Periodic Names</a>
       </footer>

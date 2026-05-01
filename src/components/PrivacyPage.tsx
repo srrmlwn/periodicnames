@@ -64,7 +64,7 @@ const PrivacyPage: React.FC = () => (
       </main>
 
       <footer className="px-4 py-4 text-center text-xs text-slate-400">
-        <a href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+        <a href="/tos.html" className="hover:text-slate-600 transition-colors">Terms of Service</a>
         <span className="mx-2">·</span>
         <a href="/" className="hover:text-slate-600 transition-colors">Periodic Names</a>
       </footer>

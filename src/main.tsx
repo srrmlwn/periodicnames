@@ -8,9 +8,9 @@ import './index.css'
 const path = window.location.pathname;
 
 let root: React.ReactNode;
-if (path === '/privacy') {
+if (path === '/privacy.html') {
   root = <PrivacyPage />;
-} else if (path === '/terms') {
+} else if (path === '/tos.html') {
   root = <TermsPage />;
 } else {
   root = <App />;
