@@ -172,6 +172,9 @@ function App() {
             isDone={animationPhase === 'done'}
           />
         </div>
+        <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-400">
+          Turn your name into a custom t-shirt — printed &amp; shipped by Printful
+        </footer>
       </div>
     </div>
   );
