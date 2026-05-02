@@ -1,36 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
-  <!-- Blue fill covers full square — Instagram's circular crop creates the circle shape -->
-  <rect width="500" height="500" fill="#2563eb"/>
+  <defs>
+    <clipPath id="circle-clip">
+      <circle cx="250" cy="250" r="250"/>
+    </clipPath>
+  </defs>
 
-  <!-- Dark ring just inside the circle boundary -->
-  <circle cx="250" cy="250" r="246" fill="none" stroke="#111111" stroke-width="10"/>
+  <!-- All content clipped to circle — transparent outside -->
+  <g clip-path="url(#circle-clip)">
+    <rect width="500" height="500" fill="#2563eb"/>
 
-  <!-- Subtle white inner ring -->
-  <circle cx="250" cy="250" r="238" fill="none" stroke="white" stroke-width="4" opacity="0.35"/>
+    <!-- Dark ring at edge -->
+    <circle cx="250" cy="250" r="246" fill="none" stroke="#111111" stroke-width="10"/>
 
-  <!-- Atomic number: 119 -->
-  <text
-    x="430" y="108"
-    font-family="Nunito, Arial, sans-serif"
-    font-size="60" font-weight="900"
-    fill="rgba(255,255,255,0.85)"
-    text-anchor="end">119</text>
+    <!-- Subtle white inner ring -->
+    <circle cx="250" cy="250" r="238" fill="none" stroke="white" stroke-width="4" opacity="0.35"/>
 
-  <!-- Symbol: Pn -->
-  <text
-    x="250" y="332"
-    font-family="Nunito, Arial, sans-serif"
-    font-size="215" font-weight="900"
-    fill="white"
-    text-anchor="middle"
-    dominant-baseline="auto">Pn</text>
+    <!-- Atomic number: 119 -->
+    <text
+      x="430" y="108"
+      font-family="Nunito, Arial, sans-serif"
+      font-size="60" font-weight="900"
+      fill="rgba(255,255,255,0.85)"
+      text-anchor="end">119</text>
 
-  <!-- Element name: periodicnames -->
-  <text
-    x="250" y="430"
-    font-family="Nunito, Arial, sans-serif"
-    font-size="43" font-weight="700"
-    fill="rgba(255,255,255,0.9)"
-    text-anchor="middle"
-    letter-spacing="1.5">periodicnames</text>
+    <!-- Symbol: Pn -->
+    <text
+      x="250" y="332"
+      font-family="Nunito, Arial, sans-serif"
+      font-size="215" font-weight="900"
+      fill="white"
+      text-anchor="middle"
+      dominant-baseline="auto">Pn</text>
+
+    <!-- Element name: periodicnames -->
+    <text
+      x="250" y="430"
+      font-family="Nunito, Arial, sans-serif"
+      font-size="43" font-weight="700"
+      fill="rgba(255,255,255,0.9)"
+      text-anchor="middle"
+      letter-spacing="1.5">periodicnames</text>
+  </g>
 </svg>
