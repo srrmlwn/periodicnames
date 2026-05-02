@@ -172,14 +172,22 @@ function App() {
             isDone={animationPhase === 'done'}
           />
         </div>
-        <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-400 space-y-1">
-          <p>Turn your name into a custom t-shirt — printed &amp; shipped by Printful</p>
+        <footer className="mt-auto px-4 py-4 text-center text-sm text-slate-400 space-y-1">
           <p>
-            <a href="/privacy.html" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+            Turn your name into a custom t-shirt
+            <span className="text-amber-400 font-semibold block sm:inline"> · Printed &amp; shipped by Printful</span>
+          </p>
+          <p className="sm:hidden text-xs">
+            <a href="/privacy.html" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
             <span className="mx-2">·</span>
-            <a href="/tos.html" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+            <a href="/tos.html" className="hover:text-slate-300 transition-colors">Terms of Service</a>
           </p>
         </footer>
+        <div className="hidden sm:block fixed bottom-4 left-4 text-xs text-slate-500 space-x-3">
+          <a href="/privacy.html" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+          <span>·</span>
+          <a href="/tos.html" className="hover:text-slate-300 transition-colors">Terms of Service</a>
+        </div>
       </div>
     </div>
   );
