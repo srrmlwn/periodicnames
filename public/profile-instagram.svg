@@ -1,26 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
   <defs>
     <clipPath id="circle-clip">
-      <circle cx="250" cy="250" r="250"/>
+      <circle cx="250" cy="250" r="248"/>
     </clipPath>
   </defs>
 
-  <!-- All content clipped to circle — transparent outside -->
   <g clip-path="url(#circle-clip)">
-    <rect width="500" height="500" fill="#2563eb"/>
+    <!-- Four quadrants using element category colors -->
+    <rect x="0"   y="0"   width="250" height="250" fill="#e03030"/> <!-- alkali red    TL -->
+    <rect x="250" y="0"   width="250" height="250" fill="#f97316"/> <!-- alkaline orange TR -->
+    <rect x="0"   y="250" width="250" height="250" fill="#2563eb"/> <!-- transition blue BL -->
+    <rect x="250" y="250" width="250" height="250" fill="#7c3aed"/> <!-- metalloid purple BR -->
 
-    <!-- Dark ring at edge -->
-    <circle cx="250" cy="250" r="246" fill="none" stroke="#111111" stroke-width="10"/>
+    <!-- Subtle white divider lines -->
+    <line x1="250" y1="0"   x2="250" y2="500" stroke="white" stroke-width="3" opacity="0.4"/>
+    <line x1="0"   y1="250" x2="500" y2="250" stroke="white" stroke-width="3" opacity="0.4"/>
 
-    <!-- Subtle white inner ring -->
-    <circle cx="250" cy="250" r="238" fill="none" stroke="white" stroke-width="4" opacity="0.35"/>
+    <!-- Dark border ring -->
+    <circle cx="250" cy="250" r="244" fill="none" stroke="#111111" stroke-width="8"/>
 
     <!-- Atomic number: 119 -->
     <text
-      x="430" y="108"
+      x="432" y="108"
       font-family="Nunito, Arial, sans-serif"
       font-size="60" font-weight="900"
-      fill="rgba(255,255,255,0.85)"
+      fill="rgba(255,255,255,0.9)"
       text-anchor="end">119</text>
 
     <!-- Symbol: Pn -->
@@ -37,7 +41,7 @@
       x="250" y="430"
       font-family="Nunito, Arial, sans-serif"
       font-size="43" font-weight="700"
-      fill="rgba(255,255,255,0.9)"
+      fill="rgba(255,255,255,0.92)"
       text-anchor="middle"
       letter-spacing="1.5">periodicnames</text>
   </g>
