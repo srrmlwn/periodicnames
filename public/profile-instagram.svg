@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- White background so Instagram's circular crop has clean edges -->
+  <rect width="500" height="500" fill="white"/>
+
+  <!-- Element tile -->
+  <rect x="20" y="20" width="460" height="460" rx="68" fill="#2563eb" stroke="#111111" stroke-width="10"/>
+
+  <!-- Subtle white inner ring — prevents dark stroke from getting clipped by circle mask -->
+  <rect x="35" y="35" width="430" height="430" rx="57" fill="none" stroke="white" stroke-width="5" opacity="0.35"/>
+
+  <!-- Atomic number: 119 -->
+  <text
+    x="450" y="102"
+    font-family="Nunito, Arial, sans-serif"
+    font-size="60" font-weight="900"
+    fill="rgba(255,255,255,0.85)"
+    text-anchor="end">119</text>
+
+  <!-- Symbol: Pn -->
+  <text
+    x="250" y="332"
+    font-family="Nunito, Arial, sans-serif"
+    font-size="215" font-weight="900"
+    fill="white"
+    text-anchor="middle"
+    dominant-baseline="auto">Pn</text>
+
+  <!-- Element name: periodicnames -->
+  <text
+    x="250" y="433"
+    font-family="Nunito, Arial, sans-serif"
+    font-size="43" font-weight="700"
+    fill="rgba(255,255,255,0.9)"
+    text-anchor="middle"
+    letter-spacing="1.5">periodicnames</text>
+</svg>
