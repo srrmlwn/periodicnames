@@ -86,41 +86,48 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
 
   return (
     <div className={`w-full ${isExiting ? 'result-exit' : 'results-fade-in'}`}>
-      <div className="flex flex-wrap gap-1 sm:gap-2 justify-center items-end">
-        {wordGroups.map((group, gi) => {
-          if (group.isSpace) {
-            const item = group.items[0];
+      <div className="w-fit mx-auto">
+        <div className="flex flex-wrap gap-1 sm:gap-2 justify-center items-end">
+          {wordGroups.map((group, gi) => {
+            if (group.isSpace) {
+              const item = group.items[0];
+              return (
+                <div
+                  key={`space-${gi}`}
+                  className={`w-4 h-12 sm:w-6 sm:h-16 flex items-center justify-center transition-opacity duration-200 ${
+                    item.index < revealedCount ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <span className="text-slate-500 text-lg font-bold">·</span>
+                </div>
+              );
+            }
+
             return (
-              <div
-                key={`space-${gi}`}
-                className={`w-4 h-12 sm:w-6 sm:h-16 flex items-center justify-center transition-opacity duration-200 ${
-                  item.index < revealedCount ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <span className="text-slate-500 text-lg font-bold">·</span>
+              <div key={`word-${gi}`} className="flex gap-1 sm:gap-2 flex-wrap justify-center">
+                {group.items.map(item => (
+                  <div
+                    key={`el-${item.index}`}
+                    className={`w-12 h-12 sm:w-16 sm:h-16 hover:z-30 transition-opacity duration-200 ${item.index < revealedCount ? 'opacity-100' : 'opacity-0'}`}
+                  >
+                    <ElementTile
+                      element={item.element}
+                      fakeElement={item.fakeElement}
+                      isHighlighted={false}
+                      animationDelay={0}
+                      size="lg"
+                    />
+                  </div>
+                ))}
               </div>
             );
-          }
-
-          return (
-            <div key={`word-${gi}`} className="flex gap-1 sm:gap-2 flex-wrap justify-center">
-              {group.items.map(item => (
-                <div
-                  key={`el-${item.index}`}
-                  className={`w-12 h-12 sm:w-16 sm:h-16 hover:z-30 transition-opacity duration-200 ${item.index < revealedCount ? 'opacity-100' : 'opacity-0'}`}
-                >
-                  <ElementTile
-                    element={item.element}
-                    fakeElement={item.fakeElement}
-                    isHighlighted={false}
-                    animationDelay={0}
-                    size="lg"
-                  />
-                </div>
-              ))}
-            </div>
-          );
-        })}
+          })}
+        </div>
+        {isDone && result.fakeElements.some(fe => fe.symbol !== ' ') && (
+          <p className="mt-1 text-right text-xs text-slate-400 italic transition-opacity duration-700 opacity-100">
+            * fictional element
+          </p>
+        )}
       </div>
 
       {isDone && (
@@ -154,12 +161,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
             </button>
           </div>
         </div>
-      )}
-
-      {isDone && result.fakeElements.some(fe => fe.symbol !== ' ') && (
-        <p className="fixed bottom-8 right-4 text-xs text-slate-400 italic transition-opacity duration-700 opacity-100">
-          * fictional element
-        </p>
       )}
 
       <SharePreviewModal
