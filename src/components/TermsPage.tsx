@@ -23,7 +23,7 @@ const TermsPage: React.FC = () => (
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-8 shadow-sm border border-slate-100">
           <h1 className="text-2xl font-bold text-slate-800 mb-1">Terms of Service</h1>
-          <p className="text-xs text-slate-400 mb-8">Last updated May 1, 2026</p>
+          <p className="text-xs text-slate-400 mb-8">Last updated May 3, 2026</p>
 
           <Section title="What you're buying">
             <p>Periodic Names sells custom print-on-demand t-shirts featuring your name spelled out with periodic table element tiles. Each item is printed to order by Printful and shipped directly to you.</p>
