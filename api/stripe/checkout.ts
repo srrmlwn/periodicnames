@@ -6,6 +6,8 @@ function log(label: string, data?: unknown) {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  log('incoming request', { method: req.method });
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -20,17 +22,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     priceUsd?: number;
   };
 
+  log('request body', { productName, variantId, productId, priceUsd, designUrl, mockupUrl });
+
   if (!variantId || !productId || !designUrl || !priceUsd || !productName) {
+    log('ERROR: missing required fields', { variantId: !!variantId, productId: !!productId, designUrl: !!designUrl, priceUsd: !!priceUsd, productName: !!productName });
     res.status(400).json({ error: 'Missing required fields' });
     return;
   }
 
-  log('request', { productName, variantId, productId, priceUsd });
+  log('env check', { has_stripe_key: !!process.env.STRIPE_SECRET_KEY });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const origin = req.headers.origin ?? 'https://periodicnames.com';
+  log('origin', origin);
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: [{
       quantity: 1,
@@ -52,8 +58,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     },
     success_url: `${origin}/?order=success`,
     cancel_url: `${origin}/`,
+  };
+
+  log('creating Stripe session', {
+    mode: sessionParams.mode,
+    unit_amount: Math.round(priceUsd * 100),
+    metadata: sessionParams.metadata,
+    shipping_countries: sessionParams.shipping_address_collection?.allowed_countries,
+    has_mockup_image: !!mockupUrl,
   });
 
-  log('session created', { id: session.id, url: session.url });
-  res.status(200).json({ checkoutUrl: session.url });
+  try {
+    const session = await stripe.checkout.sessions.create(sessionParams);
+    log('session created', { id: session.id, url: session.url });
+    res.status(200).json({ checkoutUrl: session.url });
+  } catch (err) {
+    log('ERROR: Stripe session creation failed', String(err));
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
 }
