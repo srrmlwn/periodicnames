@@ -80,6 +80,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    log('session fields', {
+      payment_status: session.payment_status,
+      has_metadata: !!session.metadata,
+      has_shipping: !!session.shipping_details,
+      metadata: session.metadata,
+    });
     if (session.payment_status === 'paid' && session.metadata && session.shipping_details) {
       const customerEmail = session.customer_details?.email ?? null;
       try {
