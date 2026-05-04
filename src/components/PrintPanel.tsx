@@ -134,6 +134,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
           productId: PRODUCT.id,
           variantId: selectedVariantId,
           designUrl,
+          mockupUrl,
           priceUsd: PRODUCT.priceUsd,
         }),
       });

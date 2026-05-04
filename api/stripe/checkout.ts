@@ -11,11 +11,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const { productName, variantId, productId, designUrl, priceUsd } = req.body as {
+  const { productName, variantId, productId, designUrl, mockupUrl, priceUsd } = req.body as {
     productName?: string;
     variantId?: number;
     productId?: number;
     designUrl?: string;
+    mockupUrl?: string;
     priceUsd?: number;
   };
 
@@ -39,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         product_data: {
           name: `Periodic Names ${productName}`,
           description: 'Custom element-name print design',
+          ...(mockupUrl ? { images: [mockupUrl] } : {}),
         },
       },
     }],
