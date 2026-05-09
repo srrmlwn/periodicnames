@@ -25,6 +25,17 @@ async function createPrintfulOrder(
 ): Promise<void> {
   const { variant_id, design_url } = metadata;
 
+  log('createPrintfulOrder inputs', { variant_id, design_url, customerEmail, shipping });
+
+  if (!variant_id) log('WARN: variant_id missing from metadata');
+  if (!design_url) log('WARN: design_url missing from metadata');
+  if (!shipping.name) log('WARN: shipping.name is empty');
+  if (!shipping.address?.line1) log('WARN: shipping.address.line1 is empty');
+  if (!shipping.address?.city) log('WARN: shipping.address.city is empty');
+  if (!shipping.address?.state) log('WARN: shipping.address.state is empty');
+  if (!shipping.address?.postal_code) log('WARN: shipping.address.postal_code is empty');
+  if (!shipping.address?.country) log('WARN: shipping.address.country is empty — defaulting to US');
+
   const body = {
     confirm: true,
     recipient: {
@@ -57,7 +68,10 @@ async function createPrintfulOrder(
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  log('request received', { method: req.method });
+
   if (req.method !== 'POST') {
+    log('rejected: wrong method', req.method);
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
@@ -66,9 +80,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const sig = req.headers['stripe-signature'];
   const secret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+  log('env check', {
+    has_stripe_key: !!process.env.STRIPE_SECRET_KEY,
+    has_webhook_secret: !!process.env.STRIPE_WEBHOOK_SECRET,
+    has_printful_key: !!process.env.PRINTFUL_API_KEY,
+    has_sig_header: !!sig,
+  });
+
   let event: Stripe.Event;
   try {
     const rawBody = await getRawBody(req);
+    log('raw body length', rawBody.byteLength);
     event = stripe.webhooks.constructEvent(rawBody, sig as string, secret);
   } catch (err) {
     log('signature verification failed', String(err));
@@ -78,29 +100,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('event', { type: event.type, id: event.id });
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    log('session state', {
-      payment_status: session.payment_status,
-      has_metadata: !!session.metadata,
-      has_shipping: !!session.shipping_details,
-    });
-    if (session.payment_status === 'paid' && session.metadata && session.shipping_details) {
-      const customerEmail = session.customer_details?.email ?? null;
-      log('session metadata', session.metadata);
-      try {
-        await createPrintfulOrder(
-          session.metadata as Record<string, string>,
-          session.shipping_details,
-          customerEmail,
-        );
-        log('order created for session', session.id);
-      } catch (err) {
-        log('order creation failed', String(err));
-        res.status(500).json({ error: 'Order creation failed' });
-        return;
-      }
-    }
+  if (event.type !== 'checkout.session.completed') {
+    log('skipping unhandled event type', event.type);
+    res.status(200).json({ received: true });
+    return;
+  }
+
+  const session = event.data.object as Stripe.Checkout.Session;
+
+  log('session state', {
+    id: session.id,
+    payment_status: session.payment_status,
+    status: session.status,
+    has_metadata: !!session.metadata,
+    metadata_keys: session.metadata ? Object.keys(session.metadata) : [],
+    has_shipping_details: !!session.shipping_details,
+    has_customer_details: !!session.customer_details,
+    customer_email: session.customer_details?.email ?? null,
+  });
+
+  if (session.payment_status !== 'paid') {
+    log('skipping: payment_status is not paid', session.payment_status);
+    res.status(200).json({ received: true });
+    return;
+  }
+
+  if (!session.metadata) {
+    log('skipping: session.metadata is missing');
+    res.status(200).json({ received: true });
+    return;
+  }
+
+  if (!session.shipping_details) {
+    log('skipping: session.shipping_details is missing');
+    res.status(200).json({ received: true });
+    return;
+  }
+
+  const customerEmail = session.customer_details?.email ?? null;
+  log('session metadata', session.metadata);
+  log('proceeding to create Printful order for session', session.id);
+
+  try {
+    await createPrintfulOrder(
+      session.metadata as Record<string, string>,
+      session.shipping_details,
+      customerEmail,
+    );
+    log('order created successfully for session', session.id);
+  } catch (err) {
+    log('order creation failed', String(err));
+    res.status(500).json({ error: 'Order creation failed' });
+    return;
   }
 
   res.status(200).json({ received: true });
