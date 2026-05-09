@@ -25,7 +25,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  log('request', { productName, variantId, productId, priceUsd });
+  const effectivePrice = process.env.PRICE_OVERRIDE_USD
+    ? parseFloat(process.env.PRICE_OVERRIDE_USD)
+    : priceUsd;
+
+  log('request', { productName, variantId, productId, priceUsd, effectivePrice });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const origin = req.headers.origin ?? 'https://periodicnames.com';
@@ -36,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       quantity: 1,
       price_data: {
         currency: 'usd',
-        unit_amount: Math.round(priceUsd * 100),
+        unit_amount: Math.round(effectivePrice * 100),
         product_data: {
           name: `Periodic Names ${productName}`,
           description: 'Custom element-name print design',
