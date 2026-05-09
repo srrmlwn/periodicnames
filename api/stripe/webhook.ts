@@ -82,6 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const session = event.data.object as Stripe.Checkout.Session;
     if (session.payment_status === 'paid' && session.metadata && session.shipping_details) {
       const customerEmail = session.customer_details?.email ?? null;
+      log('session metadata', session.metadata);
       try {
         await createPrintfulOrder(
           session.metadata as Record<string, string>,
