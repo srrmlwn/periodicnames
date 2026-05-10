@@ -40,7 +40,9 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     name: 'Unisex T-Shirt',
     slug: 'tshirt',
     description: 'Bella+Canvas 3001 unisex jersey tee, soft and pre-shrunk.',
-    priceUsd: 29.99,
+    priceUsd: import.meta.env.VITE_PRICE_OVERRIDE_USD
+      ? parseFloat(import.meta.env.VITE_PRICE_OVERRIDE_USD as string)
+      : 29.99,
     variants: TSHIRT_VARIANTS,
     designPlacement: 'front',
   },

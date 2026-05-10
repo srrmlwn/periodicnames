@@ -25,8 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const effectivePrice = process.env.PRICE_OVERRIDE_USD
-    ? parseFloat(process.env.PRICE_OVERRIDE_USD)
+  const effectivePrice = process.env.VITE_PRICE_OVERRIDE_USD
+    ? parseFloat(process.env.VITE_PRICE_OVERRIDE_USD)
     : priceUsd;
 
   log('request', { productName, variantId, productId, priceUsd, effectivePrice });
