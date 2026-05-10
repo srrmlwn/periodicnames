@@ -108,9 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const sessionSnapshot = event.data.object as Stripe.Checkout.Session;
   log('fetching full session from Stripe API', sessionSnapshot.id);
-  const session = await stripe.checkout.sessions.retrieve(sessionSnapshot.id, {
-    expand: ['shipping_details', 'customer_details'],
-  });
+  const session = await stripe.checkout.sessions.retrieve(sessionSnapshot.id);
 
   log('session state', {
     id: session.id,
