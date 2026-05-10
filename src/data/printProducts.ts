@@ -34,15 +34,17 @@ const TSHIRT_VARIANTS: PrintVariant[] = [
   { id: 6951, label: 'Athletic Heather / XL',color: '#cececc', size: 'XL' },
 ];
 
+const overrideEnv = import.meta.env.VITE_PRICE_OVERRIDE_USD as string | undefined;
+const resolvedPrice = overrideEnv ? parseFloat(overrideEnv) : 29.99;
+console.log('[printProducts] price', overrideEnv ? `override: $${resolvedPrice}` : `default: $${resolvedPrice}`);
+
 export const PRINT_PRODUCTS: PrintProduct[] = [
   {
     id: 71,
     name: 'Unisex T-Shirt',
     slug: 'tshirt',
     description: 'Bella+Canvas 3001 unisex jersey tee, soft and pre-shrunk.',
-    priceUsd: import.meta.env.VITE_PRICE_OVERRIDE_USD
-      ? parseFloat(import.meta.env.VITE_PRICE_OVERRIDE_USD as string)
-      : 29.99,
+    priceUsd: resolvedPrice,
     variants: TSHIRT_VARIANTS,
     designPlacement: 'front',
   },

@@ -25,11 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const effectivePrice = process.env.VITE_PRICE_OVERRIDE_USD
-    ? parseFloat(process.env.VITE_PRICE_OVERRIDE_USD)
-    : priceUsd;
+  const priceOverrideEnv = process.env.VITE_PRICE_OVERRIDE_USD;
+  const effectivePrice = priceOverrideEnv ? parseFloat(priceOverrideEnv) : priceUsd;
 
-  log('request', { productName, variantId, productId, priceUsd, effectivePrice });
+  log('request', { productName, variantId, productId, priceUsd, effectivePrice, priceOverrideEnv: priceOverrideEnv ?? 'not set' });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const origin = req.headers.origin ?? 'https://periodicnames.com';
