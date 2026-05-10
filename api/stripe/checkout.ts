@@ -31,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   log('request', { productName, variantId, productId, priceUsd, effectivePrice, priceOverrideEnv: priceOverrideEnv ?? 'not set' });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-  const origin = req.headers.origin ?? 'https://periodicnames.com';
+  const origin = 'https://periodicnames.com';
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',

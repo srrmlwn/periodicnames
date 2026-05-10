@@ -41,6 +41,7 @@ async function createPrintfulOrder(
     recipient: {
       name: shipping.name ?? '',
       address1: shipping.address?.line1 ?? '',
+      ...(shipping.address?.line2 ? { address2: shipping.address.line2 } : {}),
       city: shipping.address?.city ?? '',
       state_code: shipping.address?.state ?? '',
       zip: shipping.address?.postal_code ?? '',
