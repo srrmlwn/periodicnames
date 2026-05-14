@@ -5,6 +5,14 @@ export const config = { api: { bodyParser: false } };
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
+function printfulHeaders(): Record<string, string> {
+  return {
+    Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+    'X-PF-Store-Id': process.env.PRINTFUL_STORE_ID ?? '',
+    'Content-Type': 'application/json',
+  };
+}
+
 function log(label: string, data?: unknown) {
   console.log(`[webhook] ${label}`, data !== undefined ? JSON.stringify(data) : '');
 }
@@ -55,10 +63,7 @@ async function createPrintfulOrder(
 
   const res = await fetch(`${PRINTFUL_BASE}/orders`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
+    headers: printfulHeaders(),
     body: JSON.stringify(body),
   });
 
@@ -85,6 +90,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     has_stripe_key: !!process.env.STRIPE_SECRET_KEY,
     has_webhook_secret: !!process.env.STRIPE_WEBHOOK_SECRET,
     has_printful_key: !!process.env.PRINTFUL_API_KEY,
+    has_store_id: !!process.env.PRINTFUL_STORE_ID,
+    store_id: process.env.PRINTFUL_STORE_ID,
     has_sig_header: !!sig,
   });
 

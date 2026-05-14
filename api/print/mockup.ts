@@ -1,6 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const PRINTFUL_BASE = 'https://api.printful.com';
+
+function printfulHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+    'X-PF-Store-Id': process.env.PRINTFUL_STORE_ID ?? '',
+    ...extra,
+  };
+}
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_ATTEMPTS = 15;
 
@@ -39,8 +47,8 @@ function log(label: string, data?: unknown) {
   console.log(`[mockup] ${label}`, data !== undefined ? JSON.stringify(data) : '');
 }
 
-async function printfulGet<T>(path: string, authHeader: string): Promise<T> {
-  const res = await fetch(`${PRINTFUL_BASE}${path}`, { headers: { Authorization: authHeader } });
+async function printfulGet<T>(path: string, headers: Record<string, string>): Promise<T> {
+  const res = await fetch(`${PRINTFUL_BASE}${path}`, { headers });
   const raw = await res.text();
   log(`GET ${path} ←`, { status: res.status, body: raw });
   if (!res.ok) throw new Error(`Printful GET ${path} failed: ${raw}`);
@@ -62,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  log('env check', { has_printful_key: !!process.env.PRINTFUL_API_KEY });
+  log('env check', { has_printful_key: !!process.env.PRINTFUL_API_KEY, has_store_id: !!process.env.PRINTFUL_STORE_ID, store_id: process.env.PRINTFUL_STORE_ID });
 
   const { productId, variantIds, designUrl, placement = 'front' } = req.body as {
     productId?: unknown;
@@ -79,15 +87,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const authHeader = `Bearer ${process.env.PRINTFUL_API_KEY}`;
-
   let areaWidth = 1800;
   let areaHeight = 2400;
   try {
     const variantId = Array.isArray(variantIds) ? variantIds[0] : variantIds;
     const pf = await printfulGet<PrintfilesResult>(
       `/mockup-generator/printfiles/${productId}?variant_ids[]=${variantId}`,
-      authHeader,
+      printfulHeaders(),
     );
     const variantEntry = pf.variant_printfiles?.find(vp => vp.variant_id === variantId);
     const printfileId = variantEntry?.placements?.[placement as string];
@@ -120,7 +126,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   try {
     createRes = await fetch(`${PRINTFUL_BASE}/mockup-generator/create-task/${productId}`, {
       method: 'POST',
-      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      headers: printfulHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(taskBody),
     });
     createRaw = await createRes.text();
@@ -163,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     try {
       pollRes = await fetch(
         `${PRINTFUL_BASE}/mockup-generator/task?task_key=${encodeURIComponent(taskKey)}`,
-        { headers: { Authorization: authHeader } },
+        { headers: printfulHeaders() },
       );
       pollRaw = await pollRes.text();
     } catch (err) {

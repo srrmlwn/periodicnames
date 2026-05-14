@@ -7,6 +7,14 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
+function printfulHeaders(): Record<string, string> {
+  return {
+    Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
+    'X-PF-Store-Id': process.env.PRINTFUL_STORE_ID ?? '',
+    'Content-Type': 'application/json',
+  };
+}
+
 function log(label: string, data?: unknown) {
   console.log(`[draft-order] ${label}`, data !== undefined ? JSON.stringify(data) : '');
 }
@@ -22,6 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('env check', {
     has_printful_key: !!process.env.PRINTFUL_API_KEY,
+    has_store_id: !!process.env.PRINTFUL_STORE_ID,
+    store_id: process.env.PRINTFUL_STORE_ID,
     has_test_secret: !!process.env.PRINTFUL_TEST_SECRET,
   });
 
@@ -73,10 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   try {
     pfRes = await fetch(`${PRINTFUL_BASE}/orders`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: printfulHeaders(),
       body: JSON.stringify(body),
     });
     raw = await pfRes.text();
