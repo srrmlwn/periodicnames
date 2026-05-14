@@ -45,7 +45,6 @@ async function createPrintfulOrder(
   if (!shipping.address?.country) log('WARN: shipping.address.country is empty — defaulting to US');
 
   const body = {
-    confirm: true,
     recipient: {
       name: shipping.name ?? '',
       address1: shipping.address?.line1 ?? '',
@@ -70,7 +69,20 @@ async function createPrintfulOrder(
   const raw = await res.text();
   log('POST /orders ←', { status: res.status, body: raw });
 
-  if (!res.ok) throw new Error(`Printful order failed: ${raw}`);
+  if (!res.ok) throw new Error(`Printful order creation failed: ${raw}`);
+
+  const orderId = (JSON.parse(raw) as { result: { id: number } }).result.id;
+  log('order created as draft, confirming', { orderId });
+
+  const confirmRes = await fetch(`${PRINTFUL_BASE}/orders/${orderId}/confirm`, {
+    method: 'POST',
+    headers: printfulHeaders(),
+  });
+
+  const confirmRaw = await confirmRes.text();
+  log('POST /orders/confirm ←', { status: confirmRes.status, body: confirmRaw });
+
+  if (!confirmRes.ok) throw new Error(`Printful order confirmation failed: ${confirmRaw}`);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
