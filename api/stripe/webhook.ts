@@ -120,7 +120,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     status: session.status,
     has_metadata: !!session.metadata,
     metadata_keys: session.metadata ? Object.keys(session.metadata) : [],
+    collected_information: session.collected_information,
     has_shipping_details: !!shippingDetails,
+    shipping_details: shippingDetails,
     has_customer_details: !!session.customer_details,
     customer_email: customerEmail,
   });
