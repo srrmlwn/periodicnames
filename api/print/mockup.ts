@@ -44,14 +44,25 @@ async function printfulGet<T>(path: string, authHeader: string): Promise<T> {
   const raw = await res.text();
   log(`GET ${path} ←`, { status: res.status, body: raw });
   if (!res.ok) throw new Error(`Printful GET ${path} failed: ${raw}`);
-  return (JSON.parse(raw) as PrintfulResponse<T>).result;
+  let parsed: PrintfulResponse<T>;
+  try {
+    parsed = JSON.parse(raw) as PrintfulResponse<T>;
+  } catch {
+    throw new Error(`Printful GET ${path} returned non-JSON: ${raw}`);
+  }
+  return parsed.result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  log('request received', { method: req.method });
+
   if (req.method !== 'POST') {
+    log('rejected: wrong method', req.method);
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+
+  log('env check', { has_printful_key: !!process.env.PRINTFUL_API_KEY });
 
   const { productId, variantIds, designUrl, placement = 'front' } = req.body as {
     productId?: unknown;
@@ -62,9 +73,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('request', { productId, variantIds, designUrl, placement });
 
+  if (!productId || !variantIds || !designUrl) {
+    log('rejected: missing required fields', { productId: !!productId, variantIds: !!variantIds, designUrl: !!designUrl });
+    res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
   const authHeader = `Bearer ${process.env.PRINTFUL_API_KEY}`;
 
-  // Fetch print area dimensions for this product so we can populate position correctly
   let areaWidth = 1800;
   let areaHeight = 2400;
   try {
@@ -79,12 +95,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     if (printfile) {
       areaWidth = printfile.width;
       areaHeight = printfile.height;
-      log('print area', { placement, printfileId, areaWidth, areaHeight });
+      log('print area resolved', { placement, printfileId, areaWidth, areaHeight });
     } else {
-      log('placement printfile not found, using defaults', { variantEntry, printfileId });
+      log('WARN: placement printfile not found, using defaults', { variantEntry, printfileId, areaWidth, areaHeight });
     }
   } catch (err) {
-    log('printfiles fetch failed, using defaults', String(err));
+    log('WARN: printfiles fetch failed, using defaults', { error: String(err), areaWidth, areaHeight });
   }
 
   const taskBody = {
@@ -99,13 +115,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('create-task →', { url: `${PRINTFUL_BASE}/mockup-generator/create-task/${productId}`, body: taskBody });
 
-  const createRes = await fetch(`${PRINTFUL_BASE}/mockup-generator/create-task/${productId}`, {
-    method: 'POST',
-    headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
-    body: JSON.stringify(taskBody),
-  });
+  let createRes: Response;
+  let createRaw: string;
+  try {
+    createRes = await fetch(`${PRINTFUL_BASE}/mockup-generator/create-task/${productId}`, {
+      method: 'POST',
+      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      body: JSON.stringify(taskBody),
+    });
+    createRaw = await createRes.text();
+  } catch (err) {
+    log('create-task network error', String(err));
+    res.status(502).json({ error: 'Mockup task creation failed', detail: String(err) });
+    return;
+  }
 
-  const createRaw = await createRes.text();
   log('create-task ←', { status: createRes.status, body: createRaw });
 
   if (!createRes.ok) {
@@ -113,26 +137,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const createData = JSON.parse(createRaw) as PrintfulResponse<{ task_key: string }>;
-  const taskKey = createData.result?.task_key;
+  let createData: PrintfulResponse<{ task_key: string }>;
+  try {
+    createData = JSON.parse(createRaw) as PrintfulResponse<{ task_key: string }>;
+  } catch {
+    log('create-task response parse error', createRaw);
+    res.status(502).json({ error: 'Mockup task response unparseable', detail: createRaw });
+    return;
+  }
 
+  const taskKey = createData.result?.task_key;
   if (!taskKey) {
-    log('no task_key in response');
+    log('no task_key in response', createRaw);
     res.status(502).json({ error: 'No task key returned from Printful', detail: createRaw });
     return;
   }
 
-  log('polling task_key', taskKey);
+  log('polling task', { taskKey, maxAttempts: MAX_POLL_ATTEMPTS, intervalMs: POLL_INTERVAL_MS });
 
   for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
     await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
 
-    const pollRes = await fetch(
-      `${PRINTFUL_BASE}/mockup-generator/task?task_key=${encodeURIComponent(taskKey)}`,
-      { headers: { Authorization: authHeader } },
-    );
+    let pollRes: Response;
+    let pollRaw: string;
+    try {
+      pollRes = await fetch(
+        `${PRINTFUL_BASE}/mockup-generator/task?task_key=${encodeURIComponent(taskKey)}`,
+        { headers: { Authorization: authHeader } },
+      );
+      pollRaw = await pollRes.text();
+    } catch (err) {
+      log(`poll attempt ${attempt + 1} network error`, String(err));
+      res.status(502).json({ error: 'Mockup poll failed', detail: String(err) });
+      return;
+    }
 
-    const pollRaw = await pollRes.text();
     log(`poll attempt ${attempt + 1} ←`, { status: pollRes.status, body: pollRaw });
 
     if (!pollRes.ok) {
@@ -140,11 +179,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       return;
     }
 
-    const pollData = JSON.parse(pollRaw) as PrintfulResponse<PrintfulTaskResult>;
+    let pollData: PrintfulResponse<PrintfulTaskResult>;
+    try {
+      pollData = JSON.parse(pollRaw) as PrintfulResponse<PrintfulTaskResult>;
+    } catch {
+      log(`poll attempt ${attempt + 1} parse error`, pollRaw);
+      res.status(502).json({ error: 'Mockup poll response unparseable', detail: pollRaw });
+      return;
+    }
+
     const { status, mockups } = pollData.result;
+    log(`poll attempt ${attempt + 1} status`, { status, mockupCount: mockups?.length ?? 0 });
 
     if (status === 'completed' && mockups) {
-      log('completed', { mockupCount: mockups.length });
+      log('task completed', { mockupCount: mockups.length, urls: mockups.map(m => m.mockup_url) });
       res.status(200).json({
         mockups: mockups.map((m) => ({ variantId: m.variant_ids[0], mockupUrl: m.mockup_url })),
       });
@@ -152,14 +200,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
 
     if (status === 'failed') {
-      log('task failed');
+      log('task failed', pollRaw);
       res.status(502).json({ error: 'Mockup generation failed', detail: pollRaw });
       return;
     }
-
-    log(`status: ${status}, waiting…`);
   }
 
-  log('timed out after max attempts');
+  log('timed out', { taskKey, attempts: MAX_POLL_ATTEMPTS });
   res.status(504).json({ error: 'Mockup generation timed out' });
 }
