@@ -20,7 +20,7 @@ function getRawBody(req: VercelRequest): Promise<Buffer> {
 
 async function createPrintfulOrder(
   metadata: Record<string, string>,
-  shipping: Stripe.Checkout.Session.ShippingDetails,
+  shipping: Stripe.Checkout.Session.CollectedInformation.ShippingDetails,
   customerEmail: string | null,
 ): Promise<void> {
   const { variant_id, design_url } = metadata;
@@ -111,15 +111,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   log('fetching full session from Stripe API', sessionSnapshot.id);
   const session = await stripe.checkout.sessions.retrieve(sessionSnapshot.id);
 
+  const shippingDetails = session.collected_information?.shipping_details ?? null;
+  const customerEmail = session.customer_details?.email ?? null;
+
   log('session state', {
     id: session.id,
     payment_status: session.payment_status,
     status: session.status,
     has_metadata: !!session.metadata,
     metadata_keys: session.metadata ? Object.keys(session.metadata) : [],
-    has_shipping_details: !!session.shipping_details,
+    has_shipping_details: !!shippingDetails,
     has_customer_details: !!session.customer_details,
-    customer_email: session.customer_details?.email ?? null,
+    customer_email: customerEmail,
   });
 
   if (session.payment_status !== 'paid') {
@@ -134,20 +137,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!session.shipping_details) {
-    log('skipping: session.shipping_details is missing');
+  if (!shippingDetails) {
+    log('skipping: shipping_details is missing from collected_information');
     res.status(200).json({ received: true });
     return;
   }
 
-  const customerEmail = session.customer_details?.email ?? null;
   log('session metadata', session.metadata);
   log('proceeding to create Printful order for session', session.id);
 
   try {
     await createPrintfulOrder(
       session.metadata as Record<string, string>,
-      session.shipping_details,
+      shippingDetails,
       customerEmail,
     );
     log('order created successfully for session', session.id);
