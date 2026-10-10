@@ -7,7 +7,7 @@ import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from
 
 const STAGGER_MS = 500;
 const POP_MS = 200;
-const HOLD_MS = 1500;
+const HOLD_MS = 2500;
 const TILES_START_MS = 2000; // starts after name text finishes fading out
 const TEXT_FADE_IN_END = 700;
 const TEXT_HOLD_END = 1600;
@@ -85,13 +85,14 @@ export class ShareVideoGenerator {
     const totalDuration = this.getEstimatedDurationMs(result);
 
     return new Promise((resolve, reject) => {
-      recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType.split(';')[0] }));
+      recorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        resolve(new Blob(chunks, { type: mimeType.split(';')[0] }));
+      };
       recorder.onerror = reject;
       recorder.start(100);
       this.runAnimation(canvas, result, totalDuration, onProgress, () => {
-        recorder.requestData();
         recorder.stop();
-        stream.getTracks().forEach(t => t.stop());
       });
     });
   }
@@ -213,10 +214,12 @@ export class ShareVideoGenerator {
 
       onProgress?.(Math.min(1, elapsed / totalDuration));
 
-      if (elapsed < totalDuration) {
+      // Run 200ms past totalDuration before stopping — gives the 30fps capture
+      // stream enough cycles to record the final fully-revealed frame.
+      if (elapsed < totalDuration + 200) {
         requestAnimationFrame(frame);
       } else {
-        requestAnimationFrame(onComplete);
+        onComplete();
       }
     };
 
