@@ -27,7 +27,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
   const backgroundColor = colorOverride ?? (isFake ? getFakeElementColor() : getCategoryColor(element?.category || ''));
 
   const symbolClass = size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : size === 'xs' ? 'text-[10px]' : 'text-base sm:text-lg';
-  const numberClass = size === 'lg' ? 'text-[9px] sm:text-[11px]' : 'text-[7px]';
+  const numberClass = size === 'lg' ? (isFake ? 'text-[8px] sm:text-[11px]' : 'text-[9px] sm:text-[11px]') : 'text-[7px]';
 
   return (
     <div
@@ -38,12 +38,12 @@ const ElementTile: React.FC<ElementTileProps> = ({
       style={{ backgroundColor, borderColor: BRAND.ink, animationDelay: `${animationDelay}ms` }}
     >
       {isFake && size === 'lg' && (
-        <span className="hidden sm:block absolute top-[8px] -right-[19px] w-[64px] rotate-45 bg-ink text-white text-center font-bold tracking-wider leading-[1.5] text-[8px]">
+        <span className="absolute top-[3px] -right-[15px] w-[46px] sm:top-[8px] sm:-right-[19px] sm:w-[64px] rotate-45 bg-ink text-white text-center font-bold tracking-wider leading-[1.4] text-[6px] sm:leading-[1.5] sm:text-[8px]">
           {NEW_RIBBON_LABEL}
         </span>
       )}
-      {isFake && (
-        <span className={`absolute -top-[9px] -right-[9px] w-[18px] h-[18px] rotate-45 bg-ink ${size === 'lg' ? 'sm:hidden' : ''}`} aria-hidden="true" />
+      {isFake && size !== 'lg' && (
+        <span className="absolute -top-[9px] -right-[9px] w-[18px] h-[18px] rotate-45 bg-ink" aria-hidden="true" />
       )}
       {size !== 'xs' && (
         <span className={`absolute top-0.5 left-1 leading-none opacity-75 ${numberClass}`}>

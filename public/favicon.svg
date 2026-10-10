@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect x="3" y="3" width="94" height="94" rx="12" ry="12" fill="#2563eb" stroke="#111111" stroke-width="6"/>
-  <text x="86" y="19" font-family="Nunito, Arial, sans-serif" font-size="13" font-weight="900" fill="rgba(255,255,255,0.85)" text-anchor="end">119</text>
-  <text x="50" y="66" font-family="Nunito, Arial, sans-serif" font-size="46" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="auto">Pn</text>
-  <text x="50" y="86" font-family="Nunito, Arial, sans-serif" font-size="10.5" font-weight="700" fill="rgba(255,255,255,0.9)" text-anchor="middle" letter-spacing="0.5">periodic</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="9" y="9" width="52" height="52" rx="8" fill="#111111"/>
+  <rect x="4" y="4" width="52" height="52" rx="8" fill="#FFD23F" stroke="#111111" stroke-width="4"/>
+  
+  <path d="M21.004 43.0V17.8H31.372Q33.748 17.8 35.566 18.754Q37.384 19.708000000000002 38.41 21.436Q39.436 23.164 39.436 25.540000000000003V26.044Q39.436 28.384 38.373999999999995 30.130000000000003Q37.312 31.876 35.494 32.83Q33.676 33.784 31.372 33.784H25.756V43.0ZM25.756 29.464H30.904Q32.596 29.464 33.64 28.528Q34.684 27.592 34.684 25.972V25.612000000000002Q34.684 23.992 33.64 23.056Q32.596 22.12 30.904 22.12H25.756Z" fill="#111111"/>
 </svg>

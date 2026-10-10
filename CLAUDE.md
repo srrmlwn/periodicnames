@@ -201,6 +201,10 @@ Use `animationPhase` to drive visibility — do not read `result !== null` direc
 
 The periodic table sits **in the page flow between the input and the results card** (it used to be a fixed full-screen background, but the input and card hid the middle of the table, so lit transition metals/actinides were invisible). It is scaled with `transform: scale(tableScale)` inside a wrapper sized to `TABLE_W × scale` by `TABLE_H × scale`; the inner div has explicit `TABLE_W`/`TABLE_H` so flex rows never shrink. `getTableScale(tableTop)` fits the viewport width (minus 32px) and the height left after the table's measured top offset and `RESULT_CARD_RESERVE` (310px), capped at 1.15 and floored at 0.45, so the whole results card lands above the fold on laptop-height windows. When the reveal finishes, if the card bottom is still below the fold (short phones, long multi-row names) App scrolls it into view (`block: 'end'`, instant under reduced motion). Unlit tiles are faint ink outlines (`border-ink/15`, `text-ink/30`); lit tiles take the color from `litColors` (symbol → first-occurrence name color). The grid is built from `ELEMENT_POSITIONS` in `canvasTile.ts`. Legal pages still render an unlit table as a fixed backdrop.
 
+### Icons
+
+`public/favicon.svg` (tab icon: yellow P tile, ink border + hard shadow, glyphs as paths so no font dependency), `favicon.ico` (16/32/48), `apple-touch-icon.png` (180), `icon-192.png` / `icon-512.png` + `site.webmanifest`. Linked from `index.html`. The 48px+ icons include the atomic number 15; tab sizes omit it because it turns to mush.
+
 ### File Naming
 
 - Components: `PascalCase.tsx`
@@ -225,7 +229,7 @@ The periodic table sits **in the page flow between the input and the results car
 Fake elements are framed as **newly discovered**, never "fake" or "fictional" (the name ends up on someone's shirt, so it must not read as "this person is fake"):
 - **Fill:** the next `NAME_PALETTE` colour in sequence — `getTileColors` counts fakes like any other tile, so the name keeps an even colour rhythm
 - **Border / text / shadow:** ink, same as real tiles
-- **Marker:** a black diagonal ribbon across the top-right corner reading `NEW_RIBBON_LABEL` ("NEW"). On `lg` tiles from `sm` up it's the labelled ribbon; on phones, logo-size tiles and the small `DesignCanvas` preview (<64px) it's a plain black corner. Canvas outputs draw it with `drawNewRibbon` in `canvasTile.ts` (clipped band, 20% of tile size from the corner)
+- **Marker:** a black diagonal ribbon across the top-right corner reading `NEW_RIBBON_LABEL` ("NEW"). On `lg` (result) tiles it's the labelled ribbon at every breakpoint (smaller on phones, with the fake's atomic number one step smaller so 4-digit numbers clear it); logo-size tiles and the small `DesignCanvas` preview (<64px) get a plain black corner. Canvas outputs draw it with `drawNewRibbon` in `canvasTile.ts` (clipped band, 20% of tile size from the corner)
 - **No asterisk** on the tile
 - **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951)
 - **Entry animation:** `fake-wobble` keyframe
