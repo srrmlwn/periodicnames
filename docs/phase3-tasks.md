@@ -105,8 +105,8 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
 **Placement model.**
 - Frame: Printful front area as 1800×2400 (12×16in at 150ppi). Every position is in this frame.
 - `computePrintLayout` (src/utils/printLayout.ts) picks the largest tile size that fits the preset, wraps words into rows, adds the optional caption and the small `periodicnames.com` line, and returns the design's size in inches plus `position`.
-  - **Chest:** tiles ≤ 2.2in, design ≤ 10×5.5in, top 1in below print-area top, centred.
-  - **Big:** tiles ≤ 3.4in, design ≤ 12×10in, top 1.5in, centred.
+  - **Chest:** tiles ≤ 2.2in, design ≤ 10×5.5in, top 2in below print-area top (≈3in below the collar, per Printful's centre-chest guide of 3–3.5in), centred.
+  - **Big:** tiles ≤ 3.4in, design ≤ 12×10in, top 2.5in (≈3.5in below the collar; full-front guide is 3–4in), centred.
 - `generatePrintFile` renders the same layout at 300ppi, cropped tight (no empty space), so file aspect = position aspect.
 - The same `position` goes to `/api/print/mockup`, Stripe metadata `print_position`, the webhook order and `/api/print/draft-order`, all validated by `api/_lib/printPosition.ts` (`limit_to_print_area: true`).
 - Caption is ink on White/Heather shirts and white on Black/Navy.

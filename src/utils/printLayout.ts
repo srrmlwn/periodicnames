@@ -17,8 +17,8 @@ interface PlacementSpec {
 }
 
 export const PLACEMENTS: Record<Placement, PlacementSpec> = {
-  chest: { label: 'Chest', maxTileIn: 2.2, maxWidthIn: 10, maxHeightIn: 5.5, topIn: 1 },
-  big: { label: 'Big', maxTileIn: 3.4, maxWidthIn: 12, maxHeightIn: 10, topIn: 1.5 },
+  chest: { label: 'Chest', maxTileIn: 2.2, maxWidthIn: 10, maxHeightIn: 5.5, topIn: 2 },
+  big: { label: 'Big', maxTileIn: 3.4, maxWidthIn: 12, maxHeightIn: 10, topIn: 2.5 },
 };
 
 export interface PrintPosition {

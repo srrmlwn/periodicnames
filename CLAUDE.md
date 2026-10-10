@@ -261,7 +261,7 @@ Phase 2 — remaining:
 
 Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setup**):
 - Flow (Oct 2026 redesign): one screen — pick colour / size / placement (Chest or Big) / optional caption on a live drawn shirt → Buy → Stripe checkout → confirmed Printful order. "See it on a model" fetches a Printful photo only when asked.
-- Placement: the print PNG is cropped to the design and sent with an explicit `position` (centred, 1in from the top of the print area for Chest, 1.5in for Big) to BOTH the mockup generator and the order (via Stripe metadata `print_position`). Previously a 4500² square with the name in the middle was sent with no position, which printed below the chest.
+- Placement: the print PNG is cropped to the design and sent with an explicit `position` (centred, 2in from the top of the print area for Chest, 2.5in for Big — aiming for Printful's guidance of design top 3–3.5in below the collar, assuming the print area starts ~1in below it) to BOTH the mockup generator and the order (via Stripe metadata `print_position`). Previously a 4500² square with the name in the middle was sent with no position, which printed below the chest.
 - Removed: drag-to-reposition, background-table toggle on shirts, 3-step progress UI, DesignCanvas/ProductMockup components.
 - Verify with one real/draft order (`/api/print/draft-order` accepts `position`) before announcing; ShirtPreview's collar→print-area offset is an approximation.
 - Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
