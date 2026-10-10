@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor, BRAND } from '../utils/colorSchemes';
+import { getCategoryColor, getFakeElementColor, BRAND, NEW_RIBBON_LABEL } from '../utils/colorSchemes';
 import { fakeAtomicNumber } from '../utils/canvasTile';
 
 interface ElementTileProps {
@@ -24,8 +24,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
   if (!displayElement) return null;
 
   const atomicNumber = isFake ? fakeAtomicNumber(fakeElement!.name) : element?.atomicNumber;
-  const backgroundColor = isFake ? getFakeElementColor() : colorOverride ?? getCategoryColor(element?.category || '');
-  const borderColor = isFake ? getFakeElementBorderColor() : BRAND.ink;
+  const backgroundColor = colorOverride ?? (isFake ? getFakeElementColor() : getCategoryColor(element?.category || ''));
 
   const symbolClass = size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : size === 'xs' ? 'text-[10px]' : 'text-base sm:text-lg';
   const numberClass = size === 'lg' ? 'text-[9px] sm:text-[11px]' : 'text-[7px]';
@@ -33,11 +32,19 @@ const ElementTile: React.FC<ElementTileProps> = ({
   return (
     <div
       className={`w-full h-full rounded-md border-[3px] shadow-brutal flex flex-col items-center justify-center font-bold relative overflow-hidden transition-transform duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg ${
-        isFake ? 'text-pop-yellow fake-wobble' : 'text-ink tile-pop'
+        isFake ? 'text-ink fake-wobble' : 'text-ink tile-pop'
       }`}
-      title={`${displayElement.name} (${displayElement.symbol})${isFake ? ' — fictional' : ''}`}
-      style={{ backgroundColor, borderColor, animationDelay: `${animationDelay}ms` }}
+      title={`${displayElement.name} (${displayElement.symbol})${isFake ? ' — newly discovered' : ''}`}
+      style={{ backgroundColor, borderColor: BRAND.ink, animationDelay: `${animationDelay}ms` }}
     >
+      {isFake && size === 'lg' && (
+        <span className="hidden sm:block absolute top-[8px] -right-[19px] w-[64px] rotate-45 bg-ink text-white text-center font-bold tracking-wider leading-[1.5] text-[8px]">
+          {NEW_RIBBON_LABEL}
+        </span>
+      )}
+      {isFake && (
+        <span className={`absolute -top-[9px] -right-[9px] w-[18px] h-[18px] rotate-45 bg-ink ${size === 'lg' ? 'sm:hidden' : ''}`} aria-hidden="true" />
+      )}
       {size !== 'xs' && (
         <span className={`absolute top-0.5 left-1 leading-none opacity-75 ${numberClass}`}>
           {atomicNumber}
@@ -46,7 +53,6 @@ const ElementTile: React.FC<ElementTileProps> = ({
 
       <div className={`${symbolClass} leading-none flex items-start tracking-tight`}>
         <span>{displayElement.symbol}</span>
-        {isFake && <span className="text-[0.5em]">*</span>}
       </div>
 
       {size === 'lg' && (

@@ -3,6 +3,7 @@ import ElementTile from './ElementTile';
 import SharePreviewModal from './SharePreviewModal';
 import PrintPanel from './PrintPanel';
 import { createElementLayout } from '../utils/elementRenderer';
+import { NEW_RIBBON_LABEL } from '../utils/colorSchemes';
 import type { NameResult } from '../types';
 
 function getFunStatsLine(realCount: number, total: number): string {
@@ -101,7 +102,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
         </div>
         {isDone && result.fakeElements.some(fe => fe.symbol !== ' ') && (
           <p className="mt-3 text-right text-xs font-bold text-muted">
-            * fictional element
+            <span className="inline-block bg-ink text-white px-1 mr-1 rounded-sm tracking-wider">{NEW_RIBBON_LABEL}</span>= newly discovered element
           </p>
         )}
       </div>

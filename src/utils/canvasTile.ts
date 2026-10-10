@@ -1,7 +1,7 @@
 import type { Element } from '../data/elements';
 import { getAllElements } from '../data/elements';
 import type { ElementRenderItem } from './elementRenderer';
-import { BRAND, FONT_FAMILY, getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
+import { BRAND, FONT_FAMILY, NEW_RIBBON_LABEL, getCategoryColor } from './colorSchemes';
 
 // [symbol, row (0-8), col (0-17)]; rows 7-8 are lanthanides/actinides with a half-cell gap below row 6
 export const ELEMENT_POSITIONS: [string, number, number][] = [
@@ -57,14 +57,32 @@ export function fakeAtomicNumber(name: string): number {
   return [...name].reduce((sum, c) => sum + c.charCodeAt(0), 0);
 }
 
+function drawNewRibbon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, radius: number): void {
+  const offset = size * 0.2;
+  const band = size * 0.14;
+  ctx.save();
+  roundRectPath(ctx, x, y, size, size, radius);
+  ctx.clip();
+  ctx.translate(x + size, y);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = BRAND.ink;
+  ctx.fillRect(-size, offset - band / 2, size * 2, band);
+  ctx.font = canvasFont(700, size * 0.1);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = BRAND.paper;
+  ctx.fillText(NEW_RIBBON_LABEL, 0, offset + size * 0.005);
+  ctx.restore();
+}
+
 export function drawElementTile(ctx: CanvasRenderingContext2D, item: ElementRenderItem, x: number, y: number, size: number): void {
   const isFake = !!item.fakeElement;
   const el = item.element || item.fakeElement;
   if (!el) return;
 
-  const fill = isFake ? getFakeElementColor() : item.color;
-  const stroke = isFake ? getFakeElementBorderColor() : BRAND.ink;
-  const textColor = isFake ? BRAND.yellow : BRAND.ink;
+  const fill = item.color;
+  const stroke = BRAND.ink;
+  const textColor = BRAND.ink;
   const radius = size * 0.08;
   const borderWidth = Math.max(2, size * 0.045);
   const shadow = size * 0.07;
@@ -76,6 +94,8 @@ export function drawElementTile(ctx: CanvasRenderingContext2D, item: ElementRend
   roundRectPath(ctx, x, y, size, size, radius);
   ctx.fillStyle = fill;
   ctx.fill();
+  if (isFake) drawNewRibbon(ctx, x, y, size, radius);
+  roundRectPath(ctx, x, y, size, size, radius);
   ctx.strokeStyle = stroke;
   ctx.lineWidth = borderWidth;
   ctx.setLineDash([]);
@@ -94,15 +114,7 @@ export function drawElementTile(ctx: CanvasRenderingContext2D, item: ElementRend
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = textColor;
-  const symbolW = ctx.measureText(el.symbol).width;
   ctx.fillText(el.symbol, x + size / 2, y + size * 0.5);
-
-  if (isFake) {
-    ctx.font = canvasFont(700, size * 0.18);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('*', x + size / 2 + symbolW / 2 + size * 0.01, y + size * 0.24);
-  }
 
   ctx.font = canvasFont(500, size * 0.12);
   ctx.textAlign = 'center';

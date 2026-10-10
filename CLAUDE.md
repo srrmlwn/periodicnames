@@ -117,7 +117,7 @@ git worktree remove ../periodicnames-<task>
 ### Colors
 
 - **Never hardcode hex colors in components.** All tile colors come from `src/utils/colorSchemes.ts`.
-- **Result tiles are colored by position in the name, not by chemistry category.** `getTileColors(result)` returns one color per `orderedElements` index, rotating through `NAME_PALETTE` (7 hues) from a per-name offset; fakes keep the fake style. `createElementLayout` stores it as `item.color`, and every surface (result card, lit table, share image/reel, print canvas, `DesignCanvas`) uses it so screen and shirt match. Category colors remain only for the faint `drawTableBackground` watermark.
+- **Result tiles are colored by position in the name, not by chemistry category.** `getTileColors(result)` returns one color per `orderedElements` index, rotating through `NAME_PALETTE` (7 hues) from a per-name offset; fake elements take the next colour too (see Fake Element Appearance). `createElementLayout` stores it as `item.color`, and every surface (result card, lit table, share image/reel, print canvas, `DesignCanvas`) uses it so screen and shirt match. Category colors remain only for the faint `drawTableBackground` watermark.
 - Import helpers: `getCategoryColor`, `getCategoryBorderColor`, `getFakeElementColor`, `getFakeElementBorderColor`. Non-category brand colors (ink, mist, yellow, pink, mint, muted) come from `BRAND`; the logo rainbow is `LOGO_PALETTE`; canvas/inline font is `FONT_FAMILY`.
 - In Tailwind, use the matching tokens from `tailwind.config.js`: `ink`, `mist`, `muted`, `pop-yellow`, `pop-pink`, `pop-mint`, `pop-coral`, `pop-sky`. Keep the two in sync.
 
@@ -222,15 +222,15 @@ The periodic table sits **in the page flow between the input and the results car
 
 ## Fake Element Appearance
 
-Fake elements are visually distinct from real elements:
-- **Background:** `BRAND.ink` — black, vs. the saturated pastel fills of real elements
-- **Border:** `BRAND.yellow` — solid, 3px (still with the black hard shadow)
-- **Text:** `text-pop-yellow` for number, symbol, name and the `*` superscript
-- **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951) — clearly non-real, unique per variant
-- **Symbol:** rendered with a small amber `*` superscript (flex + items-start, not absolute positioning)
-- **Entry animation:** `fake-wobble` keyframe (wobble/bounce on first appearance)
-- **Footnote:** `* fictional element` appears under the result tiles when any fake elements are in the result
-- **Logo:** the fake "D" in PERIODIC keeps fake styling even though other logo tiles use `LOGO_PALETTE`
+Fake elements are framed as **newly discovered**, never "fake" or "fictional" (the name ends up on someone's shirt, so it must not read as "this person is fake"):
+- **Fill:** the next `NAME_PALETTE` colour in sequence — `getTileColors` counts fakes like any other tile, so the name keeps an even colour rhythm
+- **Border / text / shadow:** ink, same as real tiles
+- **Marker:** a black diagonal ribbon across the top-right corner reading `NEW_RIBBON_LABEL` ("NEW"). On `lg` tiles from `sm` up it's the labelled ribbon; on phones, logo-size tiles and the small `DesignCanvas` preview (<64px) it's a plain black corner. Canvas outputs draw it with `drawNewRibbon` in `canvasTile.ts` (clipped band, 20% of tile size from the corner)
+- **No asterisk** on the tile
+- **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951)
+- **Entry animation:** `fake-wobble` keyframe
+- **Legend:** `NEW = newly discovered element` under the result tiles when any fake elements are present
+- **Logo:** the fake "D" in PERIODIC uses its `LOGO_PALETTE` colour plus the corner marker
 
 ---
 
@@ -238,7 +238,7 @@ Fake elements are visually distinct from real elements:
 
 Active phase: **Phase 3 — Print on Demand** (Phase 1 complete, Phase 2 partially complete)
 
-Design refresh (Oct 2026): **neubrutalist revamp shipped to main**; follow-up: cool `mist` background, name-order tile palette, table moved into page flow so every lit element is visible.
+Design refresh (Oct 2026): **neubrutalist revamp shipped to main**; follow-up: cool `mist` background, name-order tile palette, table moved into page flow so every lit element is visible, fake elements restyled as palette tiles with a NEW ribbon.
 
 Earlier revamp notes: — palette, Space Grotesk, cards/buttons/inputs, shared `Modal`, background table lights up during reveal, canvas outputs restyled via `canvasTile.ts`, legal pages restyled, footer overlap fixed.
 

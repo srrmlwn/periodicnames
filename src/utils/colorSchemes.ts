@@ -70,7 +70,7 @@ export const defaultColorScheme: ColorScheme = {
     noble: BRAND.ink,
     lanthanide: BRAND.ink,
     actinide: BRAND.ink,
-    fake: BRAND.yellow,
+    fake: BRAND.ink,
   },
 };
 
@@ -94,12 +94,12 @@ function paletteOffset(name: string): number {
   return [...name.toLowerCase()].reduce((sum, c) => sum + c.charCodeAt(0), 0) % NAME_PALETTE.length;
 }
 
+export const NEW_RIBBON_LABEL = 'NEW';
+
 export function getTileColors(result: NameResult): string[] {
   const offset = paletteOffset(result.originalName.replace(/\s+/g, ''));
-  let realIndex = 0;
+  let tileIndex = 0;
   return result.orderedElements.map(el =>
-    'atomicNumber' in el
-      ? NAME_PALETTE[(offset + realIndex++) % NAME_PALETTE.length]
-      : getFakeElementColor()
+    el.symbol === ' ' ? 'transparent' : NAME_PALETTE[(offset + tileIndex++) % NAME_PALETTE.length]
   );
 }

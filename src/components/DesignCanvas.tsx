@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getTileColors, getFakeElementColor, getFakeElementBorderColor, BRAND, FONT_FAMILY } from '../utils/colorSchemes';
+import { getTileColors, BRAND, FONT_FAMILY, NEW_RIBBON_LABEL } from '../utils/colorSchemes';
 import { drawTableBackground, fakeAtomicNumber } from '../utils/canvasTile';
 
 interface Offset { x: number; y: number }
@@ -205,9 +205,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                   {wi > 0 && <div style={{ width: wgap, flexShrink: 0 }} />}
                   {word.map(({ el, color }, ti) => {
                     const isFake = !('atomicNumber' in el);
-                    const bg = isFake ? getFakeElementColor() : color;
-                    const border = isFake ? getFakeElementBorderColor() : BRAND.ink;
-                    const ink = isFake ? BRAND.yellow : BRAND.ink;
+                    const bg = color;
+                    const border = BRAND.ink;
+                    const ink = BRAND.ink;
                     const atomicNum = isFake ? fakeAtomicNumber(el.name) : (el as Element).atomicNumber;
 
                     return (
@@ -227,8 +227,29 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0,
+                            overflow: 'hidden',
                           }}
                         >
+                          {isFake && (
+                            <span style={{
+                              position: 'absolute',
+                              top: sz * 0.2 * Math.SQRT1_2 - sz * 0.07,
+                              left: sz * 0.5 - sz * 0.2 * Math.SQRT1_2,
+                              width: sz,
+                              height: sz * 0.14,
+                              transform: 'rotate(45deg)',
+                              backgroundColor: BRAND.ink,
+                              color: BRAND.paper,
+                              fontSize: sz * 0.1,
+                              fontWeight: 700,
+                              fontFamily: FONT_FAMILY,
+                              lineHeight: `${sz * 0.14}px`,
+                              textAlign: 'center',
+                              pointerEvents: 'none',
+                            }}>
+                              {showDetail && sz >= 64 ? NEW_RIBBON_LABEL : ''}
+                            </span>
+                          )}
                           {/* Atomic number */}
                           {showDetail && (
                             <span style={{
@@ -257,20 +278,6 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                           }}>
                             {el.symbol}
                           </span>
-
-                          {/* Fake star */}
-                          {isFake && showDetail && (
-                            <span style={{
-                              position: 'absolute',
-                              top: sz * 0.04,
-                              left: sz * 0.55,
-                              fontSize: sz * 0.14,
-                              fontWeight: 700,
-                              fontFamily: FONT_FAMILY,
-                              lineHeight: 1,
-                              pointerEvents: 'none',
-                            }}>*</span>
-                          )}
 
                           {/* Element name */}
                           {showDetail && (

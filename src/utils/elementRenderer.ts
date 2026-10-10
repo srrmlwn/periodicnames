@@ -2,7 +2,7 @@ import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
 import type { SharePlatform } from '../types/sharing';
-import { getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor, getTileColors } from './colorSchemes';
+import { getCategoryBorderColor, getFakeElementBorderColor, getTileColors } from './colorSchemes';
 
 export interface ElementRenderItem {
   type: 'element' | 'space';
@@ -81,12 +81,8 @@ export function getElementDisplayProperties(item: ElementRenderItem) {
   
   const isFake = !!item.fakeElement;
   
-  const backgroundColor = isFake 
-    ? getFakeElementColor() 
-    : item.color;
-  const borderColor = isFake 
-    ? getFakeElementBorderColor() 
-    : getCategoryBorderColor((element as Element).category);
+  const backgroundColor = item.color;
+  const borderColor = isFake ? getFakeElementBorderColor() : getCategoryBorderColor((element as Element).category);
   
   return {
     isSpace: false,
