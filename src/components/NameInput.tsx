@@ -31,7 +31,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
     return () => clearInterval(id);
   }, [name]);
 
-  const placeholder = name ? '' : `Try your name: ${PLACEHOLDER_CTAS[placeholderIdx]}`;
+  const placeholder = name ? '' : `Your name — ${PLACEHOLDER_CTAS[placeholderIdx]}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,56 +49,48 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
   return (
     <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative">
+        <div className="flex items-stretch bg-white border-[3px] border-ink rounded-xl shadow-brutal-lg overflow-hidden focus-within:-translate-x-0.5 focus-within:-translate-y-0.5 focus-within:shadow-brutal-xl transition-all duration-150">
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value.slice(0, MAX_CHARS))}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full px-4 pr-12 py-2.5 bg-white border-2 border-slate-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ease-out placeholder:text-slate-400"
+            aria-label="Your name"
+            className="flex-1 min-w-0 px-4 py-3 text-lg font-bold text-ink bg-transparent focus:outline-none placeholder:font-medium placeholder:text-muted/60 placeholder:text-base"
           />
-          {name.length >= MAX_CHARS - 6 && !hasResult && (
-            <span className={`absolute left-3 -bottom-5 text-xs ${name.length >= MAX_CHARS ? 'text-red-500' : 'text-slate-400'}`}>
-              {name.length}/{MAX_CHARS}
-            </span>
-          )}
-
           {hasResult ? (
             <button
               type="button"
               onClick={onRefresh}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all duration-300 ease-out"
+              className="nb-focus shrink-0 flex items-center gap-1.5 px-4 bg-pop-pink border-l-[3px] border-ink font-bold text-ink hover:brightness-105 active:brightness-95"
               title="Try a new name"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
+              <span className="hidden sm:inline">New</span>
             </button>
           ) : (
             <button
               type="submit"
               disabled={!name.trim()}
-              className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-md transition-all duration-300 ease-out ${
-                name.trim()
-                  ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
-                  : 'text-slate-400 cursor-not-allowed'
-              }`}
+              className="nb-focus shrink-0 flex items-center gap-1.5 px-5 bg-pop-yellow border-l-[3px] border-ink font-bold text-ink hover:brightness-105 active:brightness-95 disabled:bg-cream disabled:text-muted/60 disabled:cursor-not-allowed"
             >
-              <svg
-                className={`w-4 h-4 transition-transform duration-200 ${name.trim() ? 'hover:translate-x-0.5' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              Go
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
           )}
         </div>
+        {name.length >= MAX_CHARS - 6 && !hasResult && (
+          <span className={`absolute left-1 -bottom-6 text-xs font-bold ${name.length >= MAX_CHARS ? 'text-pop-coral' : 'text-muted'}`}>
+            {name.length}/{MAX_CHARS}
+          </span>
+        )}
       </form>
-
     </div>
   );
 };

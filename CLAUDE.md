@@ -2,7 +2,7 @@
 
 ## Project
 
-Single-page React app where users type a name and see it spelled with periodic table element symbols. Real elements are maximized; a curated fake-element database fills gaps. Three phases: (1) cartoonish UI + animations ✅, (2) social sharing (in progress), (3) print on demand.
+Single-page React app where users type a name and see it spelled with periodic table element symbols. Real elements are maximized; a curated fake-element database fills gaps. Three phases: (1) neubrutalist UI + animations ✅, (2) social sharing (in progress), (3) print on demand.
 
 Deployed at **periodicnames.com** (Vercel). Deep-link URLs: `periodicnames.com/<name>`.
 
@@ -117,7 +117,17 @@ git worktree remove ../periodicnames-<task>
 ### Colors
 
 - **Never hardcode hex colors in components.** All element category colors come from `src/utils/colorSchemes.ts`.
-- Import helpers: `getCategoryColor`, `getCategoryBorderColor`, `getFakeElementColor`, `getFakeElementBorderColor`.
+- Import helpers: `getCategoryColor`, `getCategoryBorderColor`, `getFakeElementColor`, `getFakeElementBorderColor`. Non-category brand colors (ink, cream, yellow, pink, mint, muted) come from `BRAND`; the logo rainbow is `LOGO_PALETTE`; canvas/inline font is `FONT_FAMILY`.
+- In Tailwind, use the matching tokens from `tailwind.config.js`: `ink`, `cream`, `muted`, `pop-yellow`, `pop-pink`, `pop-mint`, `pop-coral`, `pop-sky`. Keep the two in sync.
+
+### Visual Style — Neubrutalism
+
+- Cream (`cream`) page with a faint dot grid (set on `body` in `index.css`), **Space Grotesk** everywhere (UI and canvas).
+- Every surface/control: `border-[3px] border-ink`, hard offset shadow (`shadow-brutal-sm|brutal|brutal-lg|brutal-xl` — no blur), ink text on saturated fills.
+- Reusable component classes in `index.css`: `.nb-btn` (lift on hover, press-in on active), `.nb-card`, `.nb-input`, `.nb-label`, `.nb-focus` (keyboard focus ring).
+- Primary CTA = `nb-btn bg-pop-yellow`; secondary = `nb-btn bg-white`. One yellow CTA per view.
+- Modals use `Modal.tsx` (backdrop, close button, Escape, `role="dialog"`, scroll lock, focus restore) — don't hand-roll overlays.
+- Canvas output (share image, reel, print) draws tiles via `drawElementTile` in `canvasTile.ts` so it always matches the on-screen tile.
 
 ### Animations
 
@@ -136,7 +146,8 @@ src/data/
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
-  colorSchemes.ts        — getCategoryColor(category), etc.
+  colorSchemes.ts        — getCategoryColor(category), etc.; BRAND, LOGO_PALETTE, FONT_FAMILY
+  canvasTile.ts          — shared canvas drawing: ELEMENT_POSITIONS, drawElementTile, drawTableBackground, canvasFont, ensureCanvasFonts, fakeAtomicNumber
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
@@ -144,6 +155,7 @@ src/utils/
 
 src/components/
   ...
+  Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
   PrintPanel.tsx        — print-on-demand modal: 3-step flow (Design → Customize → Preview) for t-shirt only; no product picker
   DesignCanvas.tsx      — 280×280 WYSIWYG preview; draggable tile group + caption; emits print-space offsets to PrintPanel
   ProductMockup.tsx     — mockup image with click-to-enlarge lightbox + Buy CTA + Printful reassurance line
@@ -179,14 +191,16 @@ interface NameResult {
 ```
 
 - **`input`**: Initial state. Background table at base opacity. Input centered on screen.
-- **`revealing`**: Single `setInterval` (500ms) increments `revealedCount`. Both `PeriodicTable` (background brightening) and `ResultDisplay` (tile opacity) read from `revealedCount`. 1s initial delay before first element. Do not add independent timers in child components.
-- **`done`**: All elements revealed. Background table brightens matched tiles (CSS transition). Share button appears.
+- **`revealing`**: Single `setInterval` (500ms) increments `revealedCount`. Both `PeriodicTable` (matched tile lights up in full category color with `.table-light`) and `ResultDisplay` (tile mounts with `.tile-pop` / `.fake-wobble`) read from `revealedCount`. 1s initial delay before first element. Do not add independent timers in child components.
+- **`done`**: All elements revealed. Results card shows the stats sticker plus Share / "Put it on a tee" buttons.
 
 Use `animationPhase` to drive visibility — do not read `result !== null` directly.
 
 ### Background Table Layout
 
-The periodic table is a **fixed full-screen background** (`z-0`, `pointer-events: none`). Scaled via `transform: scale(Math.max(vw/754, vh/376))` to cover the viewport. Tiles use `.table-bg-tile` (opacity 0.12) and `.table-bg-tile-lit` (opacity 0.45, applied when `animationPhase === 'done'`).
+The periodic table is a **fixed full-screen background** (`z-0`, `pointer-events: none`). Scaled via `transform: scale(Math.max(vw/754, vh/376))` to cover the viewport. Unlit tiles are faint ink outlines (`border-ink/10`, `text-ink/20`). As each element is revealed, its tile in the table lights up in its category color with an ink border and hard shadow. The grid is built from `ELEMENT_POSITIONS` in `canvasTile.ts`.
+
+Results sit in a white `.nb-card` so the lit background never collides with the result tiles.
 
 Content (Header, NameInput, ResultDisplay) is in a `relative z-10` layer on top.
 
@@ -212,19 +226,22 @@ Content (Header, NameInput, ResultDisplay) is in a `relative z-10` layer on top.
 ## Fake Element Appearance
 
 Fake elements are visually distinct from real elements:
-- **Background:** `#1C1917` (stone-900) — dark, vs. the vivid saturated colors of real elements
-- **Border:** `#F59E0B` (amber-400) — solid, 2px
-- **Text:** `text-amber-200` for symbol/name; `text-amber-300` for the `*` superscript
+- **Background:** `BRAND.ink` — black, vs. the saturated pastel fills of real elements
+- **Border:** `BRAND.yellow` — solid, 3px (still with the black hard shadow)
+- **Text:** `text-pop-yellow` for number, symbol, name and the `*` superscript
 - **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951) — clearly non-real, unique per variant
 - **Symbol:** rendered with a small amber `*` superscript (flex + items-start, not absolute positioning)
 - **Entry animation:** `fake-wobble` keyframe (wobble/bounce on first appearance)
-- **Footer:** `* fictional element` appears below the Share button when any fake elements are in the result
+- **Footnote:** `* fictional element` appears under the result tiles when any fake elements are in the result
+- **Logo:** the fake "D" in PERIODIC keeps fake styling even though other logo tiles use `LOGO_PALETTE`
 
 ---
 
 ## Current Work
 
 Active phase: **Phase 3 — Print on Demand** (Phase 1 complete, Phase 2 partially complete)
+
+Design refresh (Oct 2026): **neubrutalist revamp shipped to main** — palette, Space Grotesk, cards/buttons/inputs, shared `Modal`, background table lights up during reveal, canvas outputs restyled via `canvasTile.ts`, legal pages restyled, footer overlap fixed.
 
 Phase 2 — what's done:
 - Share image generator (`ShareImageGenerator.ts`) — Canvas PNG, 1200×630

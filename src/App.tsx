@@ -130,14 +130,14 @@ function App() {
     : [];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       {orderSuccess && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-lg">
+        <div role="status" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md flex items-center gap-3 bg-pop-mint text-ink text-sm font-bold px-4 py-3 rounded-xl border-[3px] border-ink shadow-brutal sticker-in">
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
           Order placed — you'll get a shipping confirmation soon!
-          <button onClick={() => setOrderSuccess(false)} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
+          <button onClick={() => setOrderSuccess(false)} aria-label="Dismiss" className="nb-focus ml-auto shrink-0 rounded p-0.5 hover:bg-ink/10">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -147,7 +147,7 @@ function App() {
       {/* Fixed full-screen periodic table background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
         <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'center center' }}>
-          <PeriodicTable highlightedSymbols={animationPhase === 'done' ? revealedSymbols : []} />
+          <PeriodicTable highlightedSymbols={revealedSymbols} />
         </div>
       </div>
 
@@ -156,8 +156,8 @@ function App() {
         <div className="px-4 pt-4 shrink-0">
           <Header />
         </div>
-        {/* Single column: input at ~45% from top, results grow downward without moving input */}
-        <div className="content-wrap flex flex-col items-center px-4 pb-8 gap-4">
+        {/* Single column: input sits high, results grow downward without moving input */}
+        <div className="content-wrap flex flex-col items-center px-4 pb-8 gap-8">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
@@ -172,22 +172,17 @@ function App() {
             isDone={animationPhase === 'done'}
           />
         </div>
-        <footer className="mt-auto px-4 py-4 text-center text-sm text-slate-400 space-y-1">
+        <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
           <p>
             Turn your name into a custom t-shirt
-            <span className="text-amber-400 font-semibold block sm:inline"> · Printed &amp; shipped by Printful</span>
+            <span className="text-ink font-bold block sm:inline"> · Printed and shipped by Printful</span>
           </p>
-          <p className="sm:hidden text-xs">
-            <a href="/privacy.html" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+          <p className="text-xs">
+            <a href="/privacy.html" className="underline decoration-2 underline-offset-2 hover:text-ink">Privacy Policy</a>
             <span className="mx-2">·</span>
-            <a href="/tos.html" className="hover:text-slate-300 transition-colors">Terms of Service</a>
+            <a href="/tos.html" className="underline decoration-2 underline-offset-2 hover:text-ink">Terms of Service</a>
           </p>
         </footer>
-        <div className="hidden sm:block fixed bottom-4 left-4 text-xs text-slate-500 space-x-3">
-          <a href="/privacy.html" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
-          <span>·</span>
-          <a href="/tos.html" className="hover:text-slate-300 transition-colors">Terms of Service</a>
-        </div>
       </div>
     </div>
   );

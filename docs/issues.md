@@ -6,11 +6,11 @@ Status: `open` · `in-progress` · `fixed`
 
 ## Layout & Responsive
 
-### [open] #1 — Large blank white dead zone below content (all screens)
-The background periodic table (contain-scaled) never fills tall viewports at a readable tile size. On desktop-lg at TABLE_MAX_SCALE 1.5, the table occupies ~56% of the 1080px viewport height, leaving ~27% blank below. Partial mitigations applied: `bg-slate-50` background, increased max scale to 1.5. A full fix requires a different background strategy (repeating tile pattern, or cover mode with edge clipping).
+### [fixed] #1 — Large blank white dead zone below content (all screens)
+The background periodic table (contain-scaled) never fills tall viewports at a readable tile size. On desktop-lg at TABLE_MAX_SCALE 1.5, the table occupies ~56% of the 1080px viewport height, leaving ~27% blank below. Partial mitigations applied: `bg-slate-50` background, increased max scale to 1.5. A full fix requires a different background strategy (repeating tile pattern, or cover mode with edge clipping). **Resolved by the neubrutalism revamp:** the page is now a cream dot-grid background, so empty space reads as intentional canvas rather than blank white.
 
-### [open] #2 — Empty gap between header and background table (tall mobile)
-On mobile-md/lg (390–430×844–932), there is visible white space between the subheader and the top of the background table. Root cause same as #1: contain-scaled table does not reach the top of the content area. Reduced in severity by the 1.5 scale increase.
+### [fixed] #2 — Empty gap between header and background table (tall mobile)
+On mobile-md/lg (390–430×844–932), there is visible white space between the subheader and the top of the background table. Root cause same as #1: contain-scaled table does not reach the top of the content area. Reduced in severity by the 1.5 scale increase. Fixed in the revamp with a mobile-specific `.content-wrap` top padding (`24dvh - 120px`) and the dot-grid background.
 
 ### [fixed] #3 — Mobile landscape: results overflow below viewport
 At 844×390 with results visible, output tiles + buttons pushed below the 390px viewport. Fixed by adding a `.content-wrap` CSS class with `@media (max-height: 500px)` override that reduces `padding-top` from `calc(45vh - 80px)` to `calc(28vh - 30px)` on short landscape viewports.
@@ -34,6 +34,15 @@ Fake elements (stone-900 background, amber border) showed no visible hover respo
 2. Added `hover:brightness-110` to fake element tiles so the dark background brightens visibly on hover.
 
 ---
+
+### [fixed] #8 — Legal links overlap footer text on mid-width desktop
+The fixed-position Privacy/Terms links sat on top of the footer line. Moved them into the footer flow at all widths.
+
+### [fixed] #9 — Modals don't close on Escape / lack dialog semantics
+Added a shared `Modal.tsx` with Escape-to-close, `role="dialog"`, `aria-modal`, scroll lock, and focus restore.
+
+### [fixed] #10 — Fake element text invisible in share images and reels
+Canvas generators drew fake-element text in dark brown (`#78350f`) on a near-black tile. All canvases now use the shared `drawElementTile` with yellow text on ink.
 
 ## Sharing (Phase 2)
 

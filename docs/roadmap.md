@@ -4,7 +4,7 @@ Three phases, shipping in order. Each phase is independently shippable.
 
 ---
 
-## Phase 1 — Core Experience (Active)
+## Phase 1 — Core Experience (Done)
 
 **Goal**: A polished, delightful name-spelling experience with a cartoonish visual identity.
 

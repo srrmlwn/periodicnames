@@ -2,9 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getAllElements } from '../data/elements';
-import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from '../utils/colorSchemes';
-import { ELEMENT_POSITIONS } from '../utils/PrintDesignGenerator';
+import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor, BRAND, FONT_FAMILY } from '../utils/colorSchemes';
+import { drawTableBackground, fakeAtomicNumber } from '../utils/canvasTile';
 
 interface Offset { x: number; y: number }
 
@@ -77,23 +76,8 @@ function buildRows(result: NameResult, available: number): PreviewLayout {
 function drawWatermark(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const size = PREVIEW;
-  ctx.clearRect(0, 0, size, size);
-  const categoryMap = new Map(getAllElements().map(e => [e.symbol, e.category]));
-  const cellSize = size / 18;
-  const tableHeight = 9.5 * cellSize;
-  const tableStartY = (size - tableHeight) / 2;
-  const pad = cellSize * 0.06;
-  ctx.globalAlpha = 0.12;
-  for (const [symbol, row, col] of ELEMENT_POSITIONS) {
-    const category = categoryMap.get(symbol);
-    if (!category) continue;
-    const x = col * cellSize;
-    const y = tableStartY + (row <= 6 ? row : row + 0.5) * cellSize;
-    ctx.fillStyle = getCategoryColor(category);
-    ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
-  }
-  ctx.globalAlpha = 1;
+  ctx.clearRect(0, 0, PREVIEW, PREVIEW);
+  drawTableBackground(ctx, PREVIEW, PREVIEW);
 }
 
 const DesignCanvas: React.FC<DesignCanvasProps> = ({
@@ -183,8 +167,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   return (
     <div>
       <div
-        className="relative rounded-xl border-2 border-gray-100 overflow-hidden select-none mx-auto"
-        style={{ width: PREVIEW, height: PREVIEW, backgroundColor: '#ffffff' }}
+        className="relative rounded-lg border-[3px] border-ink overflow-hidden select-none mx-auto touch-none"
+        style={{ width: PREVIEW, height: PREVIEW, backgroundColor: BRAND.paper }}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
@@ -216,11 +200,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                   {word.map((el, ti) => {
                     const isFake = !('atomicNumber' in el);
                     const bg = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
-                    const border = isFake ? getFakeElementBorderColor() : '#111111';
-                    const fakeAtomicNum = isFake
-                      ? [...el.name].reduce((s, c) => s + c.charCodeAt(0), 0)
-                      : null;
-                    const atomicNum = isFake ? fakeAtomicNum : (el as Element).atomicNumber;
+                    const border = isFake ? getFakeElementBorderColor() : BRAND.ink;
+                    const ink = isFake ? BRAND.yellow : BRAND.ink;
+                    const atomicNum = isFake ? fakeAtomicNumber(el.name) : (el as Element).atomicNumber;
 
                     return (
                       <React.Fragment key={`${el.symbol}-${ti}`}>
@@ -231,13 +213,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                             height: sz,
                             backgroundColor: bg,
                             border: `${Math.max(1, Math.round(sz * 0.045))}px solid ${border}`,
-                            borderRadius: sz * 0.12,
+                            borderRadius: sz * 0.08,
+                            boxShadow: `${Math.max(1, Math.round(sz * 0.07))}px ${Math.max(1, Math.round(sz * 0.07))}px 0 ${BRAND.ink}`,
+                            color: ink,
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             flexShrink: 0,
-                            overflow: 'hidden',
                           }}
                         >
                           {/* Atomic number */}
@@ -248,8 +231,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                               left: sz * 0.07,
                               fontSize: Math.max(5, sz * 0.16),
                               fontWeight: 700,
-                              fontFamily: '"Nunito", sans-serif',
-                              color: isFake ? 'rgba(253,230,138,0.85)' : 'rgba(255,255,255,0.82)',
+                              fontFamily: FONT_FAMILY,
+                              opacity: 0.8,
                               lineHeight: 1,
                               pointerEvents: 'none',
                             }}>
@@ -260,9 +243,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                           {/* Symbol */}
                           <span style={{
                             fontSize: sz * 0.38,
-                            fontWeight: 900,
-                            fontFamily: '"Nunito", sans-serif',
-                            color: isFake ? '#fde68a' : 'white',
+                            fontWeight: 700,
+                            fontFamily: FONT_FAMILY,
                             lineHeight: 1,
                             pointerEvents: 'none',
                             marginTop: showDetail ? sz * 0.06 : 0,
@@ -277,9 +259,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                               top: sz * 0.04,
                               left: sz * 0.55,
                               fontSize: sz * 0.14,
-                              fontWeight: 900,
-                              fontFamily: '"Nunito", sans-serif',
-                              color: '#fcd34d',
+                              fontWeight: 700,
+                              fontFamily: FONT_FAMILY,
                               lineHeight: 1,
                               pointerEvents: 'none',
                             }}>*</span>
@@ -293,8 +274,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                               left: 0,
                               right: 0,
                               fontSize: Math.max(5, sz * 0.14),
-                              fontFamily: '"Nunito", sans-serif',
-                              color: isFake ? 'rgba(253,230,138,0.85)' : 'rgba(255,255,255,0.88)',
+                              fontFamily: FONT_FAMILY,
+                              opacity: 0.8,
                               textAlign: 'center',
                               lineHeight: 1,
                               whiteSpace: 'nowrap',
@@ -322,8 +303,8 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               right: 0,
               top: tilesH + Math.round(sz * 0.12),
               fontSize: Math.max(5, Math.round(sz * 0.13)),
-              fontFamily: '"Nunito", sans-serif',
-              color: 'rgba(150,150,150,0.6)',
+              fontFamily: FONT_FAMILY,
+              color: BRAND.muted,
               lineHeight: 1,
               pointerEvents: 'none',
               userSelect: 'none',
@@ -337,14 +318,14 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         {/* Caption drag handle */}
         {hasCaption && (
           <div
-            className="absolute cursor-grab active:cursor-grabbing font-semibold"
+            className="absolute cursor-grab active:cursor-grabbing font-bold"
             style={{
               left: captLeft,
               top: captTop,
               transform: 'translateX(-50%)',
               fontSize: captFontPx,
-              fontFamily: '"Nunito", sans-serif',
-              color: '#1e293b',
+              fontFamily: FONT_FAMILY,
+              color: BRAND.ink,
               whiteSpace: 'nowrap',
               maxWidth: PREVIEW - PAD * 2,
               overflow: 'hidden',
@@ -360,7 +341,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
         {/* Hint — fades once user drags */}
         {!hasMoved && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-            <span className="flex items-center gap-1 text-[10px] text-gray-400 font-medium tracking-wide bg-white/70 rounded-full px-2 py-0.5">
+            <span className="flex items-center gap-1 text-[11px] text-ink font-bold bg-pop-yellow border-2 border-ink rounded-full px-2 py-0.5">
               <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4M8 15l4 4 4-4" />
               </svg>
@@ -373,7 +354,7 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
       <button
         type="button"
         onClick={reset}
-        className="mt-1.5 text-[12px] text-gray-500 hover:text-gray-700 transition-colors duration-150"
+        className="nb-focus mt-2 text-xs font-bold text-ink underline decoration-2 underline-offset-2 hover:text-muted"
       >
         Reset layout
       </button>

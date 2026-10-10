@@ -1,11 +1,13 @@
 import React from 'react';
+import ElementTile from './ElementTile';
 import { matchNameToElements } from '../utils/elementMatcher';
+import type { Element } from '../data/elements';
+import type { FakeElement } from '../data/fakeElements';
+import { LOGO_PALETTE } from '../utils/colorSchemes';
 
-type AnyElement = ReturnType<typeof matchNameToElements>['orderedElements'][number];
+type AnyElement = Element | FakeElement;
 
 const TITLE_RESULT = matchNameToElements('Periodic Names');
-
-const HEADER_PALETTE = ['#e03030', '#f97316', '#f59e0b', '#16a34a', '#0891b2', '#7c3aed', '#db2777'];
 
 function splitIntoWords(elements: AnyElement[]): AnyElement[][] {
   const words: AnyElement[][] = [];
@@ -24,41 +26,34 @@ function splitIntoWords(elements: AnyElement[]): AnyElement[][] {
 
 const WORDS = splitIntoWords(TITLE_RESULT.orderedElements);
 
-function getAtomicNumber(el: AnyElement): number | string {
-  if ('atomicNumber' in el) return el.atomicNumber;
-  return [...el.name].reduce((sum, c) => sum + c.charCodeAt(0), 0);
-}
-
 const Header: React.FC = () => {
   let tileIndex = 0;
   return (
     <header className="text-center py-3">
-      <div className="flex flex-col items-center gap-1 mb-2">
+      <a href="/" aria-label="Periodic Names home" className="inline-flex flex-wrap justify-center gap-x-4 gap-y-2.5 mb-4">
         {WORDS.map((word, wi) => (
-          <div key={wi} className="flex gap-0.5">
+          <div key={wi} className="flex gap-1.5">
             {word.map((el, ei) => {
-              const bg = HEADER_PALETTE[tileIndex++ % HEADER_PALETTE.length];
+              const isFake = !('atomicNumber' in el);
+              const i = tileIndex++;
               return (
-                <div
-                  key={`${wi}-${ei}`}
-                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded border-2 border-black flex items-center justify-center text-white"
-                  style={{ backgroundColor: bg }}
-                  title={el.name}
-                >
-                  <span className="absolute top-0 left-0.5 text-[5px] sm:text-[6px] font-normal leading-none text-white/80">
-                    {getAtomicNumber(el)}
-                  </span>
-                  <span className="text-[11px] sm:text-xs font-bold leading-none">
-                    {el.symbol}
-                  </span>
+                <div key={`${wi}-${ei}`} className="w-9 h-9 sm:w-11 sm:h-11">
+                  <ElementTile
+                    element={isFake ? undefined : el as Element}
+                    fakeElement={isFake ? el as FakeElement : undefined}
+                    animationDelay={i * 60}
+                    colorOverride={LOGO_PALETTE[i % LOGO_PALETTE.length]}
+                    size="sm"
+                  />
                 </div>
               );
             })}
           </div>
         ))}
-      </div>
-      <p className="text-sm font-semibold text-gray-500">
-        Find your name in the Periodic Table of Elements
+      </a>
+      <p className="text-sm sm:text-base font-bold text-ink">
+        Spell your name with the{' '}
+        <span className="inline-block bg-pop-yellow border-2 border-ink px-1.5 -rotate-1">periodic table</span>
       </p>
     </header>
   );

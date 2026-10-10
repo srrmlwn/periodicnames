@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Modal from './Modal';
 import { ShareImageGenerator } from '../utils/ShareImageGenerator';
 import { ShareVideoGenerator } from '../utils/ShareVideoGenerator';
 import type { NameResult } from '../types';
@@ -197,31 +198,14 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
   const estimatedSecs = Math.ceil(videoGenRef.current.getEstimatedDurationMs(result) / 1000);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"
-        onClick={e => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors duration-150"
-          aria-label="Close"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
+    <Modal isOpen={isOpen} onClose={onClose} label="Share your name">
         <div className="px-6 pt-5 pb-6 space-y-4">
-          <h2 className="text-base font-bold text-gray-800 pr-6">Share your name</h2>
+          <h2 className="text-xl font-bold text-ink pr-10">Share your name</h2>
 
           {/* ── Customize ── */}
           <div className="space-y-3">
             <div>
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+              <p className="nb-label flex items-center gap-1">
                 <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
@@ -233,12 +217,12 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                 onChange={e => setCaption(e.target.value)}
                 placeholder={CAPTION_PLACEHOLDERS[placeholderIdx]}
                 maxLength={60}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-slate-400 text-gray-700 placeholder-gray-300"
+                className="nb-input text-sm"
               />
             </div>
 
             <div className="flex items-center">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1">
                 <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
@@ -250,14 +234,14 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                 role="switch"
                 aria-checked={showWatermark}
                 onClick={() => setShowWatermark(v => !v)}
-                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${showWatermark ? 'bg-slate-700' : 'bg-gray-200'}`}
+                className={`nb-focus relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-[3px] border-ink transition-colors duration-200 ${showWatermark ? 'bg-pop-mint' : 'bg-white'}`}
               >
-                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200 ${showWatermark ? 'translate-x-4' : 'translate-x-1'}`} />
+                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-ink transition-transform duration-200 ${showWatermark ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
               </button>
             </div>
           </div>
 
-          <div className="border-t border-gray-100" />
+          <div className="border-t-[3px] border-dashed border-ink/20" />
 
           {/* ── Platform + Preview + Actions ── */}
           <div className="space-y-3">
@@ -265,13 +249,13 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
               <select
                 value={platform}
                 onChange={e => setPlatform(e.target.value as SharePlatform)}
-                className="w-full appearance-none px-3 py-2.5 pr-8 text-sm font-semibold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-slate-400 cursor-pointer"
+                className="nb-input appearance-none pr-8 text-sm font-bold cursor-pointer"
               >
                 {platforms.map(p => (
                   <option key={p.id} value={p.id}>{p.label} — {p.description}</option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -279,17 +263,17 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
             </div>
 
             {/* Preview */}
-            <div className="h-48 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="h-48 rounded-lg bg-cream border-[3px] border-ink flex items-center justify-center overflow-hidden">
               {platform !== 'reel' && (
                 <>
                   {isGeneratingImage && (
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                      <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="flex flex-col items-center gap-2 text-muted">
+                      <div className="w-6 h-6 border-[3px] border-ink border-t-transparent rounded-full animate-spin" />
                       <span className="text-xs">Generating…</span>
                     </div>
                   )}
                   {imageError && !isGeneratingImage && (
-                    <span className="text-xs text-red-400">Generation failed — try again</span>
+                    <span className="text-xs text-pop-coral">Generation failed — try again</span>
                   )}
                   {imageUrl && !isGeneratingImage && (
                     <img src={imageUrl} alt="Share preview" className="max-h-full max-w-full object-contain" />
@@ -300,26 +284,26 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
               {platform === 'reel' && (
                 <>
                   {!isRecording && !videoUrl && (
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                      <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex flex-col items-center gap-2 text-muted">
+                      <svg className="w-10 h-10 text-muted/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                           d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.902L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      <span className="text-xs text-center text-gray-400 px-4">
-                        Animated tile reveal · <span className="font-medium text-gray-500">~{estimatedSecs}s</span>
+                      <span className="text-xs text-center text-muted px-4">
+                        Animated tile reveal · <span className="font-medium text-muted">~{estimatedSecs}s</span>
                       </span>
                     </div>
                   )}
                   {isRecording && (
                     <div className="flex flex-col items-center gap-3 w-full px-8">
-                      <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="w-8 h-8 border-[3px] border-ink border-t-transparent rounded-full animate-spin" />
+                      <div className="w-full bg-white border-2 border-ink rounded-full h-3 overflow-hidden">
                         <div
-                          className="bg-blue-500 h-1.5 rounded-full transition-all duration-100"
+                          className="bg-pop-yellow h-full transition-all duration-100"
                           style={{ width: `${Math.round(recordProgress * 100)}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-400">Recording…</span>
+                      <span className="text-xs text-muted">Recording…</span>
                     </div>
                   )}
                   {videoUrl && (
@@ -336,11 +320,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                   <button
                     onClick={handleShareImage}
                     disabled={!imageBlob || isGeneratingImage}
-                    className={`flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 flex items-center justify-center gap-2 ${
-                      imageBlob && !isGeneratingImage
-                        ? 'bg-slate-800 text-white hover:bg-slate-700'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className="nb-btn bg-pop-yellow text-sm flex-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -352,7 +332,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                     href={xIntentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="py-2.5 px-3 rounded-xl text-sm font-semibold bg-black text-white hover:bg-gray-800 transition-colors duration-150 flex items-center gap-1.5 shrink-0"
+                    className="nb-btn bg-ink text-white px-3 text-sm shrink-0"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -360,7 +340,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                     Post
                   </a>
                 </div>
-                <p className="text-[11px] text-gray-400 text-center">Attach the downloaded image when you post on X</p>
+                <p className="text-xs font-medium text-muted text-center">Attach the downloaded image when you post on X</p>
               </div>
             )}
 
@@ -370,11 +350,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                 <button
                   onClick={handleShareImage}
                   disabled={!imageBlob || isGeneratingImage}
-                  className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 flex items-center justify-center gap-2 ${
-                    imageBlob && !isGeneratingImage
-                      ? 'bg-slate-800 text-white hover:bg-slate-700'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className="nb-btn bg-pop-yellow text-sm w-full"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -382,7 +358,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                   </svg>
                   {canNativeShare ? 'Share image' : 'Download image'}
                 </button>
-                <p className="text-[11px] text-gray-400 text-center">Open Instagram → [+] → Post → select your image</p>
+                <p className="text-xs font-medium text-muted text-center">Open Instagram → [+] → Post → select your image</p>
               </div>
             )}
 
@@ -392,11 +368,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                 <button
                   onClick={handleShareImage}
                   disabled={!imageBlob || isGeneratingImage}
-                  className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 flex items-center justify-center gap-2 ${
-                    imageBlob && !isGeneratingImage
-                      ? 'bg-slate-800 text-white hover:bg-slate-700'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className="nb-btn bg-pop-yellow text-sm w-full"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -404,7 +376,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                   </svg>
                   {canNativeShare ? 'Share image' : 'Download image'}
                 </button>
-                <p className="text-[11px] text-gray-400 text-center">Open Instagram → [+] → Story → select your image</p>
+                <p className="text-xs font-medium text-muted text-center">Open Instagram → [+] → Story → select your image</p>
               </div>
             )}
 
@@ -415,11 +387,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                   <button
                     onClick={handleRecord}
                     disabled={isRecording}
-                    className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 flex items-center justify-center gap-2 ${
-                      isRecording
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-slate-800 text-white hover:bg-slate-700'
-                    }`}
+                    className="nb-btn bg-pop-yellow text-sm w-full"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -431,7 +399,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                   <div className="flex gap-2">
                     <button
                       onClick={handleDownloadVideo}
-                      className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-colors duration-150 flex items-center justify-center gap-2"
+                      className="nb-btn bg-pop-yellow text-sm flex-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -441,7 +409,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                     </button>
                     <button
                       onClick={handleRecord}
-                      className="py-2.5 px-3 rounded-xl text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors duration-150"
+                      className="nb-btn bg-white px-3 text-sm"
                       title="Record again"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -451,14 +419,13 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
                     </button>
                   </div>
                 )}
-                <p className="text-[11px] text-gray-400 text-center">Open Instagram or TikTok → Reel → select your video</p>
+                <p className="text-xs font-medium text-muted text-center">Open Instagram or TikTok → Reel → select your video</p>
               </div>
             )}
 
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

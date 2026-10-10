@@ -2,119 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes elementGlow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8);
-  }
-  50% {
-    box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.4);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+@layer base {
+  body {
+    background-color: theme('colors.cream');
+    background-image: radial-gradient(rgba(17, 17, 17, 0.13) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: theme('colors.ink');
   }
 }
 
-@keyframes elementPulse {
-  0%, 100% {
-    transform: scale(1);
+@layer components {
+  .nb-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-[3px] border-ink px-5 py-2.5 font-bold text-ink shadow-brutal;
+    transition: transform 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out;
   }
-  50% {
-    transform: scale(1.05);
+  .nb-btn:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    @apply shadow-brutal-lg;
+  }
+  .nb-btn:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+  .nb-btn:disabled {
+    @apply cursor-not-allowed opacity-50 shadow-none;
+  }
+  .nb-btn:focus-visible,
+  .nb-focus:focus-visible {
+    outline: 3px solid theme('colors.pop.sky');
+    outline-offset: 2px;
+  }
+
+  .nb-card {
+    @apply rounded-xl border-[3px] border-ink bg-white shadow-brutal-xl;
+  }
+
+  .nb-input {
+    @apply w-full rounded-lg border-[3px] border-ink bg-white px-3 py-2 font-medium text-ink shadow-brutal-sm placeholder:text-muted/60;
+  }
+  .nb-input:focus {
+    outline: none;
+    @apply shadow-brutal bg-pop-yellow/10;
+  }
+
+  .nb-label {
+    @apply mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink;
   }
 }
 
-@keyframes elementFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes elementGlowPulse {
-  0% {
-    filter: brightness(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
-  }
-  50% {
-    filter: brightness(1.3);
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3);
-  }
-  100% {
-    filter: brightness(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-  }
-}
-
-@keyframes popOut {
-  0% {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.2) rotate(5deg);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.5) rotate(10deg);
-  }
-}
-
-@keyframes cloudBurst {
-  0% {
-    opacity: 0;
-    transform: scale(0) rotate(0deg);
-  }
-  20% {
-    opacity: 1;
-    transform: scale(1.5) rotate(180deg);
-  }
-  40% {
-    opacity: 0.8;
-    transform: scale(1.2) rotate(360deg);
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.1) rotate(540deg);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) rotate(720deg);
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
-
-@keyframes resultsFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes tilePop {
+  0%   { opacity: 0; transform: translateY(-18px) scale(0.6) rotate(-6deg); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.06) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
 }
 
 @keyframes fakeWobble {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  20% { transform: rotate(-5deg) scale(1.06); }
-  40% { transform: rotate(5deg) scale(1.09); }
-  60% { transform: rotate(-3deg) scale(1.05); }
-  80% { transform: rotate(2deg) scale(1.02); }
+  0%   { opacity: 0; transform: scale(0.6) rotate(0deg); }
+  30%  { opacity: 1; transform: rotate(-7deg) scale(1.08); }
+  50%  { transform: rotate(6deg) scale(1.06); }
+  70%  { transform: rotate(-3deg) scale(1.02); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+@keyframes resultsFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes resultExit {
@@ -122,76 +74,50 @@
   to   { opacity: 0; transform: translateY(-16px) scale(0.97); }
 }
 
-.element-glow {
-  animation: elementGlow 2s ease-in-out infinite;
+@keyframes stickerIn {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-2deg); }
 }
 
-.element-highlighted {
-  box-shadow: 0 0 0 3px #fcd34d, 0 0 18px 6px rgba(252, 211, 77, 0.55);
-  animation: highlightBreath 2s ease-in-out infinite;
+@keyframes tableLight {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
-@keyframes highlightBreath {
-  0%, 100% { box-shadow: 0 0 0 3px #fcd34d, 0 0 14px 4px rgba(252, 211, 77, 0.5); }
-  50%       { box-shadow: 0 0 0 3px #fde68a, 0 0 24px 8px rgba(252, 211, 77, 0.8); }
+.tile-pop {
+  animation: tilePop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.element-pulse {
-  animation: elementPulse 1.5s ease-in-out infinite;
-}
-
-.element-fade-in {
-  animation: elementFadeIn 0.3s ease-out;
-}
-
-.element-glow-pulse {
-  animation: elementGlowPulse 2s ease-in-out infinite;
-}
-
-.element-pop-out {
-  animation: popOut 0.6s ease-out;
-}
-
-.cloud-burst {
-  animation: cloudBurst 0.8s ease-out;
-}
-
-.periodic-table-fade-out {
-  animation: fadeOut 0.6s ease-out forwards;
+.fake-wobble {
+  animation: fakeWobble 650ms ease-in-out both;
 }
 
 .results-fade-in {
   animation: resultsFadeIn 0.5s ease-out;
 }
 
-.fake-wobble {
-  animation: fakeWobble 0.65s ease-in-out both;
-}
-
 .result-exit {
   animation: resultExit 0.3s ease-in forwards;
 }
 
-
-.hover-lift {
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+.sticker-in {
+  animation: stickerIn 450ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+.table-light {
+  animation: tableLight 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-
-.animate-stagger-1 { animation-delay: 0.1s; }
-.animate-stagger-2 { animation-delay: 0.2s; }
-.animate-stagger-3 { animation-delay: 0.3s; }
-.animate-stagger-4 { animation-delay: 0.4s; }
-.animate-stagger-5 { animation-delay: 0.5s; }
 
 /* Responsive content padding: dvh accounts for mobile browser chrome so the
-   input sits at ~45% of the actual visible area, not the full screen height */
+   input sits roughly a third of the way down the visible area, not the full screen height */
 .content-wrap {
-  padding-top: max(24px, calc(45dvh - 80px));
+  padding-top: max(24px, calc(38dvh - 120px));
+}
+@media (max-width: 639px) {
+  .content-wrap {
+    padding-top: max(24px, calc(24dvh - 120px));
+  }
 }
 @media (max-height: 500px) {
   .content-wrap {
@@ -199,6 +125,8 @@
   }
 }
 
-.table-bg-tile {
-  border-radius: 8px;
+@media (prefers-reduced-motion: reduce) {
+  .tile-pop, .fake-wobble, .results-fade-in, .sticker-in, .table-light {
+    animation: none;
+  }
 }

@@ -1,125 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor } from '../utils/colorSchemes';
+import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor, BRAND } from '../utils/colorSchemes';
+import { fakeAtomicNumber } from '../utils/canvasTile';
 
 interface ElementTileProps {
   element?: Element;
   fakeElement?: FakeElement;
-  isHighlighted?: boolean;
-  onClick?: () => void;
   animationDelay?: number;
   size?: 'xs' | 'sm' | 'lg';
+  colorOverride?: string;
 }
 
 const ElementTile: React.FC<ElementTileProps> = ({
   element,
   fakeElement,
-  isHighlighted = false,
-  onClick,
   animationDelay = 0,
-  size = 'sm'
+  size = 'sm',
+  colorOverride,
 }) => {
   const isFake = !!fakeElement;
   const displayElement = element || fakeElement;
-
-  const [showPulse, setShowPulse] = useState(false);
-  const [hasWobbled, setHasWobbled] = useState(false);
-
-  useEffect(() => {
-    if (isHighlighted) {
-      setTimeout(() => setShowPulse(true), animationDelay + 200);
-    } else {
-      setShowPulse(false);
-    }
-  }, [isHighlighted, animationDelay]);
-
-  useEffect(() => {
-    if (isFake) {
-      requestAnimationFrame(() => {
-        setHasWobbled(false);
-      });
-    }
-  }, [isFake]);
-
   if (!displayElement) return null;
 
-  const fakeAtomicNumber = isFake
-    ? [...fakeElement!.name].reduce((sum, c) => sum + c.charCodeAt(0), 0)
-    : undefined;
+  const atomicNumber = isFake ? fakeAtomicNumber(fakeElement!.name) : element?.atomicNumber;
+  const backgroundColor = isFake ? getFakeElementColor() : colorOverride ?? getCategoryColor(element?.category || '');
+  const borderColor = isFake ? getFakeElementBorderColor() : BRAND.ink;
 
-  const handleClick = () => {
-    if (onClick) onClick();
-  };
-
-  const baseClasses = `
-    w-full h-full rounded-md border-2 shadow-sm
-    flex flex-col items-center justify-center
-    cursor-pointer font-bold relative overflow-hidden
-    transition-all duration-300 ease-out hover:-translate-y-0.5
-  `;
-
-  const animationClasses = isHighlighted
-    ? `
-      z-20 scale-125 element-highlighted
-      ${showPulse ? 'element-pulse' : ''}
-      hover:scale-135 hover:z-30 active:scale-95
-      transition-all duration-300 ease-out
-    `
-    : `
-      hover:shadow-lg hover:z-30 active:scale-95
-      hover:scale-125 transition-all duration-300 ease-out
-    `;
-
-  const fakeClasses = isFake
-    ? `text-amber-200 hover:brightness-110 ${isFake && !hasWobbled ? 'fake-wobble' : ''}`
-    : 'text-white';
-
-  const classes = `${baseClasses} ${fakeClasses} ${animationClasses}`;
-
-  const backgroundColor = isFake ? getFakeElementColor() : getCategoryColor(element?.category || '');
-  const borderColor = isFake ? getFakeElementBorderColor() : '#111111';
-
-  const atomicNumberClass = size === 'lg' ? 'text-xs' : 'text-[5px]';
-  const symbolClass = size === 'lg' ? 'text-2xl font-black' : size === 'xs' ? 'text-[9px] font-bold' : 'text-sm font-bold';
-  const nameClass = size === 'lg' ? 'text-[6px] sm:text-[8px]' : 'text-[6px]';
+  const symbolClass = size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : size === 'xs' ? 'text-[10px]' : 'text-base sm:text-lg';
+  const numberClass = size === 'lg' ? 'text-[9px] sm:text-[11px]' : 'text-[7px]';
 
   return (
     <div
-      className={`${classes} group`}
-      onClick={handleClick}
-      title={`${displayElement.name} (${displayElement.symbol})`}
-      style={{
-        backgroundColor,
-        borderColor,
-        animationDelay: `${animationDelay}ms`,
-        transitionDelay: `${animationDelay}ms`
-      }}
+      className={`w-full h-full rounded-md border-[3px] shadow-brutal flex flex-col items-center justify-center font-bold relative overflow-hidden transition-transform duration-150 ease-out hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg ${
+        isFake ? 'text-pop-yellow fake-wobble' : 'text-ink tile-pop'
+      }`}
+      title={`${displayElement.name} (${displayElement.symbol})${isFake ? ' — fictional' : ''}`}
+      style={{ backgroundColor, borderColor, animationDelay: `${animationDelay}ms` }}
     >
       {size !== 'xs' && (
-        <div className={`absolute top-0 left-0.5 flex flex-col leading-none ${atomicNumberClass} font-normal`}>
-          <span className="text-white/80">{fakeAtomicNumber ?? element?.atomicNumber}</span>
-        </div>
+        <span className={`absolute top-0.5 left-1 leading-none opacity-75 ${numberClass}`}>
+          {atomicNumber}
+        </span>
       )}
 
-      <div className={`${symbolClass} leading-none flex items-start`}>
+      <div className={`${symbolClass} leading-none flex items-start tracking-tight`}>
         <span>{displayElement.symbol}</span>
-        {isFake && <span className="text-[0.45em] font-bold text-amber-300">*</span>}
+        {isFake && <span className="text-[0.5em]">*</span>}
       </div>
 
-      {size !== 'xs' && (
-        <div className={`absolute bottom-0.5 left-0.5 right-0.5 ${nameClass} text-center leading-tight font-normal transition-all duration-300 ${
-          isHighlighted ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
-        }`}>
-          <span className="block truncate">
-            {displayElement.name}
-          </span>
-        </div>
-      )}
-
-      {isHighlighted && showPulse && (
-        <div className="absolute inset-0 rounded-md bg-white opacity-20 element-glow-pulse"
-          style={{ animationDelay: `${animationDelay + 300}ms` }} />
+      {size === 'lg' && (
+        <span className="absolute bottom-0.5 left-0.5 right-0.5 text-center leading-tight font-medium truncate text-[7px] sm:text-[9px]">
+          {displayElement.name}
+        </span>
       )}
     </div>
   );

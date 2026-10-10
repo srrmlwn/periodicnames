@@ -25,9 +25,13 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
 
   useEffect(() => {
     if (!zoomed) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setZoomed(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopImmediatePropagation();
+      setZoomed(false);
+    };
+    window.addEventListener('keydown', onKey, { capture: true });
+    return () => window.removeEventListener('keydown', onKey, { capture: true });
   }, [zoomed]);
 
   return (
@@ -35,14 +39,14 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={onBack}
-          className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 flex items-center gap-1"
+          className="nb-focus text-xs font-bold text-ink underline decoration-2 underline-offset-2 hover:text-muted cursor-pointer flex items-center gap-1"
         >
           <span className="text-base leading-none">‹</span>
           <span>Back</span>
         </button>
         <button
           onClick={onEditDesign}
-          className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-150 flex items-center gap-1"
+          className="nb-focus text-xs font-bold text-ink underline decoration-2 underline-offset-2 hover:text-muted cursor-pointer flex items-center gap-1"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -58,10 +62,10 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
         <img
           src={mockupUrl}
           alt="Product preview"
-          className="w-full rounded-xl object-contain"
+          className="w-full rounded-lg border-[3px] border-ink bg-cream object-contain"
           style={{ maxHeight: '280px' }}
         />
-        <div className="absolute bottom-2 right-2 bg-black/40 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+        <div className="absolute bottom-2 right-2 bg-ink/70 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
           <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0zm0 0" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 8v6m-3-3h6" />
@@ -70,33 +74,33 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
       </div>
 
       <div className="mb-4">
-        <p className="text-sm font-semibold text-gray-800">{product.name}</p>
+        <p className="text-sm font-bold text-ink">{product.name}</p>
         {variant && (
-          <p className="text-xs text-gray-500 mt-0.5">{variant.label}</p>
+          <p className="text-xs text-muted mt-0.5">{variant.label}</p>
         )}
-        <p className="text-sm font-semibold text-gray-800 mt-1">${product.priceUsd.toFixed(2)}</p>
+        <p className="text-sm font-bold text-ink mt-1">${product.priceUsd.toFixed(2)}</p>
       </div>
 
       <button
         onClick={onOrder}
         disabled={isOrdering}
-        className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors duration-150 bg-slate-800 text-white hover:bg-slate-700"
+        className="nb-btn bg-pop-yellow text-sm w-full"
       >
         Buy — ${product.priceUsd.toFixed(2)}
       </button>
-      <p className="text-center text-[10px] text-gray-400 mt-2">
-        Printed & shipped by Printful · Ships in 3–5 days
+      <p className="text-center text-xs font-medium text-muted mt-3">
+        Printed and shipped by Printful · Ships in 3–5 days
       </p>
 
       {zoomed && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/80 cursor-zoom-out"
           onClick={() => setZoomed(false)}
         >
           <img
             src={mockupUrl}
             alt="Product preview enlarged"
-            className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl border-[3px] border-ink bg-white shadow-brutal-xl"
           />
           <button
             onClick={() => setZoomed(false)}
