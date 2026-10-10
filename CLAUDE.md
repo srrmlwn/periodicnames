@@ -24,13 +24,12 @@ There is no test runner. The build command is the correctness gate.
 
 ## Development Workflow
 
-Every task follows this sequence:
+Work happens directly on `main` — no feature branches, no PRs. Every task follows this sequence:
 
-### 1. Branch
+### 1. Sync
 ```bash
-git checkout -b <type>/<short-description>
+git checkout main && git pull --rebase origin main
 ```
-Branch types: `feat/` `fix/` `refactor/` `style/`
 
 ### 2. Implement
 
@@ -59,24 +58,30 @@ git add <specific files>   # never `git add .` — avoids accidentally staging e
 git commit -m "<type>(<scope>): <what changed and why>"
 ```
 
-### 6. Push and open PR
+Commit types: `feat` `fix` `refactor` `style` `docs` `chore`
+
+### 6. Push to main
 
 ```bash
-git push -u origin <branch>
-gh pr create --title "<same as commit message>" --body "..."
+git pull --rebase origin main   # pick up any other agent's commits first
+git push origin main
 ```
+
+Pushing to `main` deploys to production on Vercel, so lint + build must pass before every push.
 
 ---
 
 ## Multi-Agent Parallel Work
 
-Multiple agents can work simultaneously using **git worktrees** — each agent gets an isolated copy of the repo on its own branch.
+Multiple agents can work simultaneously using **git worktrees** — each agent gets an isolated copy of the repo on a short-lived local branch, then rebases onto `main` and pushes straight to `main` when done (no PR).
 
 ```bash
 git worktree add ../periodicnames-<task> -b <branch-name>
 cd ../periodicnames-<task>
 npm install
-# ... work ...
+# ... work, commit ...
+git fetch origin && git rebase origin/main
+git push origin HEAD:main
 git worktree remove ../periodicnames-<task>
 ```
 
