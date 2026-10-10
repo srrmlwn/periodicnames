@@ -53,8 +53,12 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number):
   return t + '…';
 }
 
+const FIRST_UNDISCOVERED_NUMBER = 119;
+const UNDISCOVERED_RANGE = 81;
+
 export function fakeAtomicNumber(name: string): number {
-  return [...name].reduce((sum, c) => sum + c.charCodeAt(0), 0);
+  const sum = [...name].reduce((total, c) => total + c.charCodeAt(0), 0);
+  return FIRST_UNDISCOVERED_NUMBER + (sum % UNDISCOVERED_RANGE);
 }
 
 function drawNewRibbon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, radius: number): void {

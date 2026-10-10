@@ -229,12 +229,12 @@ The periodic table sits **in the page flow between the input and the results car
 Fake elements are framed as **newly discovered**, never "fake" or "fictional" (the name ends up on someone's shirt, so it must not read as "this person is fake"):
 - **Fill:** the next `NAME_PALETTE` colour in sequence — `getTileColors` counts fakes like any other tile, so the name keeps an even colour rhythm
 - **Border / text / shadow:** ink, same as real tiles
-- **Marker:** a black diagonal ribbon across the top-right corner reading `NEW_RIBBON_LABEL` ("NEW"). On `lg` (result) tiles it's the labelled ribbon at every breakpoint (smaller on phones, with the fake's atomic number one step smaller so 4-digit numbers clear it); logo-size tiles and the small `DesignCanvas` preview (<64px) get a plain black corner. Canvas outputs draw it with `drawNewRibbon` in `canvasTile.ts` (clipped band, 20% of tile size from the corner)
+- **Marker:** a black diagonal ribbon across the top-right corner reading `NEW_RIBBON_LABEL` ("NEW"). `lg` (result) and `sm` (logo) tiles show the labelled ribbon at every breakpoint (scaled down on phones); `xs` tiles and the small `DesignCanvas` preview (<64px) get a plain black corner. Canvas outputs draw it with `drawNewRibbon` in `canvasTile.ts` (clipped band, 20% of tile size from the corner)
 - **No asterisk** on the tile
-- **Atomic number:** derived from the sum of char codes of the element name (e.g. "Awesomium" → 951)
+- **Atomic number:** always 119–199 — the next undiscovered elements after oganesson (118). `fakeAtomicNumber(name)` = 119 + (char-code sum % 81), stable per variant, never more than 3 digits so it clears the ribbon
 - **Entry animation:** `fake-wobble` keyframe
 - **Legend:** `NEW = newly discovered element` under the result tiles when any fake elements are present
-- **Logo:** the fake "D" in PERIODIC uses its `LOGO_PALETTE` colour plus the corner marker
+- **Logo:** the fake "D" in PERIODIC uses its `LOGO_PALETTE` colour plus the NEW ribbon
 
 ---
 

@@ -27,7 +27,7 @@ const ElementTile: React.FC<ElementTileProps> = ({
   const backgroundColor = colorOverride ?? (isFake ? getFakeElementColor() : getCategoryColor(element?.category || ''));
 
   const symbolClass = size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : size === 'xs' ? 'text-[10px]' : 'text-base sm:text-lg';
-  const numberClass = size === 'lg' ? (isFake ? 'text-[8px] sm:text-[11px]' : 'text-[9px] sm:text-[11px]') : 'text-[7px]';
+  const numberClass = size === 'lg' ? 'text-[9px] sm:text-[11px]' : 'text-[7px]';
 
   return (
     <div
@@ -42,7 +42,12 @@ const ElementTile: React.FC<ElementTileProps> = ({
           {NEW_RIBBON_LABEL}
         </span>
       )}
-      {isFake && size !== 'lg' && (
+      {isFake && size === 'sm' && (
+        <span className="absolute top-[3px] -right-[16px] w-[46px] sm:top-[4px] sm:-right-[17px] sm:w-[52px] rotate-45 bg-ink text-white text-center font-bold tracking-wide leading-[1.35] text-[5px] sm:text-[6px]">
+          {NEW_RIBBON_LABEL}
+        </span>
+      )}
+      {isFake && size === 'xs' && (
         <span className="absolute -top-[9px] -right-[9px] w-[18px] h-[18px] rotate-45 bg-ink" aria-hidden="true" />
       )}
       {size !== 'xs' && (
