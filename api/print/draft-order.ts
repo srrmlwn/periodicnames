@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { parsePrintPosition } from '../_lib/printPosition';
 
 // Test-only endpoint: creates a Printful draft order (confirm: false) without going through Stripe.
 // Gated by PRINTFUL_TEST_SECRET to prevent accidental public use.
 // Usage: POST /api/print/draft-order
-// Body: { secret, variantId, designUrl, recipientName?, recipientEmail? }
+// Body: { secret, variantId, designUrl, position?, recipientName?, recipientEmail? }
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
@@ -42,13 +43,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const { secret, variantId, designUrl, recipientName, recipientEmail } = req.body as {
+  const { secret, variantId, designUrl, position: rawPosition, recipientName, recipientEmail } = req.body as {
     secret?: string;
     variantId?: number;
     designUrl?: string;
     recipientName?: string;
     recipientEmail?: string;
+    position?: unknown;
   };
+  const position = parsePrintPosition(rawPosition);
 
   if (secret !== testSecret) {
     log('rejected: invalid test secret');
@@ -73,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       country_code: 'US',
       ...(recipientEmail ? { email: recipientEmail } : {}),
     },
-    items: [{ variant_id: Number(variantId), quantity: 1, files: [{ type: 'front', url: designUrl }] }],
+    items: [{ variant_id: Number(variantId), quantity: 1, files: [{ type: 'front', url: designUrl, ...(position ? { position } : {}) }] }],
   };
 
   log('POST /orders (draft) →', { variantId, designUrl, recipientName, recipientEmail });

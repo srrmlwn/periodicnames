@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { parsePrintPosition } from '../_lib/printPosition';
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
@@ -27,38 +28,8 @@ interface PrintfulResponse<T> {
   result: T;
 }
 
-interface Printfile {
-  printfile_id: number;
-  width: number;
-  height: number;
-}
-
-interface VariantPrintfile {
-  variant_id: number;
-  placements: Record<string, number>;
-}
-
-interface PrintfilesResult {
-  printfiles: Printfile[];
-  variant_printfiles: VariantPrintfile[];
-}
-
 function log(label: string, data?: unknown) {
   console.log(`[mockup] ${label}`, data !== undefined ? JSON.stringify(data) : '');
-}
-
-async function printfulGet<T>(path: string, headers: Record<string, string>): Promise<T> {
-  const res = await fetch(`${PRINTFUL_BASE}${path}`, { headers });
-  const raw = await res.text();
-  log(`GET ${path} ←`, { status: res.status, body: raw });
-  if (!res.ok) throw new Error(`Printful GET ${path} failed: ${raw}`);
-  let parsed: PrintfulResponse<T>;
-  try {
-    parsed = JSON.parse(raw) as PrintfulResponse<T>;
-  } catch {
-    throw new Error(`Printful GET ${path} returned non-JSON: ${raw}`);
-  }
-  return parsed.result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -72,11 +43,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('env check', { has_printful_key: !!process.env.PRINTFUL_API_KEY, has_store_id: !!process.env.PRINTFUL_STORE_ID, store_id: process.env.PRINTFUL_STORE_ID });
 
-  const { productId, variantIds, designUrl, placement = 'front' } = req.body as {
+  const { productId, variantIds, designUrl, placement = 'front', position: rawPosition } = req.body as {
     productId?: unknown;
     variantIds?: unknown;
     designUrl?: unknown;
     placement?: string;
+    position?: unknown;
   };
 
   log('request', { productId, variantIds, designUrl, placement });
@@ -87,26 +59,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  let areaWidth = 1800;
-  let areaHeight = 2400;
-  try {
-    const variantId = Array.isArray(variantIds) ? variantIds[0] : variantIds;
-    const pf = await printfulGet<PrintfilesResult>(
-      `/mockup-generator/printfiles/${productId}?variant_ids[]=${variantId}`,
-      printfulHeaders(),
-    );
-    const variantEntry = pf.variant_printfiles?.find(vp => vp.variant_id === variantId);
-    const printfileId = variantEntry?.placements?.[placement as string];
-    const printfile = pf.printfiles?.find(p => p.printfile_id === printfileId);
-    if (printfile) {
-      areaWidth = printfile.width;
-      areaHeight = printfile.height;
-      log('print area resolved', { placement, printfileId, areaWidth, areaHeight });
-    } else {
-      log('WARN: placement printfile not found, using defaults', { variantEntry, printfileId, areaWidth, areaHeight });
-    }
-  } catch (err) {
-    log('WARN: printfiles fetch failed, using defaults', { error: String(err), areaWidth, areaHeight });
+  const position = parsePrintPosition(rawPosition);
+  if (!position) {
+    log('rejected: invalid position', rawPosition);
+    res.status(400).json({ error: 'Invalid print position' });
+    return;
   }
 
   const taskBody = {
@@ -114,7 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     files: [{
       placement,
       url: designUrl,
-      position: { area_width: areaWidth, area_height: areaHeight, width: areaWidth, height: areaHeight, top: 0, left: 0 },
+      position,
     }],
     format: 'jpg',
   };

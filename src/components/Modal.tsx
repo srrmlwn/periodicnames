@@ -5,10 +5,11 @@ interface ModalProps {
   onClose: () => void;
   label: string;
   className?: string;
+  widthClass?: string;
   children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, label, className = '', children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, label, className = '', widthClass = 'max-w-md', children }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -41,7 +42,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, label, className = '', c
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        className={`nb-card w-full max-w-md relative focus:outline-none results-fade-in ${className}`}
+        className={`nb-card w-full ${widthClass} relative focus:outline-none results-fade-in ${className}`}
         onClick={e => e.stopPropagation()}
       >
         <button

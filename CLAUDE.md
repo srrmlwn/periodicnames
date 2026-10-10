@@ -143,7 +143,7 @@ src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
-  printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only; mug/poster removed pending design work) + getPrintProduct(slug); PrintProduct/PrintVariant types
+  printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only), SHIRT_COLORS (name/hex/dark), SHIRT_SIZES, findShirtVariant(color, size)
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
@@ -152,15 +152,17 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
-  PrintDesignGenerator.ts — Canvas API PNG (4500×4500); accepts tilesOffset/captionOffset/showWatermark; no layout presets
+  printLayout.ts         — computePrintLayout(result, caption, placement) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big), PRINT_FRAME (12×16in @150ppi = 1800×2400)
+  PrintDesignGenerator.ts — generatePrintFile(): 300ppi PNG cropped tight to the design + its position
 
 src/components/
   ...
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
-  PrintPanel.tsx        — print-on-demand modal: 3-step flow (Design → Customize → Preview) for t-shirt only; no product picker
-  DesignCanvas.tsx      — 280×280 WYSIWYG preview; draggable tile group + caption; emits print-space offsets to PrintPanel
-  ProductMockup.tsx     — mockup image with click-to-enlarge lightbox + Buy CTA + Printful reassurance line
+  PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
+  ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top assumed ~1in below the neckline)
+  ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption
 
+api/_lib/printPosition.ts — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order (underscore dir = not a route)
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
   mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling
@@ -258,8 +260,10 @@ Phase 2 — remaining:
 - OG meta tags for URL link previews
 
 Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setup**):
-- Flow: Design → Customize (color + size) → Preview mockup → Stripe checkout → confirmed Printful order
-- DesignCanvas: 280×280 HTML WYSIWYG preview; draggable tile group + caption; watermark toggle
+- Flow (Oct 2026 redesign): one screen — pick colour / size / placement (Chest or Big) / optional caption on a live drawn shirt → Buy → Stripe checkout → confirmed Printful order. "See it on a model" fetches a Printful photo only when asked.
+- Placement: the print PNG is cropped to the design and sent with an explicit `position` (centred, 1in from the top of the print area for Chest, 1.5in for Big) to BOTH the mockup generator and the order (via Stripe metadata `print_position`). Previously a 4500² square with the name in the middle was sent with no position, which printed below the chest.
+- Removed: drag-to-reposition, background-table toggle on shirts, 3-step progress UI, DesignCanvas/ProductMockup components.
+- Verify with one real/draft order (`/api/print/draft-order` accepts `position`) before announcing; ShirtPreview's collar→print-area offset is an approximation.
 - Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
 - ProductMockup: click-to-enlarge lightbox, reassurance copy under Buy button
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications

@@ -36,7 +36,6 @@ const TSHIRT_VARIANTS: PrintVariant[] = [
 
 const overrideEnv = import.meta.env.VITE_PRICE_OVERRIDE_USD as string | undefined;
 const resolvedPrice = overrideEnv ? parseFloat(overrideEnv) : 29.99;
-console.log('[printProducts] price', overrideEnv ? `override: $${resolvedPrice}` : `default: $${resolvedPrice}`);
 
 export const PRINT_PRODUCTS: PrintProduct[] = [
   {
@@ -49,6 +48,26 @@ export const PRINT_PRODUCTS: PrintProduct[] = [
     designPlacement: 'front',
   },
 ];
+
+export interface ShirtColor {
+  name: string;
+  hex: string;
+  dark: boolean;
+}
+
+export const SHIRT_COLORS: ShirtColor[] = [
+  { name: 'White', hex: '#FFFFFF', dark: false },
+  { name: 'Black', hex: '#1a1a1a', dark: true },
+  { name: 'Navy', hex: '#1a2a4a', dark: true },
+  { name: 'Athletic Heather', hex: '#cececc', dark: false },
+];
+
+export const SHIRT_SIZES = ['S', 'M', 'L', 'XL'] as const;
+export type ShirtSize = typeof SHIRT_SIZES[number];
+
+export function findShirtVariant(color: ShirtColor, size: ShirtSize): PrintVariant | undefined {
+  return TSHIRT_VARIANTS.find(v => v.color === color.hex && v.size === size);
+}
 
 export function getPrintProduct(slug: string): PrintProduct | undefined {
   return PRINT_PRODUCTS.find((p) => p.slug === slug);

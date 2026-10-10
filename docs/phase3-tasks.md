@@ -95,3 +95,22 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
 **Optional follow-ups:**
 - [ ] Caption font-size slider
 - [ ] Drag individual tiles (would require refactoring `createElementLayout`)
+
+---
+
+## Oct 2026 — One-screen redesign + placement fix (supersedes the drag-canvas notes above)
+
+**Why.** A real test shirt printed below the chest. The print file was a 4500×4500 square with the name centred in it, sent to Printful with no `position`, so the empty top half of the square pushed the name down (and shrank it: a 3-letter name printed ~5in wide). The mockup request and the order also used different positioning, so the preview couldn't be trusted.
+
+**Placement model.**
+- Frame: Printful front area as 1800×2400 (12×16in at 150ppi). Every position is in this frame.
+- `computePrintLayout` (src/utils/printLayout.ts) picks the largest tile size that fits the preset, wraps words into rows, adds the optional caption and the small `periodicnames.com` line, and returns the design's size in inches plus `position`.
+  - **Chest:** tiles ≤ 2.2in, design ≤ 10×5.5in, top 1in below print-area top, centred.
+  - **Big:** tiles ≤ 3.4in, design ≤ 12×10in, top 1.5in, centred.
+- `generatePrintFile` renders the same layout at 300ppi, cropped tight (no empty space), so file aspect = position aspect.
+- The same `position` goes to `/api/print/mockup`, Stripe metadata `print_position`, the webhook order and `/api/print/draft-order`, all validated by `api/_lib/printPosition.ts` (`limit_to_print_area: true`).
+- Caption is ink on White/Heather shirts and white on Black/Navy.
+
+**UI.** `PrintPanel` is one screen: drawn shirt (`ShirtPreview`, same layout code, to scale) + colour, size, placement, optional caption, Buy (disabled until a size is picked). "See it on a model" calls the mockup generator only when clicked; the uploaded print file is cached per design so Buy reuses it.
+
+**Still to verify.** Place one draft order with a `position` and compare the Printful preview/print against `ShirtPreview` — the drawing assumes the print area starts ~1in below the neckline.

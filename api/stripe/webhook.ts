@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { parsePrintPosition } from '../_lib/printPosition';
 
 export const config = { api: { bodyParser: false } };
 
@@ -31,12 +32,14 @@ async function createPrintfulOrder(
   shipping: Stripe.Checkout.Session.CollectedInformation.ShippingDetails,
   customerEmail: string | null,
 ): Promise<void> {
-  const { variant_id, design_url } = metadata;
+  const { variant_id, design_url, print_position } = metadata;
+  const position = parsePrintPosition(print_position);
 
   log('createPrintfulOrder inputs', { variant_id, design_url, customerEmail, shipping });
 
   if (!variant_id) log('WARN: variant_id missing from metadata');
   if (!design_url) log('WARN: design_url missing from metadata');
+  if (!position) log('WARN: print_position missing or invalid — Printful will use its default placement', { print_position });
   if (!shipping.name) log('WARN: shipping.name is empty');
   if (!shipping.address?.line1) log('WARN: shipping.address.line1 is empty');
   if (!shipping.address?.city) log('WARN: shipping.address.city is empty');
@@ -55,7 +58,7 @@ async function createPrintfulOrder(
       country_code: shipping.address?.country ?? 'US',
       ...(customerEmail ? { email: customerEmail } : {}),
     },
-    items: [{ variant_id: Number(variant_id), quantity: 1, files: [{ type: 'front', url: design_url }] }],
+    items: [{ variant_id: Number(variant_id), quantity: 1, files: [{ type: 'front', url: design_url, ...(position ? { position } : {}) }] }],
   };
 
   log('POST /orders →', body);

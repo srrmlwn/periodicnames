@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import { parsePrintPosition, serializePrintPosition } from '../_lib/printPosition';
 
 function log(label: string, data?: unknown) {
   console.log(`[checkout] ${label}`, data !== undefined ? JSON.stringify(data) : '');
@@ -19,14 +20,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     has_price_override: !!process.env.VITE_PRICE_OVERRIDE_USD,
   });
 
-  const { productName, variantId, productId, designUrl, mockupUrl, priceUsd } = req.body as {
+  const { productName, variantId, productId, designUrl, mockupUrl, priceUsd, position: rawPosition } = req.body as {
     productName?: string;
     variantId?: number;
     productId?: number;
     designUrl?: string;
     mockupUrl?: string;
     priceUsd?: number;
+    position?: unknown;
   };
+
+  const position = parsePrintPosition(rawPosition);
 
   const missing = [
     !productName && 'productName',
@@ -34,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     !productId && 'productId',
     !designUrl && 'designUrl',
     !priceUsd && 'priceUsd',
+    !position && 'position',
   ].filter(Boolean);
 
   if (missing.length > 0) {
@@ -71,6 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         variant_id: String(variantId),
         product_id: String(productId),
         design_url: designUrl!,
+        print_position: serializePrintPosition(position!),
       },
       success_url: `${origin}/?order=success`,
       cancel_url: `${origin}/`,
