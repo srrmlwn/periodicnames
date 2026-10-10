@@ -116,13 +116,14 @@ git worktree remove ../periodicnames-<task>
 
 ### Colors
 
-- **Never hardcode hex colors in components.** All element category colors come from `src/utils/colorSchemes.ts`.
-- Import helpers: `getCategoryColor`, `getCategoryBorderColor`, `getFakeElementColor`, `getFakeElementBorderColor`. Non-category brand colors (ink, cream, yellow, pink, mint, muted) come from `BRAND`; the logo rainbow is `LOGO_PALETTE`; canvas/inline font is `FONT_FAMILY`.
-- In Tailwind, use the matching tokens from `tailwind.config.js`: `ink`, `cream`, `muted`, `pop-yellow`, `pop-pink`, `pop-mint`, `pop-coral`, `pop-sky`. Keep the two in sync.
+- **Never hardcode hex colors in components.** All tile colors come from `src/utils/colorSchemes.ts`.
+- **Result tiles are colored by position in the name, not by chemistry category.** `getTileColors(result)` returns one color per `orderedElements` index, rotating through `NAME_PALETTE` (7 hues) from a per-name offset; fakes keep the fake style. `createElementLayout` stores it as `item.color`, and every surface (result card, lit table, share image/reel, print canvas, `DesignCanvas`) uses it so screen and shirt match. Category colors remain only for the faint `drawTableBackground` watermark.
+- Import helpers: `getCategoryColor`, `getCategoryBorderColor`, `getFakeElementColor`, `getFakeElementBorderColor`. Non-category brand colors (ink, mist, yellow, pink, mint, muted) come from `BRAND`; the logo rainbow is `LOGO_PALETTE`; canvas/inline font is `FONT_FAMILY`.
+- In Tailwind, use the matching tokens from `tailwind.config.js`: `ink`, `mist`, `muted`, `pop-yellow`, `pop-pink`, `pop-mint`, `pop-coral`, `pop-sky`. Keep the two in sync.
 
 ### Visual Style — Neubrutalism
 
-- Cream (`cream`) page with a faint dot grid (set on `body` in `index.css`), **Space Grotesk** everywhere (UI and canvas).
+- Cool blue-tinted white (`mist`, #EEF3FA) page with a faint dot grid (set on `body` in `index.css`), **Space Grotesk** everywhere (UI and canvas).
 - Every surface/control: `border-[3px] border-ink`, hard offset shadow (`shadow-brutal-sm|brutal|brutal-lg|brutal-xl` — no blur), ink text on saturated fills.
 - Reusable component classes in `index.css`: `.nb-btn` (lift on hover, press-in on active), `.nb-card`, `.nb-input`, `.nb-label`, `.nb-focus` (keyboard focus ring).
 - Primary CTA = `nb-btn bg-pop-yellow`; secondary = `nb-btn bg-white`. One yellow CTA per view.
@@ -146,7 +147,7 @@ src/data/
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
-  colorSchemes.ts        — getCategoryColor(category), etc.; BRAND, LOGO_PALETTE, FONT_FAMILY
+  colorSchemes.ts        — getTileColors(result), NAME_PALETTE, getCategoryColor(category), etc.; BRAND, LOGO_PALETTE, FONT_FAMILY
   canvasTile.ts          — shared canvas drawing: ELEMENT_POSITIONS, drawElementTile, drawTableBackground, canvasFont, ensureCanvasFonts, fakeAtomicNumber
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
@@ -190,19 +191,15 @@ interface NameResult {
 'input'  →  'revealing'  →  'done'
 ```
 
-- **`input`**: Initial state. Background table at base opacity. Input centered on screen.
-- **`revealing`**: Single `setInterval` (500ms) increments `revealedCount`. Both `PeriodicTable` (matched tile lights up in full category color with `.table-light`) and `ResultDisplay` (tile mounts with `.tile-pop` / `.fake-wobble`) read from `revealedCount`. 1s initial delay before first element. Do not add independent timers in child components.
+- **`input`**: Initial state. Faint table below the input.
+- **`revealing`**: Single `setInterval` (500ms) increments `revealedCount`. Both `PeriodicTable` (matched tile lights up in its name-palette color with `.table-light`) and `ResultDisplay` (tile mounts with `.tile-pop` / `.fake-wobble`) read from `revealedCount`. 1s initial delay before first element. Do not add independent timers in child components.
 - **`done`**: All elements revealed. Results card shows the stats sticker plus Share / "Put it on a tee" buttons.
 
 Use `animationPhase` to drive visibility — do not read `result !== null` directly.
 
-### Background Table Layout
+### Periodic Table Layout
 
-The periodic table is a **fixed full-screen background** (`z-0`, `pointer-events: none`). Scaled via `transform: scale(Math.max(vw/754, vh/376))` to cover the viewport. Unlit tiles are faint ink outlines (`border-ink/10`, `text-ink/20`). As each element is revealed, its tile in the table lights up in its category color with an ink border and hard shadow. The grid is built from `ELEMENT_POSITIONS` in `canvasTile.ts`.
-
-Results sit in a white `.nb-card` so the lit background never collides with the result tiles.
-
-Content (Header, NameInput, ResultDisplay) is in a `relative z-10` layer on top.
+The periodic table sits **in the page flow between the input and the results card** (it used to be a fixed full-screen background, but the input and card hid the middle of the table, so lit transition metals/actinides were invisible). It is scaled with `transform: scale(tableScale)` inside a wrapper sized to `TABLE_W × scale` by `TABLE_H × scale`; the inner div has explicit `TABLE_W`/`TABLE_H` so flex rows never shrink. `getTableScale()` fits the viewport width (minus 32px) and leaves `TABLE_RESERVED_H` for header/input/card, capped at 1.15 and never below 0.7 for the height constraint. Unlit tiles are faint ink outlines (`border-ink/15`, `text-ink/30`); lit tiles take the color from `litColors` (symbol → first-occurrence name color). The grid is built from `ELEMENT_POSITIONS` in `canvasTile.ts`. Legal pages still render an unlit table as a fixed backdrop.
 
 ### File Naming
 
@@ -241,7 +238,9 @@ Fake elements are visually distinct from real elements:
 
 Active phase: **Phase 3 — Print on Demand** (Phase 1 complete, Phase 2 partially complete)
 
-Design refresh (Oct 2026): **neubrutalist revamp shipped to main** — palette, Space Grotesk, cards/buttons/inputs, shared `Modal`, background table lights up during reveal, canvas outputs restyled via `canvasTile.ts`, legal pages restyled, footer overlap fixed.
+Design refresh (Oct 2026): **neubrutalist revamp shipped to main**; follow-up: cool `mist` background, name-order tile palette, table moved into page flow so every lit element is visible.
+
+Earlier revamp notes: — palette, Space Grotesk, cards/buttons/inputs, shared `Modal`, background table lights up during reveal, canvas outputs restyled via `canvasTile.ts`, legal pages restyled, footer overlap fixed.
 
 Phase 2 — what's done:
 - Share image generator (`ShareImageGenerator.ts`) — Canvas PNG, 1200×630

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import { getCategoryColor, getFakeElementColor, getFakeElementBorderColor, BRAND, FONT_FAMILY } from '../utils/colorSchemes';
+import { getTileColors, getFakeElementColor, getFakeElementBorderColor, BRAND, FONT_FAMILY } from '../utils/colorSchemes';
 import { drawTableBackground, fakeAtomicNumber } from '../utils/canvasTile';
 
 interface Offset { x: number; y: number }
@@ -22,7 +22,12 @@ const PRINT = 4500;
 const TO_PRINT = PRINT / PREVIEW;
 const PAD = 16;
 
-type Word = (Element | FakeElement)[];
+interface TileEntry {
+  el: Element | FakeElement;
+  color: string;
+}
+
+type Word = TileEntry[];
 
 interface PreviewLayout {
   rows: Word[][];
@@ -35,13 +40,14 @@ interface PreviewLayout {
 function buildRows(result: NameResult, available: number): PreviewLayout {
   const words: Word[] = [];
   let cur: Word = [];
-  for (const el of result.orderedElements) {
+  const colors = getTileColors(result);
+  result.orderedElements.forEach((el, i) => {
     if (el.symbol === ' ') {
       if (cur.length > 0) { words.push(cur); cur = []; }
     } else {
-      cur.push(el as Element | FakeElement);
+      cur.push({ el, color: colors[i] });
     }
-  }
+  });
   if (cur.length > 0) words.push(cur);
 
   const maxLen = Math.max(1, ...words.map(w => w.length));
@@ -197,9 +203,9 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
               {row.map((word, wi) => (
                 <React.Fragment key={wi}>
                   {wi > 0 && <div style={{ width: wgap, flexShrink: 0 }} />}
-                  {word.map((el, ti) => {
+                  {word.map(({ el, color }, ti) => {
                     const isFake = !('atomicNumber' in el);
-                    const bg = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
+                    const bg = isFake ? getFakeElementColor() : color;
                     const border = isFake ? getFakeElementBorderColor() : BRAND.ink;
                     const ink = isFake ? BRAND.yellow : BRAND.ink;
                     const atomicNum = isFake ? fakeAtomicNumber(el.name) : (el as Element).atomicNumber;

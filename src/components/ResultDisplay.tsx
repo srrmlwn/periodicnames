@@ -91,7 +91,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
                 {group.items.map(item => (
                   <div key={`el-${item.index}`} className="w-11 h-11 sm:w-16 sm:h-16 hover:z-30">
                     {item.index < revealedCount && (
-                      <ElementTile element={item.element} fakeElement={item.fakeElement} size="lg" />
+                      <ElementTile element={item.element} fakeElement={item.fakeElement} size="lg" colorOverride={item.color} />
                     )}
                   </div>
                 ))}

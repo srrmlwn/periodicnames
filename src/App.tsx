@@ -4,6 +4,7 @@ import NameInput from './components/NameInput';
 import ResultDisplay from './components/ResultDisplay';
 import PeriodicTable from './components/PeriodicTable';
 import { matchNameToElements } from './utils/elementMatcher';
+import { getTileColors } from './utils/colorSchemes';
 import type { NameResult } from './types';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
@@ -11,19 +12,15 @@ type AnimationPhase = 'input' | 'revealing' | 'done';
 // Natural size of the periodic table grid (18 cols × 9 rows, w-10 tiles, gap-0.5)
 const TABLE_W = 754; // 18*40 + 17*2
 const TABLE_H = 376; // 9*40 + 8*2
-const TABLE_INSET = 48; // px breathing room on each side (desktop only)
-const TABLE_MAX_SCALE = 1.5; // cap tile size so table never overwhelms the UI
+const TABLE_SIDE_PAD = 32;
+const TABLE_RESERVED_H = 580;
+const TABLE_MIN_HEIGHT_SCALE = 0.7;
+const TABLE_MAX_SCALE = 1.15;
 
 function getTableScale() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  // On mobile (<640px) skip the inset so the table fills the width
-  const inset = vw < 640 ? 0 : TABLE_INSET * 2;
-  return Math.min(
-    (vw - inset) / TABLE_W,
-    (vh - inset) / TABLE_H,
-    TABLE_MAX_SCALE
-  );
+  const byWidth = (window.innerWidth - TABLE_SIDE_PAD) / TABLE_W;
+  const byHeight = Math.max(TABLE_MIN_HEIGHT_SCALE, (window.innerHeight - TABLE_RESERVED_H) / TABLE_H);
+  return Math.min(byWidth, byHeight, TABLE_MAX_SCALE);
 }
 
 function nameFromPath(path: string): string {
@@ -125,9 +122,13 @@ function App() {
     setInputKey(k => k + 1);
   };
 
-  const revealedSymbols = result
-    ? result.orderedElements.slice(0, revealedCount).map(e => e.symbol)
-    : [];
+  const litColors = new Map<string, string>();
+  if (result) {
+    const colors = getTileColors(result);
+    result.orderedElements.slice(0, revealedCount).forEach((el, i) => {
+      if ('atomicNumber' in el && !litColors.has(el.symbol)) litColors.set(el.symbol, colors[i]);
+    });
+  }
 
   return (
     <div className="min-h-screen">
@@ -144,20 +145,11 @@ function App() {
           </button>
         </div>
       )}
-      {/* Fixed full-screen periodic table background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
-        <div style={{ transform: `scale(${tableScale})`, transformOrigin: 'center center' }}>
-          <PeriodicTable highlightedSymbols={revealedSymbols} />
-        </div>
-      </div>
-
-      {/* Content layer */}
-      <div className="relative z-10 flex flex-col" style={{ minHeight: '100dvh' }}>
+      <div className="flex flex-col" style={{ minHeight: '100dvh' }}>
         <div className="px-4 pt-4 shrink-0">
           <Header />
         </div>
-        {/* Single column: input sits high, results grow downward without moving input */}
-        <div className="content-wrap flex flex-col items-center px-4 pb-8 gap-8">
+        <div className="flex flex-col items-center px-4 pt-6 sm:pt-8 pb-8 gap-6 sm:gap-8">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
@@ -165,6 +157,15 @@ function App() {
             onRefresh={handleRefresh}
             initialValue={inputKey === 0 ? urlName : ''}
           />
+          <div
+            className="pointer-events-none shrink-0"
+            style={{ width: TABLE_W * tableScale, height: TABLE_H * tableScale }}
+            aria-hidden="true"
+          >
+            <div style={{ width: TABLE_W, height: TABLE_H, transform: `scale(${tableScale})`, transformOrigin: 'top left' }}>
+              <PeriodicTable litColors={litColors} />
+            </div>
+          </div>
           <ResultDisplay
             result={result}
             isVisible={animationPhase !== 'input'}

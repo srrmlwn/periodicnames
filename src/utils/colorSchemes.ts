@@ -27,23 +27,27 @@ export interface ColorScheme {
   };
 }
 
+import type { NameResult } from '../types';
+
 export const BRAND = {
   ink: '#111111',
-  cream: '#FFF4E0',
+  mist: '#EEF3FA',
   paper: '#FFFFFF',
   yellow: '#FFD23F',
   pink: '#FF8FAB',
   mint: '#7BD389',
-  muted: '#5B5346',
+  muted: '#4A5468',
 } as const;
 
 export const LOGO_PALETTE = [BRAND.yellow, BRAND.pink, '#74B9FF', BRAND.mint, '#FF9F43', '#B197FC', '#4ECDC4'];
+
+export const NAME_PALETTE = ['#FFD23F', '#74B9FF', '#FF6B6B', '#7BD389', '#FF8FAB', '#B197FC', '#FF9F43'];
 
 export const FONT_FAMILY = '"Space Grotesk", "Arial Black", Arial, sans-serif';
 
 export const defaultColorScheme: ColorScheme = {
   name: 'neubrutalism',
-  background: BRAND.cream,
+  background: BRAND.mist,
   categories: {
     alkali: '#FF6B6B',
     alkaline: '#FF9F43',
@@ -84,4 +88,18 @@ export function getFakeElementColor(colorScheme: ColorScheme = defaultColorSchem
 
 export function getFakeElementBorderColor(colorScheme: ColorScheme = defaultColorScheme): string {
   return colorScheme.borders.fake;
+}
+
+function paletteOffset(name: string): number {
+  return [...name.toLowerCase()].reduce((sum, c) => sum + c.charCodeAt(0), 0) % NAME_PALETTE.length;
+}
+
+export function getTileColors(result: NameResult): string[] {
+  const offset = paletteOffset(result.originalName.replace(/\s+/g, ''));
+  let realIndex = 0;
+  return result.orderedElements.map(el =>
+    'atomicNumber' in el
+      ? NAME_PALETTE[(offset + realIndex++) % NAME_PALETTE.length]
+      : getFakeElementColor()
+  );
 }

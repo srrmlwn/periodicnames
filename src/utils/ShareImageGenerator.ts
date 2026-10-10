@@ -44,7 +44,7 @@ export class ShareImageGenerator {
     const ctx = this.ctx;
     const isX = platform === 'x';
 
-    ctx.fillStyle = BRAND.cream;
+    ctx.fillStyle = BRAND.mist;
     ctx.fillRect(0, 0, width, height);
 
     if (showWatermark) drawTableBackground(this.ctx, width, height);

@@ -2,13 +2,14 @@ import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
 import type { SharePlatform } from '../types/sharing';
-import { getCategoryColor, getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor } from './colorSchemes';
+import { getCategoryBorderColor, getFakeElementColor, getFakeElementBorderColor, getTileColors } from './colorSchemes';
 
 export interface ElementRenderItem {
   type: 'element' | 'space';
   element?: Element;
   fakeElement?: FakeElement;
   index: number;
+  color: string;
 }
 
 export interface ElementLayout {
@@ -22,6 +23,7 @@ export interface ElementLayout {
  * by both the ResultDisplay component and image generation
  */
 export function createElementLayout(result: NameResult): ElementLayout {
+  const colors = getTileColors(result);
   const items: ElementRenderItem[] = result.orderedElements.map((element, index) => {
     const isRealElement = 'isReal' in element && element.isReal;
     const isSpace = 'symbol' in element && element.symbol === ' ';
@@ -29,7 +31,8 @@ export function createElementLayout(result: NameResult): ElementLayout {
     if (isSpace) {
       return {
         type: 'space',
-        index
+        index,
+        color: colors[index]
       };
     }
     
@@ -37,13 +40,15 @@ export function createElementLayout(result: NameResult): ElementLayout {
       return {
         type: 'element',
         element: element as Element,
-        index
+        index,
+        color: colors[index]
       };
     } else {
       return {
         type: 'element',
         fakeElement: element as FakeElement,
-        index
+        index,
+        color: colors[index]
       };
     }
   });
@@ -78,7 +83,7 @@ export function getElementDisplayProperties(item: ElementRenderItem) {
   
   const backgroundColor = isFake 
     ? getFakeElementColor() 
-    : getCategoryColor((element as Element).category);
+    : item.color;
   const borderColor = isFake 
     ? getFakeElementBorderColor() 
     : getCategoryBorderColor((element as Element).category);

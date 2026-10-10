@@ -76,7 +76,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             <button
               type="submit"
               disabled={!name.trim()}
-              className="nb-focus shrink-0 flex items-center gap-1.5 px-5 bg-pop-yellow border-l-[3px] border-ink font-bold text-ink hover:brightness-105 active:brightness-95 disabled:bg-cream disabled:text-muted/60 disabled:cursor-not-allowed"
+              className="nb-focus shrink-0 flex items-center gap-1.5 px-5 bg-pop-yellow border-l-[3px] border-ink font-bold text-ink hover:brightness-105 active:brightness-95 disabled:bg-mist disabled:text-muted/60 disabled:cursor-not-allowed"
             >
               Go
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

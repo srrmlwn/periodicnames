@@ -5,7 +5,7 @@ import PeriodicTable from './PeriodicTable';
 const TermsPage: React.FC = () => (
   <div className="min-h-screen">
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 flex items-center justify-center">
-      <PeriodicTable highlightedSymbols={[]} />
+      <PeriodicTable />
     </div>
 
     <div className="relative z-10 flex flex-col" style={{ minHeight: '100dvh' }}>

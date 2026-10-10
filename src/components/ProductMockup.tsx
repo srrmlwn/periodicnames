@@ -62,7 +62,7 @@ const ProductMockup: React.FC<ProductMockupProps> = ({
         <img
           src={mockupUrl}
           alt="Product preview"
-          className="w-full rounded-lg border-[3px] border-ink bg-cream object-contain"
+          className="w-full rounded-lg border-[3px] border-ink bg-mist object-contain"
           style={{ maxHeight: '280px' }}
         />
         <div className="absolute bottom-2 right-2 bg-ink/70 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">

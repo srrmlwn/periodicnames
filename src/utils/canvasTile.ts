@@ -62,7 +62,7 @@ export function drawElementTile(ctx: CanvasRenderingContext2D, item: ElementRend
   const el = item.element || item.fakeElement;
   if (!el) return;
 
-  const fill = isFake ? getFakeElementColor() : getCategoryColor((el as Element).category);
+  const fill = isFake ? getFakeElementColor() : item.color;
   const stroke = isFake ? getFakeElementBorderColor() : BRAND.ink;
   const textColor = isFake ? BRAND.yellow : BRAND.ink;
   const radius = size * 0.08;

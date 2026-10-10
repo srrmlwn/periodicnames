@@ -2,10 +2,9 @@ import React from 'react';
 import { getAllElements } from '../data/elements';
 import type { Element } from '../data/elements';
 import { ELEMENT_POSITIONS } from '../utils/canvasTile';
-import { getCategoryColor } from '../utils/colorSchemes';
 
 interface PeriodicTableProps {
-  highlightedSymbols?: string[];
+  litColors?: Map<string, string>;
 }
 
 const ELEMENTS_BY_SYMBOL = new Map(getAllElements().map(e => [e.symbol, e]));
@@ -15,8 +14,7 @@ for (const [symbol, row, col] of ELEMENT_POSITIONS) {
   GRID[row][col] = ELEMENTS_BY_SYMBOL.get(symbol) ?? null;
 }
 
-const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedSymbols = [] }) => {
-  const lit = new Set(highlightedSymbols);
+const PeriodicTable: React.FC<PeriodicTableProps> = ({ litColors = new Map() }) => {
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -24,14 +22,15 @@ const PeriodicTable: React.FC<PeriodicTableProps> = ({ highlightedSymbols = [] }
         <div key={rowIndex} className="flex gap-0.5">
           {row.map((element, colIndex) => {
             if (!element) return <div key={colIndex} className="w-10 h-10" />;
-            const isLit = lit.has(element.symbol);
+            const litColor = litColors.get(element.symbol);
+            const isLit = litColor !== undefined;
             return (
               <div
                 key={colIndex}
                 className={`w-10 h-10 rounded-md flex flex-col items-center justify-center relative transition-colors duration-300 ${
-                  isLit ? 'border-2 border-ink shadow-brutal-sm text-ink table-light z-10' : 'border border-ink/10 text-ink/20'
+                  isLit ? 'border-2 border-ink shadow-brutal-sm text-ink table-light z-10' : 'border border-ink/15 text-ink/30'
                 }`}
-                style={isLit ? { backgroundColor: getCategoryColor(element.category) } : undefined}
+                style={isLit ? { backgroundColor: litColor } : undefined}
               >
                 <span className="absolute top-0 left-0.5 text-[5px] font-medium leading-none">
                   {element.atomicNumber}

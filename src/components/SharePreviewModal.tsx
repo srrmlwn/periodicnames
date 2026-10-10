@@ -263,7 +263,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, 
             </div>
 
             {/* Preview */}
-            <div className="h-48 rounded-lg bg-cream border-[3px] border-ink flex items-center justify-center overflow-hidden">
+            <div className="h-48 rounded-lg bg-mist border-[3px] border-ink flex items-center justify-center overflow-hidden">
               {platform !== 'reel' && (
                 <>
                   {isGeneratingImage && (

@@ -134,7 +134,7 @@ export class ShareVideoGenerator {
     const frame = (now: number) => {
       const elapsed = now - startEpoch;
 
-      ctx.fillStyle = BRAND.cream;
+      ctx.fillStyle = BRAND.mist;
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
       ctx.drawImage(bgCanvas, 0, 0);
 

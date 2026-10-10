@@ -11,7 +11,7 @@ export default {
       },
       colors: {
         ink: '#111111',
-        cream: '#FFF4E0',
+        mist: '#EEF3FA',
         pop: {
           yellow: '#FFD23F',
           pink: '#FF8FAB',
@@ -19,7 +19,7 @@ export default {
           coral: '#FF6B6B',
           sky: '#74B9FF',
         },
-        muted: '#5B5346',
+        muted: '#4A5468',
       },
       boxShadow: {
         'brutal-sm': '2px 2px 0 0 #111111',

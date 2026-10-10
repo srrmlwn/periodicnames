@@ -298,7 +298,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
                           className={`nb-focus min-w-[44px] px-3 py-1.5 rounded-lg text-sm font-bold border-[3px] border-ink transition-all duration-150 ${
                             selectedVariantId === variant.id
                               ? 'bg-pop-yellow shadow-brutal-sm -translate-x-0.5 -translate-y-0.5'
-                              : 'bg-white hover:bg-cream'
+                              : 'bg-white hover:bg-mist'
                           }`}
                         >
                           {variant.size ?? variant.label}

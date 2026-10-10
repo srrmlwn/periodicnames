@@ -4,8 +4,8 @@
 
 @layer base {
   body {
-    background-color: theme('colors.cream');
-    background-image: radial-gradient(rgba(17, 17, 17, 0.13) 1px, transparent 1px);
+    background-color: theme('colors.mist');
+    background-image: radial-gradient(rgba(30, 50, 90, 0.14) 1px, transparent 1px);
     background-size: 22px 22px;
     color: theme('colors.ink');
   }
@@ -107,22 +107,6 @@
 
 .table-light {
   animation: tableLight 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* Responsive content padding: dvh accounts for mobile browser chrome so the
-   input sits roughly a third of the way down the visible area, not the full screen height */
-.content-wrap {
-  padding-top: max(24px, calc(38dvh - 120px));
-}
-@media (max-width: 639px) {
-  .content-wrap {
-    padding-top: max(24px, calc(24dvh - 120px));
-  }
-}
-@media (max-height: 500px) {
-  .content-wrap {
-    padding-top: max(12px, calc(28dvh - 30px));
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
