@@ -78,7 +78,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
 
   return (
     <div className={`w-full ${isExiting ? 'result-exit' : 'results-fade-in'}`}>
-      <div className="nb-card w-fit max-w-full mx-auto px-3 pt-4 pb-5 sm:px-8 sm:pt-7 sm:pb-8">
+      <div className="nb-card w-fit max-w-full mx-auto px-3 pt-4 pb-5 sm:px-8 sm:pt-6 sm:pb-6">
       <div className="w-fit mx-auto">
         <div className="flex flex-wrap gap-1.5 sm:gap-3 justify-center items-end">
           {wordGroups.map((group, gi) => {
@@ -107,7 +107,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
       </div>
 
       {isDone && (
-        <div className="mt-6 flex flex-col items-center gap-5">
+        <div className="mt-4 flex flex-col items-center gap-4">
           <p className="sticker-in inline-block bg-white border-[3px] border-ink shadow-brutal rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold text-ink">
             {getFunStatsLine(result.realElementsCount, result.totalElements)}
           </p>

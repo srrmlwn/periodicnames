@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Header from './components/Header';
 import NameInput from './components/NameInput';
 import ResultDisplay from './components/ResultDisplay';
@@ -13,13 +13,13 @@ type AnimationPhase = 'input' | 'revealing' | 'done';
 const TABLE_W = 754; // 18*40 + 17*2
 const TABLE_H = 376; // 9*40 + 8*2
 const TABLE_SIDE_PAD = 32;
-const TABLE_RESERVED_H = 580;
-const TABLE_MIN_HEIGHT_SCALE = 0.7;
+const RESULT_CARD_RESERVE = 310;
+const TABLE_MIN_SCALE = 0.45;
 const TABLE_MAX_SCALE = 1.15;
 
-function getTableScale() {
+function getTableScale(tableTop: number) {
   const byWidth = (window.innerWidth - TABLE_SIDE_PAD) / TABLE_W;
-  const byHeight = Math.max(TABLE_MIN_HEIGHT_SCALE, (window.innerHeight - TABLE_RESERVED_H) / TABLE_H);
+  const byHeight = Math.max(TABLE_MIN_SCALE, (window.innerHeight - tableTop - RESULT_CARD_RESERVE) / TABLE_H);
   return Math.min(byWidth, byHeight, TABLE_MAX_SCALE);
 }
 
@@ -41,7 +41,9 @@ function App() {
   const [animationPhase, setAnimationPhase] = useState<AnimationPhase>('input');
   const [revealedCount, setRevealedCount] = useState(0);
   const [inputKey, setInputKey] = useState(0);
-  const [tableScale, setTableScale] = useState(getTableScale);
+  const [tableScale, setTableScale] = useState(TABLE_MIN_SCALE);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const [orderSuccess, setOrderSuccess] = useState(
     () => new URLSearchParams(window.location.search).get('order') === 'success'
   );
@@ -77,11 +79,23 @@ function App() {
     }
   }, [orderSuccess]);
 
-  useEffect(() => {
-    const handleResize = () => setTableScale(getTableScale());
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      if (!tableRef.current) return;
+      const tableTop = tableRef.current.getBoundingClientRect().top + window.scrollY;
+      setTableScale(getTableScale(tableTop));
+    };
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (animationPhase !== 'done' || !resultRef.current) return;
+    if (resultRef.current.getBoundingClientRect().bottom <= window.innerHeight) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    resultRef.current.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'end' });
+  }, [animationPhase]);
 
   const handleNameSubmit = (name: string) => {
     history.pushState(null, '', '/' + nameToSlug(name));
@@ -149,7 +163,7 @@ function App() {
         <div className="px-4 pt-4 shrink-0">
           <Header />
         </div>
-        <div className="flex flex-col items-center px-4 pt-6 sm:pt-8 pb-8 gap-6 sm:gap-8">
+        <div className="flex flex-col items-center px-4 pt-4 sm:pt-6 pb-8 gap-5 sm:gap-6">
           <NameInput
             key={inputKey}
             onSubmit={handleNameSubmit}
@@ -158,6 +172,7 @@ function App() {
             initialValue={inputKey === 0 ? urlName : ''}
           />
           <div
+            ref={tableRef}
             className="pointer-events-none shrink-0"
             style={{ width: TABLE_W * tableScale, height: TABLE_H * tableScale }}
             aria-hidden="true"
@@ -166,12 +181,14 @@ function App() {
               <PeriodicTable litColors={litColors} />
             </div>
           </div>
+          <div ref={resultRef} className="w-full scroll-mb-4">
           <ResultDisplay
             result={result}
             isVisible={animationPhase !== 'input'}
             revealedCount={revealedCount}
             isDone={animationPhase === 'done'}
           />
+          </div>
         </div>
         <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
           <p>
