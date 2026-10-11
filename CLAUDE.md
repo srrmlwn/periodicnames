@@ -160,7 +160,7 @@ src/components/
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline)
-  ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption
+  ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (collapsed button + input both rotate CAPTION_EXAMPLES every 2.5s while the caption is empty)
 
 api/_lib/printPosition.ts — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order (underscore dir = not a route)
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
