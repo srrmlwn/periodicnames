@@ -152,7 +152,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
-  printLayout.ts         — computePrintLayout(result, caption, placement) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (2.25, measured)
+  printLayout.ts         — computePrintLayout(result, caption, placement) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
   PrintDesignGenerator.ts — generatePrintFile(): 300ppi PNG cropped tight to the design + its position
 
 src/components/
@@ -261,9 +261,9 @@ Phase 2 — remaining:
 
 Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setup**):
 - Flow (Oct 2026 redesign): one screen — pick colour / size / placement (Chest or Big) / optional caption on a live drawn shirt → Buy → Stripe checkout → confirmed Printful order. "See it on a model" fetches a Printful photo only when asked.
-- Placement: the print PNG is cropped to the design and sent with an explicit `position` (centred; design top 3.25in below the collar for Chest, 3.5in for Big, per Printful/Printify placement guides). Printful's front print area starts ≈2.25in below the bottom of the front collar — calibrated from a real test shirt (old square file, caption top 35.3% down a 12in-wide top-aligned square, measured 6.5in below the collar) to BOTH the mockup generator and the order (via Stripe metadata `print_position`). Previously a 4500² square with the name in the middle was sent with no position, which printed below the chest.
+- Placement: the print PNG is cropped to the design and sent with an explicit `position` (centred; design top 3.25in below the collar for Chest, 3.5in for Big, per Printful/Printify placement guides). Printful's front print area starts ≈1.9in below the bottom of the front collar — calibrated from tape-measure photos of a real test shirt (old square file printed 12in wide and top-aligned: tiles 6.0in wide, caption top ≈6.15in and tiles top ≈6.9in below the collar, both implying ≈1.9in) to BOTH the mockup generator and the order (via Stripe metadata `print_position`). Previously a 4500² square with the name in the middle was sent with no position, which printed below the chest.
 - Removed: drag-to-reposition, background-table toggle on shirts, 3-step progress UI, DesignCanvas/ProductMockup components.
-- Calibration assumes Printful top-aligns unpositioned files in the 12×16 area (centred would put the area 0.25in below the collar, implausible). Confirm with one draft order (`/api/print/draft-order` accepts `position`); if off, change only PRINT_AREA_BELOW_COLLAR_IN.
+- Calibration confirmed 12×16in area (tile width matched) and top alignment (centring would put the area above the collar). Next real order is the final check; if off, change only PRINT_AREA_BELOW_COLLAR_IN.
 - Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
 - ProductMockup: click-to-enlarge lightbox, reassurance copy under Buy button
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications

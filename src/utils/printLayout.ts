@@ -6,7 +6,7 @@ import { canvasFont, drawElementTile } from './canvasTile';
 
 export const PRINT_FRAME = { widthIn: 12, heightIn: 16, ppi: 150 } as const;
 
-export const PRINT_AREA_BELOW_COLLAR_IN = 2.25;
+export const PRINT_AREA_BELOW_COLLAR_IN = 1.9;
 
 export type Placement = 'chest' | 'big';
 
