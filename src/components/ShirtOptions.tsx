@@ -10,13 +10,11 @@ interface ShirtOptionsProps {
   placement: Placement;
   caption: string;
   captionPosition: CaptionPosition;
-  captionOpen: boolean;
   onColor: (color: ShirtColor) => void;
   onSize: (size: ShirtSize) => void;
   onPlacement: (placement: Placement) => void;
   onCaption: (caption: string) => void;
   onCaptionPosition: (position: CaptionPosition) => void;
-  onOpenCaption: () => void;
 }
 
 const CAPTION_MAX = 32;
@@ -40,8 +38,8 @@ const chipClass = (active: boolean) =>
   }`;
 
 const ShirtOptions: React.FC<ShirtOptionsProps> = ({
-  color, size, placement, caption, captionPosition, captionOpen,
-  onColor, onSize, onPlacement, onCaption, onCaptionPosition, onOpenCaption,
+  color, size, placement, caption, captionPosition,
+  onColor, onSize, onPlacement, onCaption, onCaptionPosition,
 }) => {
   const [exampleIdx, setExampleIdx] = useState(0);
   const showingExamples = caption.length === 0;
@@ -97,12 +95,10 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
       </div>
     </fieldset>
 
-    {captionOpen ? (
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
         <label className="block">
           <span className="nb-label">Line of text (optional)</span>
           <input
-            autoFocus
             className="nb-input"
             value={caption}
             maxLength={CAPTION_MAX}
@@ -121,16 +117,6 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
           </div>
         )}
       </div>
-    ) : (
-      <button
-        type="button"
-        onClick={onOpenCaption}
-        className="nb-focus w-full text-left rounded-lg border-2 border-dashed border-muted px-3 py-2 text-muted hover:border-ink hover:text-ink"
-      >
-        <span className="block text-sm font-semibold">+ Add a line of text</span>
-        <span className="block truncate text-xs font-medium">e.g. “{example}”</span>
-      </button>
-    )}
   </div>
   );
 };

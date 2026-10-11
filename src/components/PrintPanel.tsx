@@ -53,7 +53,6 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [placement, setPlacement] = useState<Placement>('chest');
   const [caption, setCaption] = useState('');
   const [captionPosition, setCaptionPosition] = useState<CaptionPosition>('above');
-  const [captionOpen, setCaptionOpen] = useState(false);
   const [modelPhoto, setModelPhoto] = useState<ModelPhoto | null>(null);
   const [buyStatus, setBuyStatus] = useState<BuyStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -170,13 +169,11 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             placement={placement}
             caption={caption}
             captionPosition={captionPosition}
-            captionOpen={captionOpen}
             onColor={setColor}
             onSize={setSize}
             onPlacement={setPlacement}
             onCaption={setCaption}
             onCaptionPosition={setCaptionPosition}
-            onOpenCaption={() => setCaptionOpen(true)}
           />
           <div className="mt-auto flex flex-col gap-2">
             <button
