@@ -110,7 +110,7 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
   - **Collar calibration:** `PRINT_AREA_BELOW_COLLAR_IN = 1.9`. From tape-measure photos of the April test shirt (old 4500² file, Sriram + caption): three tiles 6.0in wide (file predicts 0.495×12 = 5.94in → 12in-wide area confirmed); caption top ≈6.15in and tiles top ≈6.9in below the bottom of the front collar; file positions 35.6% and 42.2% down the square → 6.15 − 4.27 ≈ 1.9in and 6.9 − 5.07 ≈ 1.85in. Caption→tiles gap 0.75in measured vs 0.8in predicted. Centring would imply a negative offset, so Printful top-aligns. Position `top` = (belowCollarIn − 1.9) × 150.
 - `generatePrintFile` renders the same layout at 300ppi, cropped tight (no empty space), so file aspect = position aspect.
 - The same `position` goes to `/api/print/mockup`, Stripe metadata `print_position`, the webhook order and `/api/print/draft-order`, all validated by `api/_lib/printPosition.ts` (`limit_to_print_area: true`).
-- Caption is ink on White/Heather shirts and white on Black/Navy.
+- Caption is ink on White/Heather shirts and white on Black/Navy. It sits above the name by default (most lines are lead-ins: "Born to be…", "Elementally yours,"); an Above/Below switch appears once text is typed. The design's top edge stays at the placement's collar distance either way, so text-above pushes the tiles down by one caption line.
 
 **UI.** `PrintPanel` is one screen: drawn shirt (`ShirtPreview`, same layout code, to scale) + colour, size, placement, optional caption, Buy (disabled until a size is picked). "See it on a model" calls the mockup generator only when clicked; the uploaded print file is cached per design so Buy reuses it.
 

@@ -3,7 +3,7 @@ import type { NameResult } from '../types';
 import { PRINT_PRODUCTS, SHIRT_COLORS, findShirtVariant } from '../data/printProducts';
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { generatePrintFile } from '../utils/PrintDesignGenerator';
-import type { Placement, PrintPosition } from '../utils/printLayout';
+import type { CaptionPosition, Placement, PrintPosition } from '../utils/printLayout';
 import Modal from './Modal';
 import ShirtPreview from './ShirtPreview';
 import ShirtOptions from './ShirtOptions';
@@ -52,6 +52,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const [size, setSize] = useState<ShirtSize | null>(null);
   const [placement, setPlacement] = useState<Placement>('chest');
   const [caption, setCaption] = useState('');
+  const [captionPosition, setCaptionPosition] = useState<CaptionPosition>('above');
   const [captionOpen, setCaptionOpen] = useState(false);
   const [modelPhoto, setModelPhoto] = useState<ModelPhoto | null>(null);
   const [buyStatus, setBuyStatus] = useState<BuyStatus>('idle');
@@ -60,14 +61,14 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   if (!isOpen) return null;
 
-  const designKey = `${result.orderedElements.map(e => e.name).join(',')}|${placement}|${caption.trim()}|${color.dark ? 'dark' : 'light'}`;
+  const designKey = `${result.orderedElements.map(e => e.name).join(',')}|${placement}|${caption.trim()}|${captionPosition}|${color.dark ? 'dark' : 'light'}`;
   const photoKey = `${designKey}|${color.name}`;
   const photo = modelPhoto?.key === photoKey ? modelPhoto : null;
 
   const uploadDesign = async (): Promise<UploadedDesign> => {
     const cached = uploads.current.get(designKey);
     if (cached) return cached;
-    const file = await generatePrintFile(result, caption, placement, color.dark);
+    const file = await generatePrintFile(result, caption, placement, color.dark, captionPosition);
     const { url } = await postJson<{ url: string }>('/api/print/upload', { dataUrl: await blobToDataUrl(file.blob) });
     const uploaded = { url, position: file.position };
     uploads.current.set(designKey, uploaded);
@@ -131,7 +132,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             <img src={photo.url} alt={`${result.originalName} on a ${color.name} t-shirt`} className="w-full max-w-[260px] sm:max-w-[340px] rounded-lg border-[3px] border-ink bg-white" />
           ) : (
             <div className="relative w-full">
-              <ShirtPreview result={result} color={color} placement={placement} caption={caption} />
+              <ShirtPreview result={result} color={color} placement={placement} caption={caption} captionPosition={captionPosition} />
               {photo?.status === 'loading' && (
                 <p className="absolute inset-x-0 bottom-2 mx-auto w-fit rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold shadow-brutal-sm">
                   Getting a photo from Printful…
@@ -168,11 +169,13 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             size={size}
             placement={placement}
             caption={caption}
+            captionPosition={captionPosition}
             captionOpen={captionOpen}
             onColor={setColor}
             onSize={setSize}
             onPlacement={setPlacement}
             onCaption={setCaption}
+            onCaptionPosition={setCaptionPosition}
             onOpenCaption={() => setCaptionOpen(true)}
           />
           <div className="mt-auto flex flex-col gap-2">

@@ -1,7 +1,7 @@
 import type { NameResult } from '../types';
 import { ensureCanvasFonts } from './canvasTile';
 import { canvasMeasure, computePrintLayout, drawPrintDesign } from './printLayout';
-import type { Placement, PrintPosition } from './printLayout';
+import type { CaptionPosition, Placement, PrintPosition } from './printLayout';
 
 const PRINT_PPI = 300;
 
@@ -15,11 +15,12 @@ export async function generatePrintFile(
   caption: string,
   placement: Placement,
   darkShirt: boolean,
+  captionPosition: CaptionPosition,
 ): Promise<PrintFile> {
   await ensureCanvasFonts();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
-  const layout = computePrintLayout(result, caption, placement, canvasMeasure(ctx));
+  const layout = computePrintLayout(result, caption, placement, canvasMeasure(ctx), captionPosition);
 
   canvas.width = Math.round(layout.widthIn * PRINT_PPI);
   canvas.height = Math.round(layout.heightIn * PRINT_PPI);

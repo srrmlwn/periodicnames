@@ -10,6 +10,8 @@ export const PRINT_AREA_BELOW_COLLAR_IN = 1.9;
 
 export type Placement = 'chest' | 'big';
 
+export type CaptionPosition = 'above' | 'below';
+
 interface PlacementSpec {
   label: string;
   maxTileIn: number;
@@ -41,6 +43,7 @@ export interface PrintLayout {
   widthIn: number;
   heightIn: number;
   tilesWidthIn: number;
+  tilesTopIn: number;
   captionTopIn: number;
   captionSizeIn: number;
   brandTopIn: number;
@@ -100,6 +103,7 @@ export function computePrintLayout(
   caption: string,
   placement: Placement,
   measureText: MeasureText,
+  captionPosition: CaptionPosition = 'above',
 ): PrintLayout {
   const spec = PLACEMENTS[placement];
   const words = splitWords(createElementLayout(result).items);
@@ -128,11 +132,16 @@ export function computePrintLayout(
   const tilesHeightIn = rows.length * tile + Math.max(0, rows.length - 1) * rowGapIn + shadowIn;
 
   const captionSizeIn = Math.min(0.6, Math.max(0.28, tile * 0.3));
-  const captionTopIn = tilesHeightIn + tile * 0.14;
+  const captionGapIn = tile * 0.14;
   const captionWidthIn = hasCaption ? Math.min(spec.maxWidthIn, measureText(caption.trim(), captionSizeIn, 700)) : 0;
+  const captionAbove = hasCaption && captionPosition === 'above';
+
+  const tilesTopIn = captionAbove ? captionSizeIn * 1.25 + captionGapIn : 0;
+  const tilesBottomIn = tilesTopIn + tilesHeightIn;
+  const captionTopIn = captionAbove ? 0 : tilesBottomIn + captionGapIn;
 
   const brandSizeIn = Math.max(0.12, tile * 0.08);
-  const brandTopIn = (hasCaption ? captionTopIn + captionSizeIn * 1.25 : tilesHeightIn) + tile * 0.08;
+  const brandTopIn = (hasCaption && !captionAbove ? captionTopIn + captionSizeIn * 1.25 : tilesBottomIn) + tile * 0.08;
 
   const widthIn = Math.max(tilesWidthIn, captionWidthIn);
   const heightIn = brandTopIn + brandSizeIn * 1.2;
@@ -151,7 +160,7 @@ export function computePrintLayout(
 
   return {
     rows, tileIn: tile, tileGapIn, wordGapIn, rowGapIn,
-    widthIn, heightIn, tilesWidthIn,
+    widthIn, heightIn, tilesWidthIn, tilesTopIn,
     captionTopIn, captionSizeIn, brandTopIn, brandSizeIn,
     position,
   };
@@ -170,7 +179,7 @@ export function drawPrintDesign(
 
   layout.rows.forEach((row, ri) => {
     let x = centerX - (rowWidthIn(row, layout) * s + shadow) / 2;
-    const y = ri * (layout.tileIn + layout.rowGapIn) * s;
+    const y = (layout.tilesTopIn + ri * (layout.tileIn + layout.rowGapIn)) * s;
     row.forEach((word, wi) => {
       if (wi > 0) x += layout.wordGapIn * s;
       word.forEach((item, ti) => {

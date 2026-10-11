@@ -4,13 +4,14 @@ import type { ShirtColor } from '../data/printProducts';
 import { BRAND } from '../utils/colorSchemes';
 import { ensureCanvasFonts } from '../utils/canvasTile';
 import { PRINT_AREA_BELOW_COLLAR_IN, PRINT_FRAME, canvasMeasure, computePrintLayout, drawPrintDesign } from '../utils/printLayout';
-import type { Placement } from '../utils/printLayout';
+import type { CaptionPosition, Placement } from '../utils/printLayout';
 
 interface ShirtPreviewProps {
   result: NameResult;
   color: ShirtColor;
   placement: Placement;
   caption: string;
+  captionPosition: CaptionPosition;
 }
 
 const VIEW_W = 400;
@@ -24,7 +25,7 @@ const RENDER_SCALE = 3;
 const SHIRT_PATH = 'M140 20 L60 50 L10 140 L70 165 L70 430 L330 430 L330 165 L390 140 L340 50 L260 20 Q200 70 140 20 Z';
 const COLLAR_PATH = 'M140 20 Q200 70 260 20';
 
-const ShirtPreview: React.FC<ShirtPreviewProps> = ({ result, color, placement, caption }) => {
+const ShirtPreview: React.FC<ShirtPreviewProps> = ({ result, color, placement, caption, captionPosition }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const ShirtPreview: React.FC<ShirtPreviewProps> = ({ result, color, placement, c
       ctx.stroke(new Path2D(COLLAR_PATH));
       ctx.globalAlpha = 1;
 
-      const layout = computePrintLayout(result, caption, placement, canvasMeasure(ctx));
+      const layout = computePrintLayout(result, caption, placement, canvasMeasure(ctx), captionPosition);
       const unitsPerFramePx = UNITS_PER_IN / PRINT_FRAME.ppi;
       ctx.save();
       ctx.translate(FRAME_LEFT + layout.position.left * unitsPerFramePx, FRAME_TOP + layout.position.top * unitsPerFramePx);
@@ -57,7 +58,7 @@ const ShirtPreview: React.FC<ShirtPreviewProps> = ({ result, color, placement, c
     };
     draw();
     return () => { cancelled = true; };
-  }, [result, color, placement, caption]);
+  }, [result, color, placement, caption, captionPosition]);
 
   return (
     <canvas

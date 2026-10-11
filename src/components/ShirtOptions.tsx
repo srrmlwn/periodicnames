@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { SHIRT_COLORS, SHIRT_SIZES } from '../data/printProducts';
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { PLACEMENTS } from '../utils/printLayout';
-import type { Placement } from '../utils/printLayout';
+import type { CaptionPosition, Placement } from '../utils/printLayout';
 
 interface ShirtOptionsProps {
   color: ShirtColor;
   size: ShirtSize | null;
   placement: Placement;
   caption: string;
+  captionPosition: CaptionPosition;
   captionOpen: boolean;
   onColor: (color: ShirtColor) => void;
   onSize: (size: ShirtSize) => void;
   onPlacement: (placement: Placement) => void;
   onCaption: (caption: string) => void;
+  onCaptionPosition: (position: CaptionPosition) => void;
   onOpenCaption: () => void;
 }
 
@@ -30,14 +32,16 @@ const CAPTION_EXAMPLES = [
 
 const EXAMPLE_INTERVAL_MS = 2500;
 
+const CAPTION_POSITIONS: CaptionPosition[] = ['above', 'below'];
+
 const chipClass = (active: boolean) =>
   `nb-focus min-w-[3.25rem] px-3 py-2 rounded-lg border-[3px] border-ink font-bold text-sm shadow-brutal-sm transition-colors ${
     active ? 'bg-ink text-white' : 'bg-white text-ink hover:bg-mist'
   }`;
 
 const ShirtOptions: React.FC<ShirtOptionsProps> = ({
-  color, size, placement, caption, captionOpen,
-  onColor, onSize, onPlacement, onCaption, onOpenCaption,
+  color, size, placement, caption, captionPosition, captionOpen,
+  onColor, onSize, onPlacement, onCaption, onCaptionPosition, onOpenCaption,
 }) => {
   const [exampleIdx, setExampleIdx] = useState(0);
   const showingExamples = caption.length === 0;
@@ -94,17 +98,29 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
     </fieldset>
 
     {captionOpen ? (
-      <label className="block">
-        <span className="nb-label">Line of text (optional)</span>
-        <input
-          autoFocus
-          className="nb-input"
-          value={caption}
-          maxLength={CAPTION_MAX}
-          placeholder={`e.g. ${example}`}
-          onChange={e => onCaption(e.target.value)}
-        />
-      </label>
+      <div className="flex flex-col gap-2">
+        <label className="block">
+          <span className="nb-label">Line of text (optional)</span>
+          <input
+            autoFocus
+            className="nb-input"
+            value={caption}
+            maxLength={CAPTION_MAX}
+            placeholder={`e.g. ${example}`}
+            onChange={e => onCaption(e.target.value)}
+          />
+        </label>
+        {caption.trim() && (
+          <div className="flex items-center gap-2" role="group" aria-label="Text position">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">Text</span>
+            {CAPTION_POSITIONS.map(p => (
+              <button key={p} type="button" onClick={() => onCaptionPosition(p)} aria-pressed={p === captionPosition} className={chipClass(p === captionPosition)}>
+                {p === 'above' ? 'Above name' : 'Below name'}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     ) : (
       <button
         type="button"

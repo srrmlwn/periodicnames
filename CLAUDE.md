@@ -152,7 +152,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   ShareImageGenerator.ts — Canvas API PNG (1200×630)
   ShareVideoGenerator.ts — MediaRecorder API reel video
-  printLayout.ts         — computePrintLayout(result, caption, placement) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
+  printLayout.ts         — computePrintLayout(result, caption, placement, measure, captionPosition) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
   PrintDesignGenerator.ts — generatePrintFile(): 300ppi PNG cropped tight to the design + its position
 
 src/components/
@@ -160,7 +160,7 @@ src/components/
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline)
-  ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (collapsed button + input both rotate CAPTION_EXAMPLES every 2.5s while the caption is empty)
+  ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (collapsed button + input both rotate CAPTION_EXAMPLES every 2.5s while the caption is empty); 'Above name' / 'Below name' switch appears once text is entered (default above)
 
 api/_lib/printPosition.ts — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order (underscore dir = not a route)
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
