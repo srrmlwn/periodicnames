@@ -267,7 +267,8 @@ Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setu
 - Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
 - ProductMockup: click-to-enlarge lightbox, reassurance copy under Buy button
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
-- Success: `?order=success` param shows dismissable banner in App.tsx
+- Success: `?order=success` param shows dismissable banner in App.tsx (centred via a flex wrapper — the `sticker-in` animation's transform would override a translate-based centre)
+- Testing without paying: Preview deployment + Stripe test keys + `PRINTFUL_DRAFT_ONLY=true` (webhook skips the Printful confirm). See docs/phase3-tasks.md → "Testing checkout without paying".
 - **Pending external setup only** (no code changes needed):
   - Set `PRINTFUL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Vercel env vars
   - Register `checkout.session.completed` webhook in Stripe dashboard → `https://periodicnames.com/api/stripe/webhook`

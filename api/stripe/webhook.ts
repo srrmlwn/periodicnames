@@ -75,6 +75,11 @@ async function createPrintfulOrder(
   if (!res.ok) throw new Error(`Printful order creation failed: ${raw}`);
 
   const orderId = (JSON.parse(raw) as { result: { id: number } }).result.id;
+  if (process.env.PRINTFUL_DRAFT_ONLY === 'true') {
+    log('PRINTFUL_DRAFT_ONLY=true — leaving order as an unconfirmed draft (not charged, not printed)', { orderId });
+    return;
+  }
+
   log('order created as draft, confirming', { orderId });
 
   const confirmRes = await fetch(`${PRINTFUL_BASE}/orders/${orderId}/confirm`, {

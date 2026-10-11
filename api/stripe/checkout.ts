@@ -53,7 +53,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   log('request', { productName, variantId, productId, priceUsd, effectivePrice, priceOverrideEnv: priceOverrideEnv ?? 'not set' });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-  const origin = 'https://periodicnames.com';
+  const origin = process.env.VERCEL_ENV === 'production' || !process.env.VERCEL_URL
+    ? 'https://periodicnames.com'
+    : `https://${process.env.VERCEL_URL}`;
 
   let session: Stripe.Checkout.Session;
   try {

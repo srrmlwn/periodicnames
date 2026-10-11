@@ -147,7 +147,8 @@ function App() {
   return (
     <div className="min-h-screen">
       {orderSuccess && (
-        <div role="status" className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md flex items-center gap-3 bg-pop-mint text-ink text-sm font-bold px-4 py-3 rounded-xl border-[3px] border-ink shadow-brutal sticker-in">
+        <div className="fixed top-4 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+        <div role="status" className="pointer-events-auto w-full max-w-md flex items-center gap-3 bg-pop-mint text-ink text-sm font-bold px-4 py-3 rounded-xl border-[3px] border-ink shadow-brutal sticker-in">
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
@@ -157,6 +158,7 @@ function App() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        </div>
         </div>
       )}
       <div className="flex flex-col" style={{ minHeight: '100dvh' }}>

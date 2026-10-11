@@ -115,3 +115,20 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
 **UI.** `PrintPanel` is one screen: drawn shirt (`ShirtPreview`, same layout code, to scale) + colour, size, placement, optional caption, Buy (disabled until a size is picked). "See it on a model" calls the mockup generator only when clicked; the uploaded print file is cached per design so Buy reuses it.
 
 **Still to verify.** Place one draft order with a `position` and compare the Printful preview/print against `ShirtPreview` — the drawing assumes the print area starts ~1in below the neckline.
+
+---
+
+## Testing checkout without paying (Oct 2026)
+
+Use a **Vercel Preview** deployment wired to **Stripe test mode** and **Printful drafts**, so the full flow (design → Stripe Checkout → webhook → Printful order) runs end to end with no charge and no shirt.
+
+1. Vercel → Project → Settings → Environment Variables, scope **Preview only**:
+   - `STRIPE_SECRET_KEY` = Stripe *test* secret key (`sk_test_…`)
+   - `STRIPE_WEBHOOK_SECRET` = signing secret of the test-mode webhook below
+   - `PRINTFUL_DRAFT_ONLY` = `true` — webhook creates the Printful order but skips `/confirm`, so it stays an unpaid draft (visible in Printful → Orders; delete after checking)
+   - `PRINTFUL_API_KEY` / `PRINTFUL_STORE_ID` can be the same as production (drafts are free)
+2. Stripe dashboard (test mode) → Developers → Webhooks → add endpoint `https://<preview-url>/api/stripe/webhook`, event `checkout.session.completed`. (Preview URLs change per deploy; a stable branch alias such as `periodicnames-git-staging-<team>.vercel.app` from a `staging` branch avoids re-registering. Vercel Deployment Protection must allow Stripe to reach the webhook, or use a protection bypass.)
+3. Pay with card `4242 4242 4242 4242`, any future expiry, any CVC/ZIP.
+4. Check: Stripe test payment succeeded → Vercel logs show `[webhook] … PRINTFUL_DRAFT_ONLY=true` → draft order in Printful has the right variant, print file and `position`.
+
+`checkout.ts` returns buyers to the deployment they came from on previews (`VERCEL_URL`), and to periodicnames.com in production.
