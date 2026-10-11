@@ -6,6 +6,8 @@ import { canvasFont, drawElementTile } from './canvasTile';
 
 export const PRINT_FRAME = { widthIn: 12, heightIn: 16, ppi: 150 } as const;
 
+export const PRINT_AREA_BELOW_COLLAR_IN = 2.25;
+
 export type Placement = 'chest' | 'big';
 
 interface PlacementSpec {
@@ -13,12 +15,12 @@ interface PlacementSpec {
   maxTileIn: number;
   maxWidthIn: number;
   maxHeightIn: number;
-  topIn: number;
+  belowCollarIn: number;
 }
 
 export const PLACEMENTS: Record<Placement, PlacementSpec> = {
-  chest: { label: 'Chest', maxTileIn: 2.2, maxWidthIn: 10, maxHeightIn: 5.5, topIn: 2 },
-  big: { label: 'Big', maxTileIn: 3.4, maxWidthIn: 12, maxHeightIn: 10, topIn: 2.5 },
+  chest: { label: 'Chest', maxTileIn: 2.2, maxWidthIn: 10, maxHeightIn: 5.5, belowCollarIn: 3.25 },
+  big: { label: 'Big', maxTileIn: 3.4, maxWidthIn: 12, maxHeightIn: 10, belowCollarIn: 3.5 },
 };
 
 export interface PrintPosition {
@@ -143,7 +145,7 @@ export function computePrintLayout(
     area_height: PRINT_FRAME.heightIn * ppi,
     width,
     height,
-    top: Math.round(spec.topIn * ppi),
+    top: Math.round((spec.belowCollarIn - PRINT_AREA_BELOW_COLLAR_IN) * ppi),
     left: Math.round((PRINT_FRAME.widthIn * ppi - width) / 2),
   };
 

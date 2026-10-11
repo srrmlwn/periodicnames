@@ -3,7 +3,7 @@ import type { NameResult } from '../types';
 import type { ShirtColor } from '../data/printProducts';
 import { BRAND } from '../utils/colorSchemes';
 import { ensureCanvasFonts } from '../utils/canvasTile';
-import { PRINT_FRAME, canvasMeasure, computePrintLayout, drawPrintDesign } from '../utils/printLayout';
+import { PRINT_AREA_BELOW_COLLAR_IN, PRINT_FRAME, canvasMeasure, computePrintLayout, drawPrintDesign } from '../utils/printLayout';
 import type { Placement } from '../utils/printLayout';
 
 interface ShirtPreviewProps {
@@ -17,7 +17,8 @@ const VIEW_W = 400;
 const VIEW_H = 440;
 const UNITS_PER_IN = 13;
 const FRAME_LEFT = VIEW_W / 2 - (PRINT_FRAME.widthIn * UNITS_PER_IN) / 2;
-const FRAME_TOP = 58;
+const COLLAR_Y = 45;
+const FRAME_TOP = COLLAR_Y + PRINT_AREA_BELOW_COLLAR_IN * UNITS_PER_IN;
 const RENDER_SCALE = 3;
 
 const SHIRT_PATH = 'M140 20 L60 50 L10 140 L70 165 L70 430 L330 430 L330 165 L390 140 L340 50 L260 20 Q200 70 140 20 Z';
