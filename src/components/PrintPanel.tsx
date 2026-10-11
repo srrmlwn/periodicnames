@@ -126,7 +126,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} label="Put your name on a tee" widthClass="max-w-3xl" className="max-h-[92vh] overflow-y-auto">
-      <div className="grid md:grid-cols-[1.1fr_1fr]">
+      <div className="grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="relative bg-mist border-b-[3px] md:border-b-0 md:border-r-[3px] border-ink rounded-t-[9px] md:rounded-tr-none md:rounded-l-[9px] px-4 pt-5 pb-3 sm:pt-6 sm:pb-4 flex flex-col items-center justify-center gap-2 sm:gap-3">
           {photo?.status === 'ready' ? (
             <img src={photo.url} alt={`${result.originalName} on a ${color.name} t-shirt`} className="w-full max-w-[260px] sm:max-w-[340px] rounded-lg border-[3px] border-ink bg-white" />

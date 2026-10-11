@@ -12,16 +12,32 @@ const MAX_CHARS = 30;
 const PLACEHOLDER_CTAS = [
   "what are you made of?",
   "you might be gold",
-  "are you mostly noble gas?",
+  "are you a noble gas?",
   "discover your elements",
   "see your chemistry",
   "could you be plutonium?",
-  "every name tells a chemical story",
+  "what's your chemistry?",
 ];
+
+const NARROW_QUERY = '(max-width: 639px)';
+
+function nameSizeClass(length: number): string {
+  if (length > 22) return 'text-lg max-sm:text-sm';
+  if (length > 16) return 'text-lg max-sm:text-base';
+  return 'text-lg';
+}
 
 const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh, initialValue = '' }) => {
   const [name, setName] = useState(initialValue);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [narrow, setNarrow] = useState(() => window.matchMedia(NARROW_QUERY).matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY);
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     if (name) return;
@@ -31,7 +47,8 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
     return () => clearInterval(id);
   }, [name]);
 
-  const placeholder = name ? '' : `Your name — ${PLACEHOLDER_CTAS[placeholderIdx]}`;
+  const cta = PLACEHOLDER_CTAS[placeholderIdx];
+  const placeholder = name ? '' : narrow ? cta.charAt(0).toUpperCase() + cta.slice(1) : `Your name — ${cta}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +74,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             aria-label="Your name"
-            className="flex-1 min-w-0 px-4 py-3 text-lg font-bold text-ink bg-transparent focus:outline-none placeholder:font-medium placeholder:text-muted/60 placeholder:text-base"
+            className={`flex-1 min-w-0 px-4 py-3 ${nameSizeClass(name.length)} font-bold text-ink bg-transparent focus:outline-none placeholder:font-medium placeholder:text-muted/60 placeholder:text-base`}
           />
           {hasResult ? (
             <button
