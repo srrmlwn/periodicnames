@@ -125,9 +125,10 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
       <button
         type="button"
         onClick={onOpenCaption}
-        className="nb-focus w-full truncate text-left rounded-lg border-2 border-dashed border-muted px-3 py-2.5 text-sm font-semibold text-muted hover:border-ink hover:text-ink"
+        className="nb-focus w-full text-left rounded-lg border-2 border-dashed border-muted px-3 py-2 text-muted hover:border-ink hover:text-ink"
       >
-        + Add a line of text <span className="font-medium">· e.g. “{example}”</span>
+        <span className="block text-sm font-semibold">+ Add a line of text</span>
+        <span className="block truncate text-xs font-medium">e.g. “{example}”</span>
       </button>
     )}
   </div>
