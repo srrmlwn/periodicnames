@@ -105,7 +105,7 @@ Replaced the fixed layout preset buttons with a live 340×340px WYSIWYG HTML pre
 **Placement model.**
 - Frame: Printful front area as 1800×2400 (12×16in at 150ppi). Every position is in this frame.
 - `computePrintLayout` (src/utils/printLayout.ts) picks the largest tile size that fits the preset, wraps words into rows, adds the optional caption and the small `periodicnames.com` line, and returns the design's size in inches plus `position`.
-  - **Chest:** tiles ≤ 2.2in, design ≤ 10×5.5in, design top 3.25in below the collar (Printful/Printify centre-chest guide: 3–3.5in), centred.
+  - **Chest:** tiles ≤ 2.6in (raised from 2.2in after the first Printful mockup looked small: a 3-letter name now prints ~8.5in wide), design ≤ 10×5.5in, design top 3.25in below the collar (Printful/Printify centre-chest guide: 3–3.5in), centred.
   - **Big:** tiles ≤ 3.4in, design ≤ 12×10in, design top 3.5in below the collar (full-front guide: 3–4in), centred.
   - **Collar calibration:** `PRINT_AREA_BELOW_COLLAR_IN = 1.9`. From tape-measure photos of the April test shirt (old 4500² file, Sriram + caption): three tiles 6.0in wide (file predicts 0.495×12 = 5.94in → 12in-wide area confirmed); caption top ≈6.15in and tiles top ≈6.9in below the bottom of the front collar; file positions 35.6% and 42.2% down the square → 6.15 − 4.27 ≈ 1.9in and 6.9 − 5.07 ≈ 1.85in. Caption→tiles gap 0.75in measured vs 0.8in predicted. Centring would imply a negative offset, so Printful top-aligns. Position `top` = (belowCollarIn − 1.9) × 150.
 - `generatePrintFile` renders the same layout at 300ppi, cropped tight (no empty space), so file aspect = position aspect.
