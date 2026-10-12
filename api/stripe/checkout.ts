@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { parsePrintPosition, serializePrintPosition } from '../_lib/printPosition';
+import { TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, chargePriceUsd } from '../_lib/catalog';
+import { isOwnDesignUrl } from '../_lib/designUrl';
+import { isOffensiveCaption, isOffensiveName } from '../_lib/textFilter';
 
 function log(label: string, data?: unknown) {
   console.log(`[checkout] ${label}`, data !== undefined ? JSON.stringify(data) : '');
@@ -20,37 +23,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     has_price_override: !!process.env.VITE_PRICE_OVERRIDE_USD,
   });
 
-  const { productName, variantId, productId, designUrl, mockupUrl, priceUsd, position: rawPosition } = req.body as {
+  const { productName, variantId, productId, designUrl, mockupUrl, position: rawPosition, name, caption } = req.body as {
     productName?: string;
     variantId?: number;
     productId?: number;
-    designUrl?: string;
-    mockupUrl?: string;
-    priceUsd?: number;
+    designUrl?: unknown;
+    mockupUrl?: unknown;
     position?: unknown;
+    name?: unknown;
+    caption?: unknown;
   };
 
-  const position = parsePrintPosition(rawPosition);
-
-  const missing = [
-    !productName && 'productName',
-    !variantId && 'variantId',
-    !productId && 'productId',
-    !designUrl && 'designUrl',
-    !priceUsd && 'priceUsd',
-    !position && 'position',
-  ].filter(Boolean);
-
-  if (missing.length > 0) {
-    log('rejected: missing required fields', missing);
-    res.status(400).json({ error: 'Missing required fields', missing });
+  const nameText = typeof name === 'string' ? name.slice(0, 60) : '';
+  const captionText = typeof caption === 'string' ? caption.slice(0, 60) : '';
+  if (!nameText || isOffensiveName(nameText) || isOffensiveCaption(captionText)) {
+    log('rejected: name/caption failed content check', { nameText, captionText });
+    res.status(422).json({ error: "We can't print that text" });
     return;
   }
 
-  const priceOverrideEnv = process.env.VITE_PRICE_OVERRIDE_USD;
-  const effectivePrice = priceOverrideEnv ? parseFloat(priceOverrideEnv) : priceUsd!;
+  const position = parsePrintPosition(rawPosition);
 
-  log('request', { productName, variantId, productId, priceUsd, effectivePrice, priceOverrideEnv: priceOverrideEnv ?? 'not set' });
+  const invalid = [
+    typeof productName !== 'string' && 'productName',
+    productId !== TSHIRT_PRODUCT_ID && 'productId',
+    !(typeof variantId === 'number' && TSHIRT_VARIANT_IDS.has(variantId)) && 'variantId',
+    !isOwnDesignUrl(designUrl) && 'designUrl',
+    !position && 'position',
+  ].filter(Boolean);
+
+  if (invalid.length > 0 || !isOwnDesignUrl(designUrl) || !position) {
+    log('rejected: invalid fields', invalid);
+    res.status(400).json({ error: 'Invalid order', invalid });
+    return;
+  }
+
+  const effectivePrice = chargePriceUsd();
+  const productImage = typeof mockupUrl === 'string' && mockupUrl.startsWith('https://') ? mockupUrl : undefined;
+
+  log('request', { productName, variantId, productId, effectivePrice, vercelEnv: process.env.VERCEL_ENV ?? 'unset' });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const origin = process.env.VERCEL_ENV === 'production' || !process.env.VERCEL_URL
@@ -69,7 +80,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           product_data: {
             name: `Periodic Names ${productName}`,
             description: 'Custom element-name print design',
-            ...(mockupUrl ? { images: [mockupUrl] } : {}),
+            ...(productImage ? { images: [productImage] } : {}),
           },
         },
       }],
@@ -77,8 +88,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       metadata: {
         variant_id: String(variantId),
         product_id: String(productId),
-        design_url: designUrl!,
-        print_position: serializePrintPosition(position!),
+        design_url: designUrl,
+        name: nameText,
+        caption: captionText,
+        print_position: serializePrintPosition(position),
       },
       success_url: `${origin}/?order=success`,
       cancel_url: `${origin}/`,

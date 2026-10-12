@@ -34,7 +34,8 @@ const TSHIRT_VARIANTS: PrintVariant[] = [
   { id: 6951, label: 'Athletic Heather / XL',color: '#cececc', size: 'XL' },
 ];
 
-const overrideEnv = import.meta.env.VITE_PRICE_OVERRIDE_USD as string | undefined;
+const isProductionDeploy = import.meta.env.VITE_VERCEL_ENV === 'production';
+const overrideEnv = isProductionDeploy ? undefined : import.meta.env.VITE_PRICE_OVERRIDE_USD as string | undefined;
 const resolvedPrice = overrideEnv ? parseFloat(overrideEnv) : 29.99;
 
 export const PRINT_PRODUCTS: PrintProduct[] = [

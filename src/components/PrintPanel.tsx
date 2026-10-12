@@ -3,6 +3,7 @@ import type { NameResult } from '../types';
 import { PRINT_PRODUCTS, SHIRT_COLORS, findShirtVariant } from '../data/printProducts';
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { generatePrintFile } from '../utils/PrintDesignGenerator';
+import { isOffensiveCaption, isOffensiveName } from '../utils/textFilter';
 import type { CaptionPosition, Placement, PrintPosition } from '../utils/printLayout';
 import Modal from './Modal';
 import ShirtPreview from './ShirtPreview';
@@ -74,6 +75,10 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     return uploaded;
   };
 
+  const nameBlocked = isOffensiveName(result.originalName);
+  const captionBlocked = isOffensiveCaption(caption);
+  const textBlocked = nameBlocked || captionBlocked;
+
   const showOnModel = async () => {
     const key = photoKey;
     setModelPhoto({ key, status: 'loading' });
@@ -96,7 +101,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
 
   const buy = async () => {
     const variant = size ? findShirtVariant(color, size) : undefined;
-    if (!variant) return;
+    if (!variant || textBlocked) return;
     setError(null);
     setBuyStatus('preparing');
     try {
@@ -108,11 +113,17 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
         variantId: variant.id,
         designUrl: design.url,
         position: design.position,
+        name: result.originalName,
+        caption: caption.trim(),
         mockupUrl: photo?.status === 'ready' ? photo.url : undefined,
-        priceUsd: PRODUCT.priceUsd,
       });
       window.location.href = checkoutUrl;
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('(422)')) {
+        setBuyStatus('idle');
+        setError("We can't print that text. Please change it and try again.");
+        return;
+      }
       setBuyStatus('idle');
       setError("Couldn't start checkout. Please try again in a moment.");
     }
@@ -121,6 +132,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const buyLabel =
     buyStatus === 'preparing' ? 'Preparing your print…' :
     buyStatus === 'redirecting' ? 'Opening checkout…' :
+    textBlocked ? "Can't print this text" :
     size ? `Buy · $${PRODUCT.priceUsd.toFixed(2)}` : 'Pick a size';
 
   return (
@@ -147,7 +159,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             <button
               type="button"
               onClick={showOnModel}
-              disabled={photo?.status === 'loading'}
+              disabled={photo?.status === 'loading' || textBlocked}
               className="nb-focus text-sm font-bold underline decoration-2 underline-offset-2 disabled:opacity-50 disabled:no-underline"
             >
               See it on a model →
@@ -174,17 +186,19 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
             onPlacement={setPlacement}
             onCaption={setCaption}
             onCaptionPosition={setCaptionPosition}
+            captionBlocked={captionBlocked}
+            nameBlocked={nameBlocked}
           />
           <div className="mt-auto flex flex-col gap-2">
             <button
               type="button"
               onClick={buy}
-              disabled={!size || buyStatus !== 'idle'}
+              disabled={!size || textBlocked || buyStatus !== 'idle'}
               className="nb-btn bg-pop-yellow w-full py-3 text-lg"
             >
               {buyLabel}
             </button>
-            {error && <p role="alert" className="text-sm font-semibold text-pop-coral text-center">{error}</p>}
+            {error && <p role="alert" className="rounded-md bg-pop-coral/20 px-2 py-1 text-sm font-semibold text-ink text-center">{error}</p>}
             <p className="text-xs text-muted text-center">Printed &amp; shipped by Printful · US shipping</p>
           </div>
         </div>

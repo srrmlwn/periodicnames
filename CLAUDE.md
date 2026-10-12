@@ -154,6 +154,7 @@ src/utils/
   ShareVideoGenerator.ts — MediaRecorder API reel video
   printLayout.ts         — computePrintLayout(result, caption, placement, measure, captionPosition) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
   PrintDesignGenerator.ts — generatePrintFile(): 300ppi PNG cropped tight to the design + its position
+  textFilter.ts          — re-exports api/_lib/textFilter (isOffensiveName() (lenient: whole-word matches only, allows real names like Dick/Cummings/Fukuda) and isOffensiveCaption() (strict; allows 'cum laude'), built on the `obscenity` package; slur fragments always blocked. Used by PrintPanel and re-checked server-side in checkout)
 
 src/components/
   ...
@@ -162,7 +163,12 @@ src/components/
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline). Silhouette uses real BC3001 proportions in inches from the front-collar bottom: neck 7.2in wide / 3.5in drop, armpit 5in below the collar, body 20in wide, hem 25.5in below — the earlier drawing put armpits ~9in down, which made correct prints look like they sat at the collar
   ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (always-visible labelled input; placeholder rotates CAPTION_EXAMPLES every 2.5s while empty; no autofocus so phones don't open the keyboard); 'Above name' / 'Below name' switch appears once text is entered (default above)
 
-api/_lib/printPosition.ts — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order (underscore dir = not a route)
+api/_lib/                 — shared server helpers (underscore dir = not a route)
+  printPosition.ts      — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order
+  catalog.ts            — TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, chargePriceUsd() — the ONLY source of the charged price ($29.99; VITE_PRICE_OVERRIDE_USD honoured only when VERCEL_ENV !== 'production')
+  designUrl.ts          — isOwnDesignUrl(): only https *.public.blob.vercel-storage.com/print-designs/* accepted by checkout and mockup
+  textFilter.ts         — the content filter itself (lives here so the server can import it as CommonJS; src/utils/textFilter.ts re-exports it for the browser)
+  alert.ts              — alertOwner(): logs + emails the owner via Resend (RESEND_API_KEY, ALERT_EMAIL, optional ALERT_FROM) when a paid order can't be placed
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
   mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling
@@ -267,10 +273,14 @@ Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setu
 - Product catalog: t-shirt only (BC3001, product 71, 16 variant IDs verified). Mug and poster removed — square 4500×4500 canvas doesn't suit their print areas; needs product-specific canvas sizing.
 - ProductMockup: click-to-enlarge lightbox, reassurance copy under Buy button
 - Payment: Stripe Checkout session → webhook places Printful order after payment; customer email forwarded for shipping notifications
+- Checkout hardening (Oct 2026): price set server-side (client never sends it); productId/variantId validated against the catalog; designUrl must be our own Blob upload; name + caption re-checked by textFilter (422 if blocked) and stored in Stripe metadata
+- Webhook hardening: Printful `external_id` = Stripe payment intent, looked up first (`GET /orders/@{id}`) so Stripe retries never duplicate an order — an existing draft is just confirmed. Any paid order that can't be placed (Printful error, missing metadata or shipping) calls alertOwner()
 - Success: `?order=success` param shows dismissable banner in App.tsx (centred via a flex wrapper — the `sticker-in` animation's transform would override a translate-based centre)
 - Testing without paying: Preview deployment + Stripe test keys + `PRINTFUL_DRAFT_ONLY=true` (webhook skips the Printful confirm). See docs/phase3-tasks.md → "Testing checkout without paying".
 - **Pending external setup only** (no code changes needed):
   - Set `PRINTFUL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Vercel env vars
+  - Set `RESEND_API_KEY` + `ALERT_EMAIL` (Production) so failed paid orders email the owner
+  - Remove `VITE_PRICE_OVERRIDE_USD` from Production (it is ignored there now, but should not exist)
   - Register `checkout.session.completed` webhook in Stripe dashboard → `https://periodicnames.com/api/stripe/webhook`
 
 See `docs/phase1-tasks.md` for Phase 1–2 task checklist.

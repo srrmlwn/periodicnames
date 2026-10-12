@@ -15,6 +15,8 @@ interface ShirtOptionsProps {
   onPlacement: (placement: Placement) => void;
   onCaption: (caption: string) => void;
   onCaptionPosition: (position: CaptionPosition) => void;
+  captionBlocked: boolean;
+  nameBlocked: boolean;
 }
 
 const CAPTION_MAX = 32;
@@ -39,7 +41,7 @@ const chipClass = (active: boolean) =>
 
 const ShirtOptions: React.FC<ShirtOptionsProps> = ({
   color, size, placement, caption, captionPosition,
-  onColor, onSize, onPlacement, onCaption, onCaptionPosition,
+  onColor, onSize, onPlacement, onCaption, onCaptionPosition, captionBlocked, nameBlocked,
 }) => {
   const [exampleIdx, setExampleIdx] = useState(0);
   const showingExamples = caption.length === 0;
@@ -54,6 +56,11 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
 
   return (
   <div className="flex flex-col gap-4">
+    {nameBlocked && (
+      <p role="alert" className="rounded-lg border-[3px] border-ink bg-pop-coral/20 px-3 py-2 text-sm font-semibold text-ink">
+        We can't print this name on a shirt. Try a different name.
+      </p>
+    )}
     <fieldset>
       <legend className="nb-label flex w-full justify-between">
         Colour <span className="normal-case tracking-normal font-semibold text-muted">{color.name}</span>
@@ -100,12 +107,19 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
           <span className="nb-label">Line of text (optional)</span>
           <input
             className="nb-input"
+            aria-invalid={captionBlocked}
+            aria-describedby={captionBlocked ? 'caption-error' : undefined}
             value={caption}
             maxLength={CAPTION_MAX}
             placeholder={`e.g. ${example}`}
             onChange={e => onCaption(e.target.value)}
           />
         </label>
+        {captionBlocked && (
+          <p id="caption-error" role="alert" className="rounded-md bg-pop-coral/20 px-2 py-1 text-sm font-semibold text-ink">
+            Let's keep it friendly — we can't print that line.
+          </p>
+        )}
         {caption.trim() && (
           <div className="flex items-center gap-2" role="group" aria-label="Text position">
             <span className="text-xs font-bold uppercase tracking-wider text-muted">Text</span>

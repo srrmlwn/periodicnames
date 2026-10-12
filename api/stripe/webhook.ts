@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { parsePrintPosition } from '../_lib/printPosition';
+import { alertOwner } from '../_lib/alert';
 
 export const config = { api: { bodyParser: false } };
 
@@ -27,11 +28,48 @@ function getRawBody(req: VercelRequest): Promise<Buffer> {
   });
 }
 
+interface ExistingOrder {
+  id: number;
+  status: string;
+}
+
+async function findOrderByExternalId(externalId: string): Promise<ExistingOrder | null> {
+  const res = await fetch(`${PRINTFUL_BASE}/orders/@${encodeURIComponent(externalId)}`, { headers: printfulHeaders() });
+  if (res.status === 404) return null;
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`Printful order lookup failed (${res.status}): ${raw}`);
+  const { result } = JSON.parse(raw) as { result: ExistingOrder };
+  return { id: result.id, status: result.status };
+}
+
+async function confirmOrder(orderId: number): Promise<void> {
+  if (process.env.PRINTFUL_DRAFT_ONLY === 'true') {
+    log('PRINTFUL_DRAFT_ONLY=true — leaving order as an unconfirmed draft (not charged, not printed)', { orderId });
+    return;
+  }
+  log('confirming order', { orderId });
+  const confirmRes = await fetch(`${PRINTFUL_BASE}/orders/${orderId}/confirm`, {
+    method: 'POST',
+    headers: printfulHeaders(),
+  });
+  const confirmRaw = await confirmRes.text();
+  log('POST /orders/confirm ←', { status: confirmRes.status, body: confirmRaw });
+  if (!confirmRes.ok) throw new Error(`Printful order confirmation failed: ${confirmRaw}`);
+}
+
 async function createPrintfulOrder(
   metadata: Record<string, string>,
   shipping: Stripe.Checkout.Session.CollectedInformation.ShippingDetails,
   customerEmail: string | null,
+  externalId: string,
 ): Promise<void> {
+  const existing = await findOrderByExternalId(externalId);
+  if (existing) {
+    log('order already exists for this payment', { externalId, ...existing });
+    if (existing.status === 'draft') await confirmOrder(existing.id);
+    return;
+  }
+
   const { variant_id, design_url, print_position } = metadata;
   const position = parsePrintPosition(print_position);
 
@@ -48,6 +86,7 @@ async function createPrintfulOrder(
   if (!shipping.address?.country) log('WARN: shipping.address.country is empty — defaulting to US');
 
   const body = {
+    external_id: externalId,
     recipient: {
       name: shipping.name ?? '',
       address1: shipping.address?.line1 ?? '',
@@ -75,22 +114,8 @@ async function createPrintfulOrder(
   if (!res.ok) throw new Error(`Printful order creation failed: ${raw}`);
 
   const orderId = (JSON.parse(raw) as { result: { id: number } }).result.id;
-  if (process.env.PRINTFUL_DRAFT_ONLY === 'true') {
-    log('PRINTFUL_DRAFT_ONLY=true — leaving order as an unconfirmed draft (not charged, not printed)', { orderId });
-    return;
-  }
-
-  log('order created as draft, confirming', { orderId });
-
-  const confirmRes = await fetch(`${PRINTFUL_BASE}/orders/${orderId}/confirm`, {
-    method: 'POST',
-    headers: printfulHeaders(),
-  });
-
-  const confirmRaw = await confirmRes.text();
-  log('POST /orders/confirm ←', { status: confirmRes.status, body: confirmRaw });
-
-  if (!confirmRes.ok) throw new Error(`Printful order confirmation failed: ${confirmRaw}`);
+  log('order created as draft', { orderId, externalId });
+  await confirmOrder(orderId);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -160,17 +185,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!session.metadata) {
-    log('skipping: session.metadata is missing');
+  const alertDetails = {
+    stripeSession: session.id,
+    paymentIntent: session.payment_intent,
+    customerEmail,
+    amount: session.amount_total,
+    metadata: session.metadata,
+  };
+
+  if (!session.metadata || !session.metadata.design_url || !session.metadata.variant_id) {
+    log('paid session is missing order metadata');
+    await alertOwner('PAID order missing design details — no shirt ordered', alertDetails);
     res.status(200).json({ received: true });
     return;
   }
 
   if (!shippingDetails) {
-    log('skipping: shipping_details is missing from collected_information');
+    log('paid session has no shipping details');
+    await alertOwner('PAID order missing shipping address — no shirt ordered', alertDetails);
     res.status(200).json({ received: true });
     return;
   }
+
+  const externalId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.id.slice(-32);
 
   log('session metadata', session.metadata);
   log('proceeding to create Printful order for session', session.id);
@@ -180,10 +219,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       session.metadata as Record<string, string>,
       shippingDetails,
       customerEmail,
+      externalId,
     );
     log('order created successfully for session', session.id);
   } catch (err) {
     log('order creation failed', String(err));
+    await alertOwner('PAID order could not be placed with Printful (Stripe will retry)', { ...alertDetails, externalId, error: String(err) });
     res.status(500).json({ error: 'Order creation failed' });
     return;
   }

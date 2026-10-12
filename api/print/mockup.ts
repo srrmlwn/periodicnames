@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { parsePrintPosition } from '../_lib/printPosition';
+import { isOwnDesignUrl } from '../_lib/designUrl';
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
@@ -56,6 +57,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   if (!productId || !variantIds || !designUrl) {
     log('rejected: missing required fields', { productId: !!productId, variantIds: !!variantIds, designUrl: !!designUrl });
     res.status(400).json({ error: 'Missing required fields' });
+    return;
+  }
+
+  if (!isOwnDesignUrl(designUrl)) {
+    log('rejected: designUrl is not one of our uploads', designUrl);
+    res.status(400).json({ error: 'Invalid design URL' });
     return;
   }
 
