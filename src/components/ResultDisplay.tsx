@@ -4,21 +4,10 @@ import SharePreviewModal from './SharePreviewModal';
 import PrintPanel from './PrintPanel';
 import { createElementLayout } from '../utils/elementRenderer';
 import { NEW_RIBBON_LABEL } from '../utils/colorSchemes';
+import { getFunStatsLine } from '../utils/funStats';
+import { primeShareAudio } from '../utils/shareAudio';
+import { TEES_ENABLED } from '../data/printProducts';
 import type { NameResult } from '../types';
-
-function getFunStatsLine(realCount: number, total: number): string {
-  if (total === 0) return '';
-  if (realCount === total) {
-    return total === 1
-      ? "100% real — the periodic table had you covered."
-      : `All ${total} real — the periodic table had you covered.`;
-  }
-  if (realCount === 0) return "Zero real elements — you're beyond the known periodic table.";
-  const pct = realCount / total;
-  if (pct >= 0.75) return `${realCount} of ${total} real — practically a chemist.`;
-  if (pct >= 0.5) return `${realCount} of ${total} real — more fact than fiction.`;
-  return `${realCount} of ${total} real — science is still catching up to you.`;
-}
 
 interface ResultDisplayProps {
   result: NameResult | null;
@@ -58,6 +47,11 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
   }, [isVisible]);
 
   if (!shouldRender || !result) return null;
+
+  const openShare = () => {
+    primeShareAudio();
+    setIsShareModalOpen(true);
+  };
 
   const layout = createElementLayout(result);
 
@@ -113,30 +107,34 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
             {getFunStatsLine(result.realElementsCount, result.totalElements)}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <button onClick={() => setIsShareModalOpen(true)} className="nb-btn bg-white">
+            <button onClick={openShare} className={`nb-btn ${TEES_ENABLED ? 'bg-white' : 'bg-pop-yellow'}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
               Share
             </button>
-            <button onClick={() => setIsPrintPanelOpen(true)} className="nb-btn bg-pop-yellow">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              Put it on a tee
-            </button>
+            {TEES_ENABLED ? (
+              <button onClick={() => setIsPrintPanelOpen(true)} className="nb-btn bg-pop-yellow">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Put it on a tee
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-lg border-[3px] border-dashed border-ink/40 px-4 py-2 font-bold text-muted">
+                Tees coming soon
+              </span>
+            )}
           </div>
         </div>
       )}
       </div>
 
-      <SharePreviewModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        result={result}
-      />
+      {isShareModalOpen && (
+        <SharePreviewModal onClose={() => setIsShareModalOpen(false)} result={result} />
+      )}
       <PrintPanel
         isOpen={isPrintPanelOpen}
         onClose={() => setIsPrintPanelOpen(false)}

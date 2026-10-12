@@ -5,6 +5,7 @@ import ResultDisplay from './components/ResultDisplay';
 import PeriodicTable from './components/PeriodicTable';
 import { matchNameToElements } from './utils/elementMatcher';
 import { getTileColors } from './utils/colorSchemes';
+import { TEES_ENABLED } from './data/printProducts';
 import type { NameResult } from './types';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
@@ -35,6 +36,8 @@ function nameFromPath(path: string): string {
 function nameToSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-');
 }
+
+const DEFAULT_TITLE = document.title;
 
 function App() {
   const [result, setResult] = useState<NameResult | null>(null);
@@ -99,6 +102,7 @@ function App() {
 
   const handleNameSubmit = (name: string) => {
     history.pushState(null, '', '/' + nameToSlug(name));
+    document.title = `${name.trim()} in periodic table elements | Periodic Names`;
     stopReveal();
     const nameResult = matchNameToElements(name);
     const total = nameResult.orderedElements.length;
@@ -129,6 +133,7 @@ function App() {
 
   const handleRefresh = () => {
     history.pushState(null, '', '/');
+    document.title = DEFAULT_TITLE;
     stopReveal();
     setResult(null);
     setRevealedCount(0);
@@ -193,9 +198,15 @@ function App() {
           </div>
         </div>
         <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
+          <p className="max-w-xl mx-auto">
+            Type any name and we spell it with chemical element symbols, using real elements wherever they fit
+            and newly discovered ones for the rest.
+          </p>
           <p>
-            Turn your name into a custom t-shirt
-            <span className="text-ink font-bold block sm:inline"> · Printed and shipped by Printful</span>
+            {TEES_ENABLED ? 'Turn your name into a custom t-shirt' : 'Share it as a reel, story or post'}
+            <span className="text-ink font-bold block sm:inline">
+              {TEES_ENABLED ? ' · Printed and shipped by Printful' : ' · Name tees coming soon'}
+            </span>
           </p>
           <p className="text-xs">
             <a href="/privacy.html" className="underline decoration-2 underline-offset-2 hover:text-ink">Privacy Policy</a>

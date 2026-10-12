@@ -1,433 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Modal from './Modal';
-import { ShareImageGenerator } from '../utils/ShareImageGenerator';
-import { ShareVideoGenerator } from '../utils/ShareVideoGenerator';
+import ShareMediaPreview from './ShareMediaPreview';
+import ShareActions from './ShareActions';
+import { CAPTION_EXAMPLES, CAPTION_EXAMPLE_INTERVAL_MS } from '../data/captionExamples';
+import { reelMimeType, recordShareReel, renderShareImage, shareFileName, shareSlug } from '../utils/shareMedia';
+import { primeShareAudio } from '../utils/shareAudio';
+import type { ShareFormat } from '../utils/shareScene';
 import type { NameResult } from '../types';
-import type { SharePlatform } from '../types/sharing';
+import type { ShareMedia } from '../types/sharing';
 
 interface SharePreviewModalProps {
-  isOpen: boolean;
   onClose: () => void;
   result: NameResult;
 }
 
-const CAPTION_PLACEHOLDERS = [
-  'e.g. Born to be periodic',
-  'e.g. Elementally yours',
-  'e.g. Made of stardust',
-  'e.g. Periodic and proud',
-  'e.g. The element of surprise',
+const FORMATS: { id: ShareFormat; label: string; detail: string }[] = [
+  { id: 'reel', label: 'Reel', detail: 'video' },
+  { id: 'story', label: 'Story', detail: '9:16' },
+  { id: 'post', label: 'Post', detail: '4:5' },
+  { id: 'wide', label: 'Wide', detail: 'X / chat' },
 ];
 
-interface PlatformOption {
-  id: SharePlatform;
-  label: string;
-  description: string;
+const CAPTION_DEBOUNCE_MS = 600;
+
+function detectFileShare(): boolean {
+  try {
+    return !!navigator.canShare?.({ files: [new File([''], 'test.png', { type: 'image/png' })] });
+  } catch {
+    return false;
+  }
 }
-
-const ALL_PLATFORMS: PlatformOption[] = [
-  { id: 'x',         label: 'X Post',        description: '16:9 image' },
-  { id: 'instagram', label: 'Instagram Post', description: '1:1 image'  },
-  { id: 'story',     label: 'Story',          description: '9:16 image' },
-  { id: 'reel',      label: 'Reel (video)',   description: '9:16 video' },
-];
-
-const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ isOpen, onClose, result }) => {
-  const [caption, setCaption] = useState('');
-  const [showWatermark, setShowWatermark] = useState(true);
-  const [platform, setPlatform] = useState<SharePlatform>('x');
-  const [placeholderIdx, setPlaceholderIdx] = useState(0);
-  const [debouncedCaption, setDebouncedCaption] = useState('');
-
-  const [imageBlob, setImageBlob] = useState<Blob | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordProgress, setRecordProgress] = useState(0);
-
-  const imageGenRef = useRef(new ShareImageGenerator());
-  const videoGenRef = useRef(new ShareVideoGenerator());
-  const imageUrlRef = useRef<string | null>(null);
-  const videoUrlRef = useRef<string | null>(null);
-  const wasOpenRef = useRef(false);
-
-  const supportsVideo = ShareVideoGenerator.isSupported();
-  const platforms = supportsVideo ? ALL_PLATFORMS : ALL_PLATFORMS.filter(p => p.id !== 'reel');
-
-  // Reset state each time the modal opens fresh
-  useEffect(() => {
-    if (isOpen && !wasOpenRef.current) {
-      setCaption('');
-      setDebouncedCaption('');
-      setPlatform('x');
-      setShowWatermark(true);
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen]);
-
-  // Debounce caption input so preview only regenerates after typing stops
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedCaption(caption), 600);
-    return () => clearTimeout(id);
-  }, [caption]);
-
-  // Rotate placeholder while caption field is empty
-  useEffect(() => {
-    if (!isOpen || caption) return;
-    const id = setInterval(
-      () => setPlaceholderIdx(i => (i + 1) % CAPTION_PLACEHOLDERS.length),
-      2500,
-    );
-    return () => clearInterval(id);
-  }, [isOpen, caption]);
-
-  // Generate image whenever a relevant setting changes
-  useEffect(() => {
-    if (!isOpen || platform === 'reel') return;
-
-    let cancelled = false;
-    if (imageUrlRef.current) { URL.revokeObjectURL(imageUrlRef.current); imageUrlRef.current = null; }
-    setImageBlob(null);
-    setImageUrl(null);
-    setImageError(false);
-    setIsGeneratingImage(true);
-
-    const gen = imageGenRef.current;
-    const cap = debouncedCaption || undefined;
-
-    const generate = async () => {
-      let blob: Blob;
-      if (platform === 'x') blob = await gen.generateXImage(result, cap, showWatermark);
-      else if (platform === 'instagram') blob = await gen.generateInstagramImage(result, cap, showWatermark);
-      else if (platform === 'story') blob = await gen.generateStoryImage(result, cap, showWatermark);
-      else return;
-
-      if (cancelled) return;
-      const url = URL.createObjectURL(blob);
-      imageUrlRef.current = url;
-      setImageBlob(blob);
-      setImageUrl(url);
-      setIsGeneratingImage(false);
-    };
-
-    generate().catch(err => {
-      if (!cancelled) {
-        console.error('Image generation failed:', err);
-        setIsGeneratingImage(false);
-        setImageError(true);
-      }
-    });
-
-    return () => { cancelled = true; };
-  }, [isOpen, platform, showWatermark, debouncedCaption, result]);
-
-  // Reset video state when switching away from reel or closing
-  useEffect(() => {
-    if (platform !== 'reel' || !isOpen) {
-      setVideoBlob(null);
-      setVideoUrl(null);
-      setIsRecording(false);
-      setRecordProgress(0);
-      if (videoUrlRef.current) { URL.revokeObjectURL(videoUrlRef.current); videoUrlRef.current = null; }
-    }
-  }, [platform, isOpen]);
-
-  // Cleanup object URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
-      if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current);
-    };
-  }, []);
-
-  const handleRecord = async () => {
-    if (isRecording) return;
-    if (videoUrlRef.current) { URL.revokeObjectURL(videoUrlRef.current); videoUrlRef.current = null; }
-    setVideoBlob(null);
-    setVideoUrl(null);
-    setIsRecording(true);
-    setRecordProgress(0);
-    try {
-      const blob = await videoGenRef.current.generateReelVideo(result, setRecordProgress);
-      const url = URL.createObjectURL(blob);
-      videoUrlRef.current = url;
-      setVideoBlob(blob);
-      setVideoUrl(url);
-    } catch (err) {
-      console.error('Video recording failed:', err);
-    } finally {
-      setIsRecording(false);
-    }
-  };
-
-  const handleShareImage = async () => {
-    if (!imageBlob) return;
-    const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
-    const filename = `periodicnames-${slug}-${platform}.png`;
-    const file = new File([imageBlob], filename, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: `${result.originalName} in periodic table elements`,
-          text: 'Try yours at periodicnames.com',
-        });
-        return;
-      } catch { /* fall through to download */ }
-    }
-    downloadBlob(imageBlob, filename);
-  };
-
-  const handleDownloadVideo = () => {
-    if (!videoBlob) return;
-    const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
-    downloadBlob(videoBlob, `periodicnames-${slug}-reel.webm`);
-  };
-
-  if (!isOpen) return null;
-
-  const slug = result.originalName.toLowerCase().replace(/\s+/g, '-');
-  const xText = encodeURIComponent(`"${result.originalName}" in periodic table elements — try yours:`);
-  const xUrl = encodeURIComponent(`https://periodicnames.com/${slug}`);
-  const xIntentUrl = `https://x.com/intent/tweet?text=${xText}&url=${xUrl}`;
-  const canNativeShare = typeof navigator !== 'undefined' && !!navigator.canShare;
-  const estimatedSecs = Math.ceil(videoGenRef.current.getEstimatedDurationMs(result) / 1000);
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} label="Share your name">
-        <div className="px-6 pt-5 pb-6 space-y-4">
-          <h2 className="text-xl font-bold text-ink pr-10">Share your name</h2>
-
-          {/* ── Customize ── */}
-          <div className="space-y-3">
-            <div>
-              <p className="nb-label flex items-center gap-1">
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                Caption (optional)
-              </p>
-              <input
-                type="text"
-                value={caption}
-                onChange={e => setCaption(e.target.value)}
-                placeholder={CAPTION_PLACEHOLDERS[placeholderIdx]}
-                maxLength={60}
-                className="nb-input text-sm"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <p className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1">
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                Background table
-              </p>
-              <div className="flex-1" />
-              <button
-                type="button"
-                role="switch"
-                aria-checked={showWatermark}
-                onClick={() => setShowWatermark(v => !v)}
-                className={`nb-focus relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-[3px] border-ink transition-colors duration-200 ${showWatermark ? 'bg-pop-mint' : 'bg-white'}`}
-              >
-                <span className={`inline-block h-3.5 w-3.5 rounded-full bg-ink transition-transform duration-200 ${showWatermark ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
-              </button>
-            </div>
-          </div>
-
-          <div className="border-t-[3px] border-dashed border-ink/20" />
-
-          {/* ── Platform + Preview + Actions ── */}
-          <div className="space-y-3">
-            <div className="relative">
-              <select
-                value={platform}
-                onChange={e => setPlatform(e.target.value as SharePlatform)}
-                className="nb-input appearance-none pr-8 text-sm font-bold cursor-pointer"
-              >
-                {platforms.map(p => (
-                  <option key={p.id} value={p.id}>{p.label} — {p.description}</option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ink">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="h-48 rounded-lg bg-mist border-[3px] border-ink flex items-center justify-center overflow-hidden">
-              {platform !== 'reel' && (
-                <>
-                  {isGeneratingImage && (
-                    <div className="flex flex-col items-center gap-2 text-muted">
-                      <div className="w-6 h-6 border-[3px] border-ink border-t-transparent rounded-full animate-spin" />
-                      <span className="text-xs">Generating…</span>
-                    </div>
-                  )}
-                  {imageError && !isGeneratingImage && (
-                    <span className="text-xs text-pop-coral">Generation failed — try again</span>
-                  )}
-                  {imageUrl && !isGeneratingImage && (
-                    <img src={imageUrl} alt="Share preview" className="max-h-full max-w-full object-contain" />
-                  )}
-                </>
-              )}
-
-              {platform === 'reel' && (
-                <>
-                  {!isRecording && !videoUrl && (
-                    <div className="flex flex-col items-center gap-2 text-muted">
-                      <svg className="w-10 h-10 text-muted/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.902L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-xs text-center text-muted px-4">
-                        Animated tile reveal · <span className="font-medium text-muted">~{estimatedSecs}s</span>
-                      </span>
-                    </div>
-                  )}
-                  {isRecording && (
-                    <div className="flex flex-col items-center gap-3 w-full px-8">
-                      <div className="w-8 h-8 border-[3px] border-ink border-t-transparent rounded-full animate-spin" />
-                      <div className="w-full bg-white border-2 border-ink rounded-full h-3 overflow-hidden">
-                        <div
-                          className="bg-pop-yellow h-full transition-all duration-100"
-                          style={{ width: `${Math.round(recordProgress * 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted">Recording…</span>
-                    </div>
-                  )}
-                  {videoUrl && (
-                    <video src={videoUrl} className="max-h-full max-w-full object-contain" controls autoPlay loop muted />
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* X Post */}
-            {platform === 'x' && (
-              <div className="space-y-1.5">
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleShareImage}
-                    disabled={!imageBlob || isGeneratingImage}
-                    className="nb-btn bg-pop-yellow text-sm flex-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    {canNativeShare ? 'Share image' : 'Download image'}
-                  </button>
-                  <a
-                    href={xIntentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="nb-btn bg-ink text-white px-3 text-sm shrink-0"
-                  >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    Post
-                  </a>
-                </div>
-                <p className="text-xs font-medium text-muted text-center">Attach the downloaded image when you post on X</p>
-              </div>
-            )}
-
-            {/* Instagram Post */}
-            {platform === 'instagram' && (
-              <div className="space-y-1.5">
-                <button
-                  onClick={handleShareImage}
-                  disabled={!imageBlob || isGeneratingImage}
-                  className="nb-btn bg-pop-yellow text-sm w-full"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {canNativeShare ? 'Share image' : 'Download image'}
-                </button>
-                <p className="text-xs font-medium text-muted text-center">Open Instagram → [+] → Post → select your image</p>
-              </div>
-            )}
-
-            {/* Story */}
-            {platform === 'story' && (
-              <div className="space-y-1.5">
-                <button
-                  onClick={handleShareImage}
-                  disabled={!imageBlob || isGeneratingImage}
-                  className="nb-btn bg-pop-yellow text-sm w-full"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {canNativeShare ? 'Share image' : 'Download image'}
-                </button>
-                <p className="text-xs font-medium text-muted text-center">Open Instagram → [+] → Story → select your image</p>
-              </div>
-            )}
-
-            {/* Reel */}
-            {platform === 'reel' && (
-              <div className="space-y-1.5">
-                {!videoBlob ? (
-                  <button
-                    onClick={handleRecord}
-                    disabled={isRecording}
-                    className="nb-btn bg-pop-yellow text-sm w-full"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M15 10l4.553-2.069A1 1 0 0121 8.867v6.266a1 1 0 01-1.447.902L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    {isRecording ? 'Recording…' : 'Record Reel'}
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleDownloadVideo}
-                      className="nb-btn bg-pop-yellow text-sm flex-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Download .webm
-                    </button>
-                    <button
-                      onClick={handleRecord}
-                      className="nb-btn bg-white px-3 text-sm"
-                      title="Record again"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                <p className="text-xs font-medium text-muted text-center">Open Instagram or TikTok → Reel → select your video</p>
-              </div>
-            )}
-
-          </div>
-        </div>
-    </Modal>
-  );
-};
 
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
@@ -436,8 +38,142 @@ function downloadBlob(blob: Blob, filename: string): void {
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+const chipClass = (active: boolean) =>
+  `nb-focus flex flex-col items-center px-2 py-1.5 rounded-lg border-[3px] border-ink font-bold text-sm leading-tight shadow-brutal-sm transition-colors ${
+    active ? 'bg-ink text-white' : 'bg-white text-ink hover:bg-mist'
+  }`;
+
+const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }) => {
+  const [videoMime] = useState(reelMimeType);
+  const [canShareFiles] = useState(detectFileShare);
+  const [format, setFormat] = useState<ShareFormat>(videoMime ? 'reel' : 'story');
+  const [caption, setCaption] = useState('');
+  const [debouncedCaption, setDebouncedCaption] = useState('');
+  const [exampleIdx, setExampleIdx] = useState(0);
+  const [media, setMedia] = useState<ShareMedia | null>(null);
+  const [progress, setProgress] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const formats = videoMime ? FORMATS : FORMATS.filter(f => f.id !== 'reel');
+  const mediaKey = `${format}|${debouncedCaption}`;
+  const current = media?.key === mediaKey ? media : null;
+  const readyUrl = current?.status === 'ready' ? current.url : null;
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedCaption(caption.trim()), CAPTION_DEBOUNCE_MS);
+    return () => clearTimeout(id);
+  }, [caption]);
+
+  useEffect(() => {
+    if (caption) return;
+    const id = setInterval(() => setExampleIdx(i => (i + 1) % CAPTION_EXAMPLES.length), CAPTION_EXAMPLE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [caption]);
+
+  useEffect(() => {
+    const key = `${format}|${debouncedCaption}`;
+    const ready = (blob: Blob) => setMedia({ key, status: 'ready', blob, url: URL.createObjectURL(blob) });
+    setMedia({ key, status: 'working' });
+
+    if (format !== 'reel') {
+      let cancelled = false;
+      renderShareImage(result, debouncedCaption, format)
+        .then(blob => { if (!cancelled) ready(blob); })
+        .catch(() => { if (!cancelled) setMedia({ key, status: 'error' }); });
+      return () => { cancelled = true; };
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const controller = new AbortController();
+    setProgress(0);
+    recordShareReel(canvas, result, debouncedCaption, controller.signal, p => setProgress(Math.round(p * 50) / 50))
+      .then(ready)
+      .catch(err => { if (!controller.signal.aborted) { console.error(err); setMedia({ key, status: 'error' }); } });
+    return () => controller.abort();
+  }, [format, debouncedCaption, result]);
+
+  useEffect(() => () => { if (readyUrl) URL.revokeObjectURL(readyUrl); }, [readyUrl]);
+
+  const fileFor = (blob: Blob) => new File([blob], shareFileName(result.originalName, format, blob.type), { type: blob.type });
+
+  const share = async () => {
+    if (current?.status !== 'ready') return;
+    const file = fileFor(current.blob);
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: `${result.originalName} in periodic table elements` });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+      }
+    }
+    downloadBlob(current.blob, file.name);
+  };
+
+  const download = () => {
+    if (current?.status === 'ready') downloadBlob(current.blob, fileFor(current.blob).name);
+  };
+
+  const pickFormat = (f: ShareFormat) => {
+    if (f === 'reel') primeShareAudio();
+    setFormat(f);
+  };
+
+  return (
+    <Modal isOpen onClose={onClose} label="Share your name" widthClass="max-w-3xl" className="max-h-[92vh] overflow-y-auto">
+      <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="bg-mist border-b-[3px] md:border-b-0 md:border-r-[3px] border-ink rounded-t-[9px] md:rounded-tr-none md:rounded-l-[9px] px-4 py-5 sm:py-6 flex items-center justify-center">
+          <ShareMediaPreview format={format} media={current} progress={progress} canvasRef={canvasRef} name={result.originalName} />
+        </div>
+
+        <div className="px-5 pt-5 pb-5 sm:pt-6 flex flex-col gap-4 sm:gap-5">
+          <div className="pr-10">
+            <h2 className="text-xl font-bold text-ink">Share your name</h2>
+            <p className="text-sm text-muted mt-0.5">Pick a format, then send it anywhere.</p>
+          </div>
+
+          <fieldset>
+            <legend className="nb-label">Format</legend>
+            <div className="grid grid-cols-4 gap-2">
+              {formats.map(f => (
+                <button key={f.id} type="button" onClick={() => pickFormat(f.id)} aria-pressed={f.id === format} className={chipClass(f.id === format)}>
+                  {f.label}
+                  <span className={`text-[11px] font-semibold ${f.id === format ? 'text-white/75' : 'text-muted'}`}>{f.detail}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <label className="block">
+            <span className="nb-label">Line of text (optional)</span>
+            <input
+              className="nb-input"
+              value={caption}
+              maxLength={40}
+              placeholder={`e.g. ${CAPTION_EXAMPLES[exampleIdx]}`}
+              onChange={e => setCaption(e.target.value)}
+            />
+          </label>
+
+          <ShareActions
+            format={format}
+            ready={current?.status === 'ready'}
+            isWebm={!!videoMime?.startsWith('video/webm')}
+            canShareFiles={canShareFiles}
+            link={`https://periodicnames.com/${shareSlug(result.originalName)}`}
+            shareText={`My name in periodic table elements 🧪 What's yours?`}
+            onShare={share}
+            onDownload={download}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
 export default SharePreviewModal;

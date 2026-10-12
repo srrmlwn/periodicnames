@@ -1,7 +1,6 @@
 import type { NameResult } from '../types';
 import type { Element } from '../data/elements';
 import type { FakeElement } from '../data/fakeElements';
-import type { SharePlatform } from '../types/sharing';
 import { getCategoryBorderColor, getFakeElementBorderColor, getTileColors } from './colorSchemes';
 
 export interface ElementRenderItem {
@@ -96,60 +95,3 @@ export function getElementDisplayProperties(item: ElementRenderItem) {
     category: item.element?.category || null
   };
 }
-
-/**
- * Calculates layout dimensions for image generation
- */
-export function calculateImageLayout(
-  layout: ElementLayout,
-  platform: SharePlatform
-) {
-  const tileSize = platform === 'x' ? 80 : 100;
-  const spacing = 4;
-  const spaceWidth = 16; // Width of space (w-4 = 16px)
-  const maxElementsPerRow = platform === 'x' ? 8 : 6;
-  
-  // Calculate layout including spaces
-  let currentRowWidth = 0;
-  let currentRowElements = 0;
-  let totalHeight = 0;
-  let maxRowWidth = 0;
-  
-  layout.items.forEach((item) => {
-    if (item.type === 'space') {
-      currentRowWidth += spaceWidth;
-    } else {
-      // Check if we need to wrap to next row
-      if (currentRowElements >= maxElementsPerRow) {
-        // Move to next row
-        totalHeight += tileSize + spacing;
-        maxRowWidth = Math.max(maxRowWidth, currentRowWidth);
-        currentRowWidth = tileSize;
-        currentRowElements = 1;
-      } else {
-        if (currentRowElements > 0) {
-          currentRowWidth += spacing;
-        }
-        currentRowWidth += tileSize;
-        currentRowElements++;
-      }
-    }
-  });
-  
-  // Add height for the last row
-  if (currentRowElements > 0) {
-    totalHeight += tileSize;
-  }
-  
-  // Use the maximum row width found
-  const totalWidth = Math.max(maxRowWidth, currentRowWidth);
-  
-  return {
-    tileSize,
-    spacing,
-    spaceWidth,
-    totalWidth,
-    totalHeight,
-    maxElementsPerRow
-  };
-} 

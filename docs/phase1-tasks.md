@@ -94,20 +94,20 @@ Remaining optional polish items are in Phase 1d below.
 
 ---
 
-### Phase 2 — Social Sharing (Partially Complete)
+### Phase 2 — Social Sharing (Complete, Oct 2026 rebuild)
 
-- [x] **Share image generator** (`src/utils/ShareImageGenerator.ts`)
-  Canvas-based PNG generation (1200×630). Faded periodic table background, element tiles centered, `periodicnames.com/<name>` URL footer.
+- [x] **One share scene for every format** (`src/utils/shareScene.ts`)
+  `buildShareScene` lays out the site's look on canvas: dot-grid mist background, tile logo, white card with the name tiles and optional line of text, stats sticker, lit mini periodic table, yellow "Spell yours at periodicnames.com" CTA. `drawShareScene(ctx, scene, t, timeline)` draws the final frame (images) or any moment of the reel. Formats: Reel 1080×1920 video, Story 1080×1920, Post 1080×1350 (4:5), Wide 1200×630. Tall formats keep content inside y 210–1480 so Instagram's UI doesn't cover it.
 
-- [x] **Share reel video generator** (`src/utils/ShareVideoGenerator.ts`)
-  MediaRecorder API. 500ms stagger + plain opacity fade matching app animation. Name-to-elements transform animation.
+- [x] **Reel video** (`src/utils/shareMedia.ts`, `src/utils/shareAudio.ts`)
+  Name types into an input box → card pops → tiles slam in one by one (spring + spin + drop, small screen shake) while their cells light on the mini table → sticker stamps → CTA bounces in → ~2.4s hold. 5–8s total. Synthesised sound (typing clicks, rising pops, chord, ding) via Web Audio mixed into the recording. MediaRecorder prefers MP4/H.264 (Chrome, Safari), falls back to WebM (Firefox, with a warning that Instagram may reject it). The AudioContext is primed on the Share click so Safari allows sound.
 
-- [x] **Share preview modal** (`src/components/SharePreviewModal.tsx`)
-  Shows generated image/video previews with download buttons.
+- [x] **Share dialog** (`SharePreviewModal`, `ShareMediaPreview`, `ShareActions`)
+  Two-column layout matching the tee designer. Format chips, optional line of text (rotating examples), live preview — the reel records visibly in the preview, then swaps to the finished video. Primary button uses `navigator.share({ files })` when the device supports file sharing (phones → Instagram/TikTok share sheet), otherwise downloads. Copy link, X intent, Save.
 
-- [ ] **Twitter/X direct share** — intent URL with pre-filled text.
-- [ ] **Instagram Reel upload guidance** — instructions modal after download.
-- [ ] **Web Share API** (`navigator.share({ files })`) for mobile native share.
+- [x] **Twitter/X direct share** — intent URL with pre-filled text + name link.
+- [x] **Web Share API** (`navigator.share({ files })`) for mobile native share.
+- [x] **Instagram guidance** — per-format one-line hints under the share button replace a separate modal.
 
 ---
 
@@ -133,5 +133,6 @@ Remaining optional polish items are in Phase 1d below.
 ### Optional Polish (Low Priority)
 
 - [ ] **Keyboard accessibility** — `tabIndex`, `role="img"`, `aria-label` on ElementTile; `onKeyDown` for Enter/Space.
-- [ ] **Favicon** — element tile–style icon.
-- [ ] **OG meta tags** — `og:image`, `og:title`, `og:description` for link previews when sharing the URL.
+- [x] **Favicon** — element tile–style icon.
+- [x] **OG meta tags** — static `og:*`/`twitter:*` tags + `public/og-image.png` (rendered with the Wide share scene). Per-name previews would need server-side rendering — not done yet.
+- [x] **SEO basics** — `robots.txt`, `sitemap.xml`, JSON-LD `WebApplication`, canonical → home, tagline is the page `<h1>`, per-name `document.title`, short descriptive footer copy. Placeholder GA and Search Console tags removed.

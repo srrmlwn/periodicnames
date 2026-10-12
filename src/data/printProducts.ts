@@ -73,3 +73,8 @@ export function findShirtVariant(color: ShirtColor, size: ShirtSize): PrintVaria
 export function getPrintProduct(slug: string): PrintProduct | undefined {
   return PRINT_PRODUCTS.find((p) => p.slug === slug);
 }
+
+export const TEES_ENABLED =
+  import.meta.env.VITE_TEES_ENABLED === 'true' ||
+  import.meta.env.VITE_VERCEL_ENV === 'preview' ||
+  import.meta.env.DEV;

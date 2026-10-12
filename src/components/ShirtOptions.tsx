@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SHIRT_COLORS, SHIRT_SIZES } from '../data/printProducts';
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { PLACEMENTS } from '../utils/printLayout';
+import { CAPTION_EXAMPLES, CAPTION_EXAMPLE_INTERVAL_MS } from '../data/captionExamples';
 import type { CaptionPosition, Placement } from '../utils/printLayout';
 
 interface ShirtOptionsProps {
@@ -21,16 +22,6 @@ interface ShirtOptionsProps {
 
 const CAPTION_MAX = 32;
 
-const CAPTION_EXAMPLES = [
-  'Born to be periodic',
-  'Elementally yours',
-  'Made of stardust',
-  'Periodic and proud',
-  'The element of surprise',
-  'My name is science',
-];
-
-const EXAMPLE_INTERVAL_MS = 2500;
 
 const CAPTION_POSITIONS: CaptionPosition[] = ['above', 'below'];
 
@@ -48,7 +39,7 @@ const ShirtOptions: React.FC<ShirtOptionsProps> = ({
 
   useEffect(() => {
     if (!showingExamples) return;
-    const id = setInterval(() => setExampleIdx(i => (i + 1) % CAPTION_EXAMPLES.length), EXAMPLE_INTERVAL_MS);
+    const id = setInterval(() => setExampleIdx(i => (i + 1) % CAPTION_EXAMPLES.length), CAPTION_EXAMPLE_INTERVAL_MS);
     return () => clearInterval(id);
   }, [showingExamples]);
 

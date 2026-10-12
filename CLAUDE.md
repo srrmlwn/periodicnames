@@ -143,15 +143,18 @@ src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
-  printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only), SHIRT_COLORS (name/hex/dark), SHIRT_SIZES, findShirtVariant(color, size)
+  printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only), SHIRT_COLORS (name/hex/dark), SHIRT_SIZES, findShirtVariant(color, size); TEES_ENABLED (true in dev, Preview deploys, or when VITE_TEES_ENABLED=true — production shows "Tees coming soon" otherwise)
+  captionExamples.ts   — CAPTION_EXAMPLES rotating placeholders shared by the tee and share dialogs
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
   colorSchemes.ts        — getTileColors(result), NAME_PALETTE, getCategoryColor(category), etc.; BRAND, LOGO_PALETTE, FONT_FAMILY
   canvasTile.ts          — shared canvas drawing: ELEMENT_POSITIONS, drawElementTile, drawTableBackground, canvasFont, ensureCanvasFonts, fakeAtomicNumber
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
-  ShareImageGenerator.ts — Canvas API PNG (1200×630)
-  ShareVideoGenerator.ts — MediaRecorder API reel video
+  shareScene.ts          — ShareFormat ('reel'|'story'|'post'|'wide'), SHARE_SIZES, buildShareScene(result, caption, format, measure), sceneTimeline(scene), drawShareScene(ctx, scene, t?, timeline?) — one renderer for share images and every reel frame
+  shareMedia.ts          — renderShareImage(result, caption, format) → PNG; recordShareReel(canvas, result, caption, signal, onProgress) → MP4 (or WebM fallback) via MediaRecorder; reelMimeType(), shareFileName(), shareSlug()
+  shareAudio.ts          — primeShareAudio() (call in a click handler), scheduleReelSounds() synthesised clicks/pops/chord for the reel
+  funStats.ts            — getFunStatsLine(real, total): the stats sticker text (result card + share scene)
   printLayout.ts         — computePrintLayout(result, caption, placement, measure, captionPosition) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
   PrintDesignGenerator.ts — generatePrintFile(): 300ppi PNG cropped tight to the design + its position
   textFilter.ts          — re-exports api/_lib/textFilter (isOffensiveName() (lenient: whole-word matches only, allows real names like Dick/Cummings/Fukuda) and isOffensiveCaption() (strict; allows 'cum laude'), built on the `obscenity` package; slur fragments always blocked. Used by PrintPanel and re-checked server-side in checkout)
@@ -159,6 +162,9 @@ src/utils/
 src/components/
   ...
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
+  SharePreviewModal.tsx — share dialog (mounted only while open): format chips, optional line of text, preview, actions; regenerates on format/text change (text debounced 600ms)
+  ShareMediaPreview.tsx — preview pane: the reel's recording canvas (visible while recording), then the finished <video>; images as <img>
+  ShareActions.tsx      — Share/Download (navigator.share with the file when supported), Copy link, X intent, Save; per-format hint
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline). Silhouette uses real BC3001 proportions in inches from the front-collar bottom: neck 7.2in wide / 3.5in drop, armpit 5in below the collar, body 20in wide, hem 25.5in below — the earlier drawing put armpits ~9in down, which made correct prints look like they sat at the collar
   ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (always-visible labelled input; placeholder rotates CAPTION_EXAMPLES every 2.5s while empty; no autofocus so phones don't open the keyboard); 'Above name' / 'Below name' switch appears once text is entered (default above)
@@ -254,16 +260,14 @@ Design refresh (Oct 2026): **neubrutalist revamp shipped to main**; follow-up: c
 
 Earlier revamp notes: — palette, Space Grotesk, cards/buttons/inputs, shared `Modal`, background table lights up during reveal, canvas outputs restyled via `canvasTile.ts`, legal pages restyled, footer overlap fixed.
 
-Phase 2 — what's done:
-- Share image generator (`ShareImageGenerator.ts`) — Canvas PNG, 1200×630
-- Share video/reel generator (`ShareVideoGenerator.ts`) — MediaRecorder, 500ms stagger
-- Share preview modal (`SharePreviewModal.tsx`)
+Launch plan (Oct 2026): **launch with sharing; tees show "coming soon" in production** (`TEES_ENABLED`) until the test shirt confirms placement and Stripe/Printful env setup is done. Preview deploys and local dev keep the full tee flow. To turn tees on: set `VITE_TEES_ENABLED=true` in Vercel Production and redeploy.
 
-Phase 2 — remaining:
-- Twitter/X intent URL share
-- Instagram Reel upload instructions modal
-- `navigator.share({ files })` Web Share API for mobile native share
-- OG meta tags for URL link previews
+Phase 2 — sharing (rebuilt Oct 2026, see docs/phase1-tasks.md):
+- One canvas scene (`shareScene.ts`) in the site's style for Reel (video), Story, Post (4:5) and Wide (X/link) — same tiles, card, sticker, lit mini table and yellow CTA as the site
+- Reel: typed name → tiles slam in → table lights → sticker → CTA, with synthesised sound; MP4 where MediaRecorder supports it
+- Dialog: native share sheet with the file on phones (→ Instagram Reels/Stories), download on desktop, copy link, X intent
+
+SEO: static OG/Twitter tags + `public/og-image.png`, JSON-LD, `robots.txt`, `sitemap.xml`, canonical → home (name pages are not meant to be indexed separately yet), tagline `<h1>`, per-name `document.title`. Search Console: verify via a DNS TXT record (domain property), then submit the sitemap. Not done: per-name link previews (needs server-rendered meta + OG images), analytics.
 
 Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setup**):
 - Flow (Oct 2026 redesign): one screen — pick colour / size / placement (Chest or Big) / optional caption on a live drawn shirt → Buy → Stripe checkout → confirmed Printful order. "See it on a model" fetches a Printful photo only when asked.

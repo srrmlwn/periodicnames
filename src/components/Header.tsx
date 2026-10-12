@@ -51,10 +51,10 @@ const Header: React.FC = () => {
           </div>
         ))}
       </a>
-      <p className="text-sm sm:text-base font-bold text-ink">
+      <h1 className="text-sm sm:text-base font-bold text-ink">
         Spell your name with the{' '}
         <span className="inline-block bg-pop-yellow border-2 border-ink px-1.5 -rotate-1">periodic table</span>
-      </p>
+      </h1>
     </header>
   );
 };
