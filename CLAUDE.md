@@ -154,6 +154,7 @@ src/utils/
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
   shareScene.ts          — ShareFormat ('reel'|'story'|'post'|'wide'), SHARE_SIZES, buildShareScene(result, format, measure, headline?), sceneTimeline(scene), drawShareScene(ctx, scene, t?, timeline?) — one renderer for share images and every reel frame. Final/hero layout: logo → headline → big name card + stats sticker → small lit table → "Spell your name at periodicnames.com". The reel's intro is site-like (hook "What's your name in elements?", input + Go, big table, small card) and tweens into the hero layout
   shareMedia.ts          — renderShareImage(result, format, headline?) → PNG; recordShareReel(result, { signal, onStart(canvas, totalMs), onProgress({elapsedMs,totalMs}) }) → MP4 (or WebM) via MediaRecorder on its own offscreen canvas (keeps recording when the user switches formats); estimateReelMs(); reelMimeType(), shareFileName(), shareSlug()
+  remuxVideo.ts          — remuxToMp4(blob): rewrites the MediaRecorder output as a standard fast-start MP4 (ftyp/moov/mdat) with mediabunny, loaded on demand. MediaRecorder writes fragmented MP4 with a header duration of 0, and apps that trust the header (seen when sharing) played only the first fragment (~3s). No re-encode; falls back to the raw recording if the rewrite fails
   shareMachine.ts        — share generation state machine (pure reducer): per-format MediaState idle → generating → ready | error; start ignored unless idle/error (dedupe + cache), stale results ignored. Tested in shareMachine.test.ts
   shareFile.ts           — canShareFile(file) (navigator.canShare({files})), canShareLink(url)/shareLink(url, text) (dismissed vs failed; failure falls back to copy), shareOrDownload(file, download) → shared | dismissed (AbortError) | downloaded (unsupported or share-failed), downloadFile(), copyText() with execCommand fallback. Tested in shareFile.test.ts
   analytics.ts           — track(event, props): sends share events to window.gtag if a GA4 tag is installed (none is yet); never sends names
@@ -235,7 +236,7 @@ The periodic table sits **in the page flow between the input and the results car
 
 ## What Not to Do
 
-- Do not add npm dependencies without a clear reason.
+- Do not add npm dependencies without a clear reason. (`mediabunny` is used only to remux recorded video into a standard MP4 — see remuxVideo.ts — and is dynamically imported.)
 - Do not add comments explaining what code does — names should be self-evident.
 - Do not add error boundaries or fallbacks for things that can't fail (pure client-side data transforms, static element data).
 - Do not use `setTimeout` for anything other than UX delay in animation sequences.

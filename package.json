@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",
+    "mediabunny": "1.60.0",
     "obscenity": "^0.4.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

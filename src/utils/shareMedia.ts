@@ -3,6 +3,7 @@ import { ensureCanvasFonts } from './canvasTile';
 import { SHARE_SIZES, buildShareScene, canvasTextMeasure, drawShareScene, sceneTimeline } from './shareScene';
 import type { ShareFormat } from './shareScene';
 import { getShareAudio, scheduleReelSounds } from './shareAudio';
+import { remuxToMp4 } from './remuxVideo';
 
 const REEL_MIME_TYPES = [
   'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
@@ -84,7 +85,7 @@ export async function recordShareReel(result: NameResult, { signal, onStart, onP
   const chunks: Blob[] = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
-  return new Promise<Blob>((resolve, reject) => {
+  const recording = await new Promise<Blob>((resolve, reject) => {
     let frame = 0;
     const cleanup = () => {
       cancelAnimationFrame(frame);
@@ -126,6 +127,14 @@ export async function recordShareReel(result: NameResult, { signal, onStart, onP
     };
     frame = requestAnimationFrame(tick);
   });
+
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  try {
+    return await remuxToMp4(recording);
+  } catch (err) {
+    console.warn('Could not rewrite the recording as a standard MP4', err);
+    return recording;
+  }
 }
 
 export function estimateReelMs(result: NameResult): number {
