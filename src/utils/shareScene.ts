@@ -100,6 +100,8 @@ export interface SceneTimeline {
 }
 
 const TILE_POP_MS = 360;
+const CTA_IN_MS = 420;
+const FINAL_HOLD_MS = 3000;
 const TILE_IMPACT_MS = 140;
 
 type Measure = (text: string, weight: number, size: number) => number;
@@ -270,7 +272,7 @@ export function sceneTimeline(scene: ShareScene): SceneTimeline {
   const lastTile = tileStarts.length > 0 ? tileStarts[tileStarts.length - 1] : cardIn;
   const stickerIn = lastTile + TILE_POP_MS + 200;
   const ctaIn = stickerIn + 420;
-  return { typeStart, charMs, typeEnd, cardIn, tileStarts, stickerIn, ctaIn, end: ctaIn + 2400 };
+  return { typeStart, charMs, typeEnd, cardIn, tileStarts, stickerIn, ctaIn, end: ctaIn + CTA_IN_MS + FINAL_HOLD_MS };
 }
 
 export function tileImpactTimes(timeline: SceneTimeline): number[] {
@@ -474,12 +476,11 @@ function drawTable(ctx: CanvasRenderingContext2D, scene: ShareScene, t: number, 
 
 function drawCta(ctx: CanvasRenderingContext2D, scene: ShareScene, t: number, tl: SceneTimeline | null): void {
   const c = scene.cta;
-  const p = tl ? clamp01((t - tl.ctaIn) / 420) : 1;
+  const p = tl ? clamp01((t - tl.ctaIn) / CTA_IN_MS) : 1;
   if (p <= 0) return;
-  const settle = tl ? Math.sin((t - tl.ctaIn) / 380) * 0.012 : 0;
   ctx.save();
   ctx.translate(0, (1 - easeOutBack(p)) * c.h * 1.2);
-  withTransform(ctx, c.cx, c.cy, 1, 0.02 + settle, clamp01(p * 3), () => {
+  withTransform(ctx, c.cx, c.cy, 1, 0.02, clamp01(p * 3), () => {
     const box: Box = { x: c.cx - c.w / 2, y: c.cy - c.h / 2, w: c.w, h: c.h };
     drawBrutalBox(ctx, box, BRAND.yellow, c.size * 0.1, c.size * 0.16, c.size * 0.3);
     ctx.font = canvasFont(700, c.size);
