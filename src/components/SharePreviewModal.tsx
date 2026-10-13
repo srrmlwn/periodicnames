@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Modal from './Modal';
 import ShareMediaPreview from './ShareMediaPreview';
 import ShareActions from './ShareActions';
-import { CAPTION_EXAMPLES, CAPTION_EXAMPLE_INTERVAL_MS } from '../data/captionExamples';
 import { reelMimeType, recordShareReel, renderShareImage, shareFileName, shareSlug } from '../utils/shareMedia';
 import { primeShareAudio } from '../utils/shareAudio';
 import type { ShareFormat } from '../utils/shareScene';
@@ -20,8 +19,6 @@ const FORMATS: { id: ShareFormat; label: string; detail: string }[] = [
   { id: 'post', label: 'Post', detail: '4:5' },
   { id: 'wide', label: 'Wide', detail: 'X / chat' },
 ];
-
-const CAPTION_DEBOUNCE_MS = 600;
 
 function detectFileShare(): boolean {
   try {
@@ -51,37 +48,22 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
   const [videoMime] = useState(reelMimeType);
   const [canShareFiles] = useState(detectFileShare);
   const [format, setFormat] = useState<ShareFormat>(videoMime ? 'reel' : 'story');
-  const [caption, setCaption] = useState('');
-  const [debouncedCaption, setDebouncedCaption] = useState('');
-  const [exampleIdx, setExampleIdx] = useState(0);
   const [media, setMedia] = useState<ShareMedia | null>(null);
   const [progress, setProgress] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const formats = videoMime ? FORMATS : FORMATS.filter(f => f.id !== 'reel');
-  const mediaKey = `${format}|${debouncedCaption}`;
-  const current = media?.key === mediaKey ? media : null;
+  const current = media?.key === format ? media : null;
   const readyUrl = current?.status === 'ready' ? current.url : null;
 
   useEffect(() => {
-    const id = setTimeout(() => setDebouncedCaption(caption.trim()), CAPTION_DEBOUNCE_MS);
-    return () => clearTimeout(id);
-  }, [caption]);
-
-  useEffect(() => {
-    if (caption) return;
-    const id = setInterval(() => setExampleIdx(i => (i + 1) % CAPTION_EXAMPLES.length), CAPTION_EXAMPLE_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [caption]);
-
-  useEffect(() => {
-    const key = `${format}|${debouncedCaption}`;
+    const key = format;
     const ready = (blob: Blob) => setMedia({ key, status: 'ready', blob, url: URL.createObjectURL(blob) });
     setMedia({ key, status: 'working' });
 
     if (format !== 'reel') {
       let cancelled = false;
-      renderShareImage(result, debouncedCaption, format)
+      renderShareImage(result, '', format)
         .then(blob => { if (!cancelled) ready(blob); })
         .catch(() => { if (!cancelled) setMedia({ key, status: 'error' }); });
       return () => { cancelled = true; };
@@ -91,11 +73,11 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
     if (!canvas) return;
     const controller = new AbortController();
     setProgress(0);
-    recordShareReel(canvas, result, debouncedCaption, controller.signal, p => setProgress(Math.round(p * 50) / 50))
+    recordShareReel(canvas, result, '', controller.signal, p => setProgress(Math.round(p * 50) / 50))
       .then(ready)
       .catch(err => { if (!controller.signal.aborted) { console.error(err); setMedia({ key, status: 'error' }); } });
     return () => controller.abort();
-  }, [format, debouncedCaption, result]);
+  }, [format, result]);
 
   useEffect(() => () => { if (readyUrl) URL.revokeObjectURL(readyUrl); }, [readyUrl]);
 
@@ -148,17 +130,6 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
               ))}
             </div>
           </fieldset>
-
-          <label className="block">
-            <span className="nb-label">Line of text (optional)</span>
-            <input
-              className="nb-input"
-              value={caption}
-              maxLength={40}
-              placeholder={`e.g. ${CAPTION_EXAMPLES[exampleIdx]}`}
-              onChange={e => setCaption(e.target.value)}
-            />
-          </label>
 
           <ShareActions
             format={format}

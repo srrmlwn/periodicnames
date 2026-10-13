@@ -144,7 +144,7 @@ src/data/
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
   elementCategories.ts — category label → display name
   printProducts.ts     — PRINT_PRODUCTS catalog (t-shirt only), SHIRT_COLORS (name/hex/dark), SHIRT_SIZES, findShirtVariant(color, size); TEES_ENABLED (true in dev, Preview deploys, or when VITE_TEES_ENABLED=true — production shows "Tees coming soon" otherwise)
-  captionExamples.ts   — CAPTION_EXAMPLES rotating placeholders shared by the tee and share dialogs
+  captionExamples.ts   — CAPTION_EXAMPLES rotating placeholders for the tee caption field
 
 src/utils/
   elementMatcher.ts      — matchNameToElements(name): NameResult  [DP, maximizes real elements]
@@ -162,7 +162,7 @@ src/utils/
 src/components/
   ...
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
-  SharePreviewModal.tsx — share dialog (mounted only while open): format chips, optional line of text, preview, actions; regenerates on format/text change (text debounced 600ms)
+  SharePreviewModal.tsx — share dialog (mounted only while open): format chips, preview, actions; regenerates on format change. No line-of-text field (removed: re-recorded the reel on every edit, shrank the name, duplicated the platform's own caption box, and wasn't content-filtered next to our branding)
   ShareMediaPreview.tsx — preview pane: the reel's recording canvas (visible while recording), then the finished <video>; images as <img>
   ShareActions.tsx      — Share/Download (navigator.share with the file when supported), Copy link, X intent, Save; per-format hint
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
