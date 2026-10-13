@@ -33,20 +33,20 @@ interface FormatSpec {
 }
 
 const TALL: FormatSpec = {
-  top: 210, bottom: 1480, side: 90, logoTile: 62, nameTileMax: 176, nameMaxH: 520,
-  captionSize: 50, stickerSize: 34, ctaSize: 40, gap: 56, tableW: 860, dot: 30,
+  top: 220, bottom: 1420, side: 140, logoTile: 54, nameTileMax: 150, nameMaxH: 330,
+  captionSize: 50, stickerSize: 32, ctaSize: 38, gap: 44, tableW: 800, dot: 30,
 };
 
 const SPECS: Record<ShareFormat, FormatSpec> = {
   reel: TALL,
   story: TALL,
   post: {
-    top: 64, bottom: 1290, side: 80, logoTile: 54, nameTileMax: 168, nameMaxH: 430,
-    captionSize: 46, stickerSize: 32, ctaSize: 38, gap: 48, tableW: 780, dot: 30,
+    top: 56, bottom: 1300, side: 80, logoTile: 52, nameTileMax: 150, nameMaxH: 330,
+    captionSize: 46, stickerSize: 30, ctaSize: 36, gap: 42, tableW: 820, dot: 30,
   },
   wide: {
-    top: 34, bottom: 600, side: 70, logoTile: 40, nameTileMax: 136, nameMaxH: 240,
-    captionSize: 34, stickerSize: 25, ctaSize: 28, gap: 30, tableW: 0, dot: 24,
+    top: 26, bottom: 606, side: 70, logoTile: 34, nameTileMax: 120, nameMaxH: 200,
+    captionSize: 32, stickerSize: 23, ctaSize: 26, gap: 24, tableW: 0, dot: 24,
   },
 };
 
@@ -102,6 +102,8 @@ export interface SceneTimeline {
 const TILE_POP_MS = 360;
 const CTA_IN_MS = 420;
 const FINAL_HOLD_MS = 3000;
+const SUBMIT_DELAY_MS = 300;
+const PRESS_MS = 160;
 const TILE_IMPACT_MS = 140;
 
 type Measure = (text: string, weight: number, size: number) => number;
@@ -210,8 +212,11 @@ export function buildShareScene(result: NameResult, caption: string, format: Sha
   const ctaH = spec.ctaSize * 2;
   const ctaW = measure(SHARE_CTA, 700, spec.ctaSize) + spec.ctaSize * 1.6;
 
+  const inputH = spec.captionSize * 1.7;
+  const inputW = contentW * 0.82;
+
   const region = spec.bottom - spec.top;
-  const fixedH = logo.height + spec.gap + cardH + stickerH * 0.5 + spec.gap + ctaH;
+  const fixedH = logo.height + spec.gap + inputH + spec.gap + cardH + stickerH * 0.5 + spec.gap + ctaH;
   let tableCell = spec.tableW / 18;
   if (spec.tableW > 0) {
     const room = region - fixedH - spec.gap;
@@ -225,11 +230,8 @@ export function buildShareScene(result: NameResult, caption: string, format: Sha
   const logoPos = { x: (width - logo.width) / 2, y };
   y += logo.height + spec.gap;
 
-  const card: Box = { x: (width - cardW) / 2, y, w: cardW, h: cardH };
-  const captionY = card.y + pad;
-  const tilesPos = { x: (width - tilesBlock.width) / 2, y: card.y + pad + captionBlockH };
-  const stickerCy = card.y + card.h;
-  y = card.y + card.h + stickerH * 0.5 + spec.gap;
+  const inputBox: Box = { x: (width - inputW) / 2, y, w: inputW, h: inputH };
+  y += inputH + spec.gap;
 
   let table: ShareScene['table'] = null;
   if (showTable) {
@@ -237,14 +239,17 @@ export function buildShareScene(result: NameResult, caption: string, format: Sha
     y += tableH + spec.gap;
   }
 
+  const card: Box = { x: (width - cardW) / 2, y, w: cardW, h: cardH };
+  const captionY = card.y + pad;
+  const tilesPos = { x: (width - tilesBlock.width) / 2, y: card.y + pad + captionBlockH };
+  const stickerCy = card.y + card.h;
+  y = card.y + card.h + stickerH * 0.5 + spec.gap;
+
   const litSymbols = new Map<string, { color: string; order: number }>();
   for (const p of tilesBlock.placed) {
     const el = p.item.element;
     if (el && !litSymbols.has(el.symbol)) litSymbols.set(el.symbol, { color: p.item.color, order: p.order });
   }
-
-  const inputW = Math.min(contentW, Math.max(cardW, contentW * 0.8));
-  const inputH = spec.captionSize * 2.4;
 
   return {
     format, width, height, name: result.originalName, spec,
@@ -256,7 +261,7 @@ export function buildShareScene(result: NameResult, caption: string, format: Sha
     table,
     litSymbols,
     cta: { size: spec.ctaSize, cx: width / 2, cy: y + ctaH / 2, w: ctaW, h: ctaH },
-    inputBox: { x: (width - inputW) / 2, y: card.y + card.h / 2 - inputH / 2, w: inputW, h: inputH },
+    inputBox,
   };
 }
 
@@ -265,7 +270,7 @@ export function sceneTimeline(scene: ShareScene): SceneTimeline {
   const typeStart = 300;
   const charMs = Math.min(110, Math.max(45, 1100 / chars));
   const typeEnd = typeStart + chars * charMs;
-  const cardIn = typeEnd + 420;
+  const cardIn = typeEnd + SUBMIT_DELAY_MS + 260;
   const n = scene.tiles.placed.length;
   const stagger = Math.min(280, Math.max(140, 2600 / Math.max(1, n)));
   const tileStarts = scene.tiles.placed.map((_, i) => cardIn + 260 + i * stagger);
@@ -331,40 +336,60 @@ function drawLogo(ctx: CanvasRenderingContext2D, scene: ShareScene): void {
   for (const p of logo.placed) drawElementTile(ctx, p.item, logo.x + p.x, logo.y + p.y, logo.tile);
 }
 
-function drawInput(ctx: CanvasRenderingContext2D, scene: ShareScene, t: number, tl: SceneTimeline): void {
-  const exit = clamp01((t - tl.cardIn) / 220);
-  if (exit >= 1) return;
-  const enter = easeOutBack(clamp01((t - 0) / 300));
+function drawInput(ctx: CanvasRenderingContext2D, scene: ShareScene, t: number, tl: SceneTimeline | null): void {
   const box = scene.inputBox;
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
   const unit = scene.spec.captionSize;
-  withTransform(ctx, cx, cy, enter * (1 - exit * 0.4), 0, 1 - exit, () => {
-    ctx.font = canvasFont(700, unit * 0.42);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
-    ctx.fillStyle = BRAND.ink;
-    ctx.fillText('YOUR NAME', box.x + 4, box.y - unit * 0.3);
+  const submitAt = tl ? tl.typeEnd + SUBMIT_DELAY_MS : -Infinity;
+  const pressed = tl !== null && t >= submitAt && t < submitAt + PRESS_MS;
+  const shadow = pressed ? 0 : unit * 0.16;
+  const shift = pressed ? unit * 0.12 : 0;
+  const b: Box = { x: box.x + shift, y: box.y + shift, w: box.w, h: box.h };
+  const radius = unit * 0.3;
+  const border = unit * 0.12;
 
-    drawBrutalBox(ctx, box, BRAND.paper, unit * 0.12, unit * 0.16, unit * 0.3);
-    const typed = Math.max(0, Math.min(scene.name.length, Math.floor((t - tl.typeStart) / tl.charMs) + 1));
-    const text = t < tl.typeStart ? '' : scene.name.slice(0, typed);
-    let size = unit * 1.05;
+  ctx.save();
+  drawBrutalBox(ctx, b, BRAND.paper, border, shadow, radius);
+
+  ctx.font = canvasFont(700, unit * 0.62);
+  const goW = ctx.measureText('Go →').width + unit * 1.1;
+  const goX = b.x + b.w - goW;
+  ctx.save();
+  roundRectPath(ctx, b.x, b.y, b.w, b.h, radius);
+  ctx.clip();
+  ctx.fillStyle = BRAND.yellow;
+  ctx.fillRect(goX, b.y, goW, b.h);
+  ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(goX, b.y);
+  ctx.lineTo(goX, b.y + b.h);
+  ctx.lineWidth = border;
+  ctx.strokeStyle = BRAND.ink;
+  ctx.stroke();
+  roundRectPath(ctx, b.x, b.y, b.w, b.h, radius);
+  ctx.stroke();
+  ctx.fillStyle = BRAND.ink;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Go →', goX + goW / 2, b.y + b.h / 2);
+
+  const typed = tl ? Math.max(0, Math.min(scene.name.length, Math.floor((t - tl.typeStart) / tl.charMs) + 1)) : scene.name.length;
+  const text = tl && t < tl.typeStart ? '' : scene.name.slice(0, typed);
+  const textX = b.x + unit * 0.5;
+  const maxTextW = goX - textX - unit * 0.4;
+  let size = unit * 0.95;
+  ctx.font = canvasFont(700, size);
+  while (size > unit * 0.45 && ctx.measureText(scene.name).width > maxTextW) {
+    size -= 2;
     ctx.font = canvasFont(700, size);
-    while (size > unit * 0.5 && ctx.measureText(scene.name).width > box.w - unit * 1.4) {
-      size -= 2;
-      ctx.font = canvasFont(700, size);
-    }
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = BRAND.ink;
-    const textX = box.x + unit * 0.6;
-    ctx.fillText(text, textX, cy);
-    const cursorOn = t >= tl.typeEnd ? Math.floor(t / 260) % 2 === 0 : true;
-    if (cursorOn) {
-      const cx2 = textX + ctx.measureText(text).width + 6;
-      ctx.fillRect(cx2, cy - size * 0.55, Math.max(4, unit * 0.08), size * 1.1);
-    }
-  });
+  }
+  ctx.textAlign = 'left';
+  ctx.fillText(text, textX, b.y + b.h / 2);
+  const typing = tl !== null && t < submitAt;
+  if (typing && (t < tl.typeEnd || Math.floor(t / 260) % 2 === 0)) {
+    const cx = textX + ctx.measureText(text).width + 4;
+    ctx.fillRect(cx, b.y + b.h / 2 - size * 0.55, Math.max(4, unit * 0.07), size * 1.1);
+  }
+  ctx.restore();
 }
 
 function drawCard(ctx: CanvasRenderingContext2D, scene: ShareScene, t: number, tl: SceneTimeline | null): void {
@@ -510,7 +535,7 @@ export function drawShareScene(ctx: CanvasRenderingContext2D, scene: ShareScene,
   if (timeline) ctx.translate(shakeOffset(scene, t, timeline), 0);
   drawLogo(ctx, scene);
   drawTable(ctx, scene, t, timeline);
-  if (timeline) drawInput(ctx, scene, t, timeline);
+  drawInput(ctx, scene, t, timeline);
   drawCard(ctx, scene, t, timeline);
   drawNameTiles(ctx, scene, t, timeline);
   drawSticker(ctx, scene, t, timeline);

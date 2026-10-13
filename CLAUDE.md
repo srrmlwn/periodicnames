@@ -263,8 +263,9 @@ Earlier revamp notes: — palette, Space Grotesk, cards/buttons/inputs, shared `
 Launch plan (Oct 2026): **launch with sharing; tees show "coming soon" in production** (`TEES_ENABLED`) until the test shirt confirms placement and Stripe/Printful env setup is done. Preview deploys and local dev keep the full tee flow. To turn tees on: set `VITE_TEES_ENABLED=true` in Vercel Production and redeploy.
 
 Phase 2 — sharing (rebuilt Oct 2026, see docs/phase1-tasks.md):
-- One canvas scene (`shareScene.ts`) in the site's style for Reel (video), Story, Post (4:5) and Wide (X/link) — same tiles, card, sticker, lit mini table and yellow CTA as the site
-- Reel: typed name → tiles slam in → table lights → sticker → CTA, with synthesised sound; MP4 where MediaRecorder supports it
+- One canvas scene (`shareScene.ts`) laid out like the site — logo, name input, periodic table, result card + sticker, yellow CTA — for Reel (video), Story, Post (4:5) and Wide (X/link)
+- Reel: name types in → Go presses → tiles slam into the card while their table cells light → sticker → CTA → 3s still hold, with synthesised sound; MP4 where MediaRecorder supports it
+- Tall formats stay inside x 140–940, y 220–1420 (Instagram + TikTok UI safe zones)
 - Dialog: native share sheet with the file on phones (→ Instagram Reels/Stories), download on desktop, copy link, X intent
 
 SEO: static OG/Twitter tags + `public/og-image.png`, JSON-LD, `robots.txt`, `sitemap.xml`, canonical → home (name pages are not meant to be indexed separately yet), tagline `<h1>`, per-name `document.title`. Search Console: verify via a DNS TXT record (domain property), then submit the sitemap. Not done: per-name link previews (needs server-rendered meta + OG images), analytics.
