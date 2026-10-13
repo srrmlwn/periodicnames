@@ -163,7 +163,8 @@ src/components/
   ...
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
   SharePreviewModal.tsx — share dialog (mounted only while open): format chips, preview, actions; regenerates on format change. No line-of-text field (removed: re-recorded the reel on every edit, shrank the name, duplicated the platform's own caption box, and wasn't content-filtered next to our branding)
-  ShareMediaPreview.tsx — preview pane: the reel's recording canvas (visible while recording), then the finished <video>; images as <img>
+  ShareMediaPreview.tsx — preview pane: the reel's recording canvas (visible while recording), then the finished muted looping <video> (no controls); images as <img>. Tapping the media or the "Full size" button opens ShareLightbox
+  ShareLightbox.tsx     — full-screen viewer over the share dialog (video with sound + controls, or image); its Escape handler runs in the capture phase and stops propagation so only the lightbox closes, not the dialog
   ShareActions.tsx      — Share/Download (navigator.share with the file when supported), Copy link, X intent, Save; per-format hint
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline). Silhouette uses real BC3001 proportions in inches from the front-collar bottom: neck 7.2in wide / 3.5in drop, armpit 5in below the collar, body 20in wide, hem 25.5in below — the earlier drawing put armpits ~9in down, which made correct prints look like they sat at the collar

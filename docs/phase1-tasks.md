@@ -103,7 +103,7 @@ Remaining optional polish items are in Phase 1d below.
   Name types into the input → "Go" button presses → result card pops → tiles slam in one by one (spring + spin + drop, small screen shake) while their cells light on the mini table → sticker stamps → CTA bounces in → 3s completely still hold so viewers can take it in. 6–9s total. Synthesised sound (typing clicks, rising pops, chord, ding) via Web Audio mixed into the recording. MediaRecorder prefers MP4/H.264 (Chrome, Safari), falls back to WebM (Firefox, with a warning that Instagram may reject it). The AudioContext is primed on the Share click so Safari allows sound.
 
 - [x] **Share dialog** (`SharePreviewModal`, `ShareMediaPreview`, `ShareActions`)
-  Two-column layout matching the tee designer. Format chips, live preview (no caption field — people add their own caption in the app they post to) — the reel records visibly in the preview, then swaps to the finished video. Primary button uses `navigator.share({ files })` when the device supports file sharing (phones → Instagram/TikTok share sheet), otherwise downloads. Copy link, X intent, Save.
+  Two-column layout matching the tee designer. Format chips, live preview with a "Full size" viewer (tap the preview; plays the reel with sound) (no caption field — people add their own caption in the app they post to) — the reel records visibly in the preview, then swaps to the finished video. Primary button uses `navigator.share({ files })` when the device supports file sharing (phones → Instagram/TikTok share sheet), otherwise downloads. Copy link, X intent, Save.
 
 - [x] **Twitter/X direct share** — intent URL with pre-filled text + name link.
 - [x] **Web Share API** (`navigator.share({ files })`) for mobile native share.
