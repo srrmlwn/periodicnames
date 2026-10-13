@@ -54,6 +54,7 @@ export function scheduleReelSounds(ctx: AudioContext, out: AudioNode, tl: SceneT
     tone(ctx, out, s(at - 20), note, 0.22, 0.32, 'triangle');
     tone(ctx, out, s(at - 20), 140, 0.12, 0.35, 'sine', 60);
   });
+  tone(ctx, out, s(tl.finaleStart), 260, 0.5, 0.12, 'sine', 900);
   tone(ctx, out, s(tl.stickerIn + 60), 110, 0.2, 0.45, 'sine', 50);
   [1046.5, 1318.51, 1567.98].forEach((f, i) => tone(ctx, out, s(tl.stickerIn + 90 + i * 40), f, 0.5, 0.16, 'triangle'));
   [1567.98, 2093].forEach(f => tone(ctx, out, s(tl.ctaIn + 120), f, 0.9, 0.12, 'sine'));

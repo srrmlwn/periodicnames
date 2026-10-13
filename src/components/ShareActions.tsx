@@ -1,55 +1,62 @@
 import React, { useState } from 'react';
-import type { ShareFormat } from '../utils/shareScene';
+import type { MediaState, ShareKind } from '../utils/shareMachine';
+import { copyText } from '../utils/shareFile';
+import { track } from '../utils/analytics';
 
 interface ShareActionsProps {
-  format: ShareFormat;
-  ready: boolean;
+  kind: ShareKind;
+  media: MediaState;
+  canShareReady: boolean;
   isWebm: boolean;
-  canShareFiles: boolean;
+  notice: string | null;
   link: string;
   shareText: string;
+  onCreate: () => void;
   onShare: () => void;
-  onDownload: () => void;
+  onSave: () => void;
 }
-
-const HINTS: Record<ShareFormat, { phone: string; desktop: string }> = {
-  reel: {
-    phone: 'Pick Instagram → Reel, or TikTok, WhatsApp… It has sound, too.',
-    desktop: 'Saves a video with sound. Send it to your phone and post it as a Reel.',
-  },
-  story: { phone: 'Pick Instagram → Story.', desktop: 'Saves a 9:16 image for Instagram or Snapchat stories.' },
-  post: { phone: 'Pick Instagram → Post.', desktop: 'Saves a 4:5 image, the size Instagram feeds show biggest.' },
-  wide: { phone: 'Best for X, LinkedIn and group chats.', desktop: 'Best for X, LinkedIn and group chats.' },
-};
 
 const smallBtn = 'nb-btn bg-white px-3 py-2 text-sm flex-1';
 
-const ShareActions: React.FC<ShareActionsProps> = ({ format, ready, isWebm, canShareFiles, link, shareText, onShare, onDownload }) => {
+function primaryLabel(kind: ShareKind, media: MediaState, canShareReady: boolean): string {
+  const noun = kind === 'video' ? 'video' : 'image';
+  switch (media.status) {
+    case 'idle': return kind === 'video' ? 'Create video' : 'Preparing image…';
+    case 'generating': return kind === 'video' ? 'Creating video…' : 'Preparing image…';
+    case 'error': return 'Try again';
+    case 'ready': return canShareReady ? `Share ${noun}` : `Save ${noun}`;
+  }
+}
+
+const ShareActions: React.FC<ShareActionsProps> = ({ kind, media, canShareReady, isWebm, notice, link, shareText, onCreate, onShare, onSave }) => {
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle');
-  const isVideo = format === 'reel';
-  const noun = isVideo ? 'video' : 'image';
-  const primary = canShareFiles ? `Share ${noun}` : `Download ${noun}`;
   const xUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(link)}`;
+  const ready = media.status === 'ready';
+  const busy = media.status === 'generating' || (kind === 'image' && media.status === 'idle');
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied('done');
-    } catch {
-      setCopied('failed');
-    }
-    setTimeout(() => setCopied('idle'), 2000);
+    const ok = await copyText(link);
+    setCopied(ok ? 'done' : 'failed');
+    if (ok) track('share_link_copied');
+    setTimeout(() => setCopied('idle'), 2500);
   };
 
   return (
-    <div className="mt-auto flex flex-col gap-3">
-      <button type="button" onClick={onShare} disabled={!ready} className="nb-btn bg-pop-yellow w-full py-3 text-lg">
-        {ready ? primary : isVideo ? 'Making your reel…' : 'Drawing…'}
+    <div className="mt-auto flex flex-col gap-2.5">
+      <button
+        type="button"
+        onClick={ready ? onShare : onCreate}
+        disabled={busy}
+        aria-busy={busy}
+        className="nb-btn bg-pop-yellow w-full py-3 text-lg"
+      >
+        {primaryLabel(kind, media, canShareReady)}
       </button>
-      <p className="-mt-1 text-xs font-medium text-muted text-center">
-        {canShareFiles ? HINTS[format].phone : HINTS[format].desktop}
-      </p>
-      {isVideo && isWebm && ready && (
+      {media.status === 'error' && (
+        <p role="alert" className="rounded-md bg-pop-coral/20 px-2 py-1 text-sm font-semibold text-ink text-center">{media.message}</p>
+      )}
+      {notice && <p role="status" className="text-xs font-semibold text-ink text-center">{notice}</p>}
+      {ready && isWebm && (
         <p className="rounded-md bg-pop-yellow/30 px-2 py-1 text-xs font-semibold text-ink text-center">
           This browser saves WebM, which Instagram may reject. Chrome or Safari save MP4.
         </p>
@@ -64,12 +71,11 @@ const ShareActions: React.FC<ShareActionsProps> = ({ format, ready, isWebm, canS
           </svg>
           Post
         </a>
-        {canShareFiles && (
-          <button type="button" onClick={onDownload} disabled={!ready} className={smallBtn}>
-            Save
-          </button>
+        {ready && canShareReady && (
+          <button type="button" onClick={onSave} className={smallBtn}>Save</button>
         )}
       </div>
+      {copied === 'failed' && <p className="text-xs font-semibold text-muted text-center break-all select-all">{link}</p>}
     </div>
   );
 };

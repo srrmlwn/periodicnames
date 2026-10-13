@@ -32,38 +32,45 @@ export function shareFileName(name: string, format: ShareFormat, mime: string): 
   return `periodicnames-${shareSlug(name)}-${format}.${ext}`;
 }
 
-export async function renderShareImage(result: NameResult, caption: string, format: ShareFormat): Promise<Blob> {
+export async function renderShareImage(result: NameResult, format: ShareFormat, headline?: string): Promise<Blob> {
   await ensureCanvasFonts();
   const { width, height } = SHARE_SIZES[format];
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
-  drawShareScene(ctx, buildShareScene(result, caption, format, canvasTextMeasure(ctx)));
+  drawShareScene(ctx, buildShareScene(result, format, canvasTextMeasure(ctx), headline));
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))), 'image/png');
   });
 }
 
-export async function recordShareReel(
-  canvas: HTMLCanvasElement,
-  result: NameResult,
-  caption: string,
-  signal: AbortSignal,
-  onProgress: (ratio: number) => void,
-): Promise<Blob> {
+export interface ReelProgress {
+  elapsedMs: number;
+  totalMs: number;
+}
+
+export interface RecordReelOptions {
+  signal?: AbortSignal;
+  onStart?: (canvas: HTMLCanvasElement, totalMs: number) => void;
+  onProgress?: (progress: ReelProgress) => void;
+}
+
+export async function recordShareReel(result: NameResult, { signal, onStart, onProgress }: RecordReelOptions = {}): Promise<Blob> {
   const mimeType = reelMimeType();
   if (!mimeType) throw new Error('Video recording is not supported in this browser');
   await ensureCanvasFonts();
-  if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
   const { width, height } = SHARE_SIZES.reel;
+  const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
-  const scene = buildShareScene(result, caption, 'reel', canvasTextMeasure(ctx));
+  const scene = buildShareScene(result, 'reel', canvasTextMeasure(ctx));
   const timeline = sceneTimeline(scene);
   drawShareScene(ctx, scene, 0, timeline);
+  onStart?.(canvas, timeline.end);
 
   const videoStream = canvas.captureStream(FPS);
   const audio = getShareAudio();
@@ -90,15 +97,15 @@ export async function recordShareReel(
       cleanup();
       reject(new DOMException('Aborted', 'AbortError'));
     };
-    signal.addEventListener('abort', onAbort, { once: true });
+    signal?.addEventListener('abort', onAbort, { once: true });
 
     recorder.onstop = () => {
-      signal.removeEventListener('abort', onAbort);
+      signal?.removeEventListener('abort', onAbort);
       cleanup();
       resolve(new Blob(chunks, { type: mimeType.split(';')[0] }));
     };
     recorder.onerror = () => {
-      signal.removeEventListener('abort', onAbort);
+      signal?.removeEventListener('abort', onAbort);
       cleanup();
       reject(new Error('Recording failed'));
     };
@@ -110,7 +117,7 @@ export async function recordShareReel(
     const tick = (now: number) => {
       const elapsed = now - start;
       drawShareScene(ctx, scene, Math.min(elapsed, timeline.end), timeline);
-      onProgress(Math.min(1, elapsed / timeline.end));
+      onProgress?.({ elapsedMs: Math.min(elapsed, timeline.end), totalMs: timeline.end });
       if (elapsed < timeline.end + TAIL_MS) {
         frame = requestAnimationFrame(tick);
       } else if (recorder.state !== 'inactive') {
@@ -119,4 +126,9 @@ export async function recordShareReel(
     };
     frame = requestAnimationFrame(tick);
   });
+}
+
+export function estimateReelMs(result: NameResult): number {
+  const ctx = document.createElement('canvas').getContext('2d')!;
+  return sceneTimeline(buildShareScene(result, 'reel', canvasTextMeasure(ctx))).end;
 }

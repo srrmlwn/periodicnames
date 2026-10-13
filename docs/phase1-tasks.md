@@ -105,6 +105,8 @@ Remaining optional polish items are in Phase 1d below.
 - [x] **Share dialog** (`SharePreviewModal`, `ShareMediaPreview`, `ShareActions`)
   Two-column layout matching the tee designer. Format chips, live preview with a "Full size" viewer (tap the preview; plays the reel with sound) (no caption field — people add their own caption in the app they post to) — the reel records visibly in the preview, then swaps to the finished video. Primary button uses `navigator.share({ files })` when the device supports file sharing (phones → Instagram/TikTok share sheet), otherwise downloads. Copy link, X intent, Save.
 
+- [x] **Share UX pass (Oct 2026)** — Video / Image choice, explicit Create video step, generation state machine with per-format cache and retry, hero composition (name card first), reel hook + zoom-to-hero finale, share/download/copy fallbacks, analytics events, Vitest tests (20). Real-device checks on iOS Safari / Android Chrome / Samsung Internet still to do.
+
 - [x] **Twitter/X direct share** — intent URL with pre-filled text + name link.
 - [x] **Web Share API** (`navigator.share({ files })`) for mobile native share.
 - [x] **Instagram guidance** — per-format one-line hints under the share button replace a separate modal.

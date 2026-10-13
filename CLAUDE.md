@@ -16,9 +16,10 @@ Docs: `docs/tech-architecture.md` · `docs/phase1-tasks.md`
 npm run dev      # Vite dev server → http://localhost:5173
 npm run build    # TypeScript type-check + production build (must pass before commit)
 npm run lint     # ESLint
+npm test         # Vitest (share state machine + share/download fallbacks)
 ```
 
-There is no test runner. The build command is the correctness gate.
+The build command is the main correctness gate; `npm test` covers the pure share logic (`src/utils/*.test.ts`).
 
 ---
 
@@ -151,8 +152,11 @@ src/utils/
   colorSchemes.ts        — getTileColors(result), NAME_PALETTE, getCategoryColor(category), etc.; BRAND, LOGO_PALETTE, FONT_FAMILY
   canvasTile.ts          — shared canvas drawing: ELEMENT_POSITIONS, drawElementTile, drawTableBackground, canvasFont, ensureCanvasFonts, fakeAtomicNumber
   elementRenderer.ts     — createElementLayout(result) for ResultDisplay word grouping
-  shareScene.ts          — ShareFormat ('reel'|'story'|'post'|'wide'), SHARE_SIZES, buildShareScene(result, caption, format, measure), sceneTimeline(scene), drawShareScene(ctx, scene, t?, timeline?) — one renderer for share images and every reel frame
-  shareMedia.ts          — renderShareImage(result, caption, format) → PNG; recordShareReel(canvas, result, caption, signal, onProgress) → MP4 (or WebM fallback) via MediaRecorder; reelMimeType(), shareFileName(), shareSlug()
+  shareScene.ts          — ShareFormat ('reel'|'story'|'post'|'wide'), SHARE_SIZES, buildShareScene(result, format, measure, headline?), sceneTimeline(scene), drawShareScene(ctx, scene, t?, timeline?) — one renderer for share images and every reel frame. Final/hero layout: logo → headline → big name card + stats sticker → small lit table → "Spell your name at periodicnames.com". The reel's intro is site-like (hook "What's your name in elements?", input + Go, big table, small card) and tweens into the hero layout
+  shareMedia.ts          — renderShareImage(result, format, headline?) → PNG; recordShareReel(result, { signal, onStart(canvas, totalMs), onProgress({elapsedMs,totalMs}) }) → MP4 (or WebM) via MediaRecorder on its own offscreen canvas (keeps recording when the user switches formats); estimateReelMs(); reelMimeType(), shareFileName(), shareSlug()
+  shareMachine.ts        — share generation state machine (pure reducer): per-format MediaState idle → generating → ready | error; start ignored unless idle/error (dedupe + cache), stale results ignored. Tested in shareMachine.test.ts
+  shareFile.ts           — canShareFile(file) (navigator.canShare({files})), shareOrDownload(file, download) → shared | dismissed (AbortError) | downloaded (unsupported or share-failed), downloadFile(), copyText() with execCommand fallback. Tested in shareFile.test.ts
+  analytics.ts           — track(event, props): sends share events to window.gtag if a GA4 tag is installed (none is yet); never sends names
   shareAudio.ts          — primeShareAudio() (call in a click handler), scheduleReelSounds() synthesised clicks/pops/chord for the reel
   funStats.ts            — getFunStatsLine(real, total): the stats sticker text (result card + share scene)
   printLayout.ts         — computePrintLayout(result, caption, placement, measure, captionPosition) → tile size, rows, size in inches and the Printful `position`; drawPrintDesign() draws it (shared by preview and print file); PLACEMENTS (chest/big, defined by inches below the collar), PRINT_FRAME (12×16in @150ppi = 1800×2400), PRINT_AREA_BELOW_COLLAR_IN (1.9, measured from a real shirt)
@@ -162,10 +166,11 @@ src/utils/
 src/components/
   ...
   Modal.tsx             — shared neubrutalist dialog shell (Escape to close, aria-modal, scroll lock)
-  SharePreviewModal.tsx — share dialog (mounted only while open): format chips, preview, actions; regenerates on format change. No line-of-text field (removed: re-recorded the reel on every edit, shrank the name, duplicated the platform's own caption box, and wasn't content-filtered next to our branding)
-  ShareMediaPreview.tsx — preview pane: the reel's recording canvas (visible while recording), then the finished muted looping <video> (no controls); images as <img>. Tapping the media or the "Full size" button opens ShareLightbox
+  SharePreviewModal.tsx — share dialog (mounted only while open). useReducer(shareReducer); caches every generated file for the dialog's lifetime and revokes object URLs on close; aborts a recording on close. Video is created only on "Create video"; images generate automatically (the Story image doubles as the video's poster = its final frame). No line-of-text field (removed: re-recorded the reel on every edit, shrank the name, duplicated the platform's own caption box, and wasn't content-filtered next to our branding)
+  ShareFormatPicker.tsx — two primary choices, Video / Image; Image shows Story 9:16 · Post 4:5 · Wide size chips; Video shows its spec line
+  ShareMediaPreview.tsx — preview pane: video idle → poster ("The video ends on this frame"), generating → live recording canvas + "Recording Ns of Ms", ready → muted looping <video>; images as <img>. Tapping ready media or "Full size" opens ShareLightbox
   ShareLightbox.tsx     — full-screen viewer over the share dialog (video with sound + controls, or image); its Escape handler runs in the capture phase and stops propagation so only the lightbox closes, not the dialog
-  ShareActions.tsx      — Share/Download (navigator.share with the file when supported), Copy link, X intent, Save; per-format hint
+  ShareActions.tsx      — state-driven primary button: Create video → Creating video… → Share video (or Save video when the browser can't share files) · Try again on error; Copy link (with fallback), Post on X, Save
   PrintPanel.tsx        — one-screen t-shirt designer: drawn shirt preview, colour/size/placement/caption, Buy; "See it on a model" link swaps in a Printful photo mockup on demand
   ShirtPreview.tsx      — canvas drawing of the shirt in the chosen colour with the design at its real position (13 units/in; print frame top drawn PRINT_AREA_BELOW_COLLAR_IN below the neckline). Silhouette uses real BC3001 proportions in inches from the front-collar bottom: neck 7.2in wide / 3.5in drop, armpit 5in below the collar, body 20in wide, hem 25.5in below — the earlier drawing put armpits ~9in down, which made correct prints look like they sat at the collar
   ShirtOptions.tsx      — colour swatches, size chips, Chest/Big placement, optional caption (always-visible labelled input; placeholder rotates CAPTION_EXAMPLES every 2.5s while empty; no autofocus so phones don't open the keyboard); 'Above name' / 'Below name' switch appears once text is entered (default above)
@@ -265,7 +270,9 @@ Launch plan (Oct 2026): **launch with sharing; tees show "coming soon" in produc
 
 Phase 2 — sharing (rebuilt Oct 2026, see docs/phase1-tasks.md):
 - One canvas scene (`shareScene.ts`) laid out like the site — logo, name input, periodic table, result card + sticker, yellow CTA — for Reel (video), Story, Post (4:5) and Wide (X/link)
-- Reel: name types in → Go presses → tiles slam into the card while their table cells light → sticker → CTA → 3s still hold, with synthesised sound; MP4 where MediaRecorder supports it
+- Dialog: Video (default where MediaRecorder works) or Image (Story / Post / Wide). States: idle → generating → ready | error with Try again; files cached per format, never regenerated for Share-after-Save
+- Reel (~8–11s): hook + typing in the site-like layout → tiles slam into the card while table cells light → card zooms up to the hero layout → sticker → CTA → 3s still hold; synthesised sound but readable muted; MP4 where MediaRecorder supports it
+- Analytics: share_modal_opened, share_format_selected, media_generation_started/completed/failed, native_share_invoked/completed/dismissed, media_downloaded, share_link_copied via track() — inert until a GA4 tag is added
 - Tall formats stay inside x 140–940, y 220–1420 (Instagram + TikTok UI safe zones)
 - Dialog: native share sheet with the file on phones (→ Instagram Reels/Stories), download on desktop, copy link, X intent
 
