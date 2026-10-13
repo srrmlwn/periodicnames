@@ -107,7 +107,7 @@ Remaining optional polish items are in Phase 1d below.
 
 - [x] **Share UX pass (Oct 2026)** — Video / Image choice, explicit Create video step, generation state machine with per-format cache and retry, hero composition (name card first), reel hook + zoom-to-hero finale, share/download/copy fallbacks, analytics events, Vitest tests (20). Real-device checks on iOS Safari / Android Chrome / Samsung Internet still to do.
 
-- [x] **Twitter/X direct share** — intent URL with pre-filled text + name link.
+- [x] ~~Twitter/X direct share~~ — replaced by a generic **Share link** button (native share sheet with the URL) so no single platform is singled out.
 - [x] **Web Share API** (`navigator.share({ files })`) for mobile native share.
 - [x] **Instagram guidance** — per-format one-line hints under the share button replace a separate modal.
 

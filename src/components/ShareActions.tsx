@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { MediaState, ShareKind } from '../utils/shareMachine';
-import { copyText } from '../utils/shareFile';
+import { canShareLink, copyText, shareLink } from '../utils/shareFile';
 import { track } from '../utils/analytics';
 
 interface ShareActionsProps {
@@ -30,7 +30,7 @@ function primaryLabel(kind: ShareKind, media: MediaState, canShareReady: boolean
 
 const ShareActions: React.FC<ShareActionsProps> = ({ kind, media, canShareReady, isWebm, notice, link, shareText, onCreate, onShare, onSave }) => {
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle');
-  const xUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(link)}`;
+  const [linkShareable] = useState(() => canShareLink(link));
   const ready = media.status === 'ready';
   const busy = media.status === 'generating' || (kind === 'image' && media.status === 'idle');
 
@@ -39,6 +39,14 @@ const ShareActions: React.FC<ShareActionsProps> = ({ kind, media, canShareReady,
     setCopied(ok ? 'done' : 'failed');
     if (ok) track('share_link_copied');
     setTimeout(() => setCopied('idle'), 2500);
+  };
+
+  const shareTheLink = async () => {
+    track('native_share_invoked', { format: 'link' });
+    const outcome = await shareLink(link, shareText);
+    if (outcome === 'shared') track('native_share_completed', { format: 'link' });
+    else if (outcome === 'dismissed') track('native_share_dismissed', { format: 'link' });
+    else await copyLink();
   };
 
   return (
@@ -65,12 +73,14 @@ const ShareActions: React.FC<ShareActionsProps> = ({ kind, media, canShareReady,
         <button type="button" onClick={copyLink} className={smallBtn}>
           {copied === 'done' ? 'Link copied!' : copied === 'failed' ? "Couldn't copy" : 'Copy link'}
         </button>
-        <a href={xUrl} target="_blank" rel="noopener noreferrer" className={smallBtn}>
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-          Post
-        </a>
+        {linkShareable && (
+          <button type="button" onClick={shareTheLink} className={smallBtn}>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1" />
+            </svg>
+            Share link
+          </button>
+        )}
         {ready && canShareReady && (
           <button type="button" onClick={onSave} className={smallBtn}>Save</button>
         )}

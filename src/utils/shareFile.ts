@@ -79,3 +79,22 @@ export async function copyText(text: string, env?: ClipboardEnv): Promise<boolea
   }
   return fallback ? fallback(text) : false;
 }
+
+export function canShareLink(url: string, env: ShareCapable = navigator): boolean {
+  try {
+    return typeof env.share === 'function' && (env.canShare ? env.canShare({ url }) : true);
+  } catch {
+    return false;
+  }
+}
+
+export type LinkShareOutcome = 'shared' | 'dismissed' | 'failed';
+
+export async function shareLink(url: string, text: string, env: ShareCapable = navigator): Promise<LinkShareOutcome> {
+  try {
+    await env.share!({ url, text });
+    return 'shared';
+  } catch (err) {
+    return err instanceof Error && err.name === 'AbortError' ? 'dismissed' : 'failed';
+  }
+}

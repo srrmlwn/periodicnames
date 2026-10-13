@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { canShareFile, copyText, shareOrDownload } from './shareFile';
+import { canShareFile, canShareLink, copyText, shareLink, shareOrDownload } from './shareFile';
 
 const file = new File(['data'], 'periodicnames-sasha-reel.mp4', { type: 'video/mp4' });
 
@@ -73,5 +73,26 @@ describe('copyText', () => {
   it('reports failure when nothing can copy', async () => {
     expect(await copyText('x', {})).toBe(false);
     expect(await copyText('x', { legacyCopy: () => false })).toBe(false);
+  });
+});
+
+describe('link sharing', () => {
+  const url = 'https://periodicnames.com/sasha';
+
+  it('is only offered when the Web Share API exists', () => {
+    expect(canShareLink(url, {})).toBe(false);
+    expect(canShareLink(url, { share: async () => {} })).toBe(true);
+    expect(canShareLink(url, { share: async () => {}, canShare: () => false })).toBe(false);
+  });
+
+  it('passes the link and text to the share sheet', async () => {
+    const share = vi.fn(async () => {});
+    expect(await shareLink(url, 'hi', { share })).toBe('shared');
+    expect(share).toHaveBeenCalledWith({ url, text: 'hi' });
+  });
+
+  it('distinguishes a cancelled sheet from a failure', async () => {
+    expect(await shareLink(url, 'hi', { share: async () => { throw new DOMException('x', 'AbortError'); } })).toBe('dismissed');
+    expect(await shareLink(url, 'hi', { share: async () => { throw new DOMException('x', 'NotAllowedError'); } })).toBe('failed');
   });
 });
