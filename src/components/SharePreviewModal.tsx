@@ -23,8 +23,8 @@ const FAILURE_MESSAGE: Record<'video' | 'image', string> = {
 };
 
 const SAVED_NOTICE: Record<ShareKind, string> = {
-  video: 'Saved to your downloads. Post it from Instagram or TikTok by picking the file.',
-  image: 'Saved to your downloads. Post it from your photos or files.',
+  video: 'Download started. To post it, open Instagram or TikTok and pick the video from your files.',
+  image: 'Download started. To post it, open your app and pick the image from your photos or files.',
 };
 
 const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }) => {
@@ -130,7 +130,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
     else {
       track('media_downloaded', { ...props, reason: res.reason });
       setNotice(res.reason === 'share-failed'
-        ? "Your browser couldn't open the share sheet, so we saved the file instead."
+        ? "Couldn't open the share sheet, so the download started instead."
         : SAVED_NOTICE[state.kind]);
     }
   };
@@ -155,7 +155,7 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
   };
 
   return (
-    <Modal isOpen onClose={onClose} label="Share your name" widthClass="max-w-3xl" className="max-h-[94dvh] overflow-y-auto">
+    <Modal isOpen onClose={onClose} label="Your name, ready to share" widthClass="max-w-3xl" className="max-h-[94dvh] overflow-y-auto">
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="bg-mist border-b-[3px] md:border-b-0 md:border-r-[3px] border-ink rounded-t-[9px] md:rounded-tr-none md:rounded-l-[9px] px-4 py-4 sm:py-6 flex items-center justify-center">
           <ShareMediaPreview kind={state.kind} media={media} poster={poster} liveCanvas={liveCanvas} progress={progress} name={result.originalName} />
@@ -163,8 +163,8 @@ const SharePreviewModal: React.FC<SharePreviewModalProps> = ({ onClose, result }
 
         <div className="px-5 pt-4 pb-5 sm:pt-6 flex flex-col gap-3 sm:gap-4">
           <div className="pr-10">
-            <h2 className="text-xl font-bold text-ink">Share your name</h2>
-            <p className="hidden sm:block text-sm text-muted mt-0.5">A video for Reels and TikTok, or an image for anywhere.</p>
+            <h2 className="text-lg sm:text-xl font-bold text-ink">Your name, ready to share</h2>
+            <p className="hidden sm:block text-sm text-muted mt-0.5">Pick a video or an image, then share or download it.</p>
           </div>
           <ShareFormatPicker
             kind={state.kind}

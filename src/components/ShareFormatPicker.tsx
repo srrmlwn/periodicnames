@@ -45,7 +45,7 @@ const ShareFormatPicker: React.FC<ShareFormatPickerProps> = ({ kind, imageFormat
     <div className="flex min-h-[30px] items-center justify-center gap-2">
       {kind === 'video' ? (
         <p className="text-xs font-semibold text-muted">
-          {videoSupported ? `9:16 · about ${videoSeconds}s · with sound · for Reels & TikTok` : "This browser can't record video. Images work everywhere."}
+          {videoSupported ? `Vertical video · ~${videoSeconds} seconds · Includes sound` : "This browser can't record video. Images work everywhere."}
         </p>
       ) : (
         <div role="group" aria-label="Image size" className="flex gap-2">

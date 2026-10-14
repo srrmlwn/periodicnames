@@ -24,7 +24,7 @@ function primaryLabel(kind: ShareKind, media: MediaState, canShareReady: boolean
     case 'idle': return kind === 'video' ? 'Create video' : 'Preparing image…';
     case 'generating': return kind === 'video' ? 'Creating video…' : 'Preparing image…';
     case 'error': return 'Try again';
-    case 'ready': return canShareReady ? `Share ${noun}` : `Save ${noun}`;
+    case 'ready': return canShareReady ? `Share ${noun}` : `Download ${noun}`;
   }
 }
 
@@ -82,7 +82,7 @@ const ShareActions: React.FC<ShareActionsProps> = ({ kind, media, canShareReady,
           </button>
         )}
         {ready && canShareReady && (
-          <button type="button" onClick={onSave} className={smallBtn}>Save</button>
+          <button type="button" onClick={onSave} className={smallBtn}>Download</button>
         )}
       </div>
       {copied === 'failed' && <p className="text-xs font-semibold text-muted text-center break-all select-all">{link}</p>}

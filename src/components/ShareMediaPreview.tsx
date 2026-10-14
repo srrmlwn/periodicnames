@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ShareLightbox from './ShareLightbox';
+import ShareVideoPlayer from './ShareVideoPlayer';
 import type { MediaState, ShareKind } from '../utils/shareMachine';
 
 interface ShareMediaPreviewProps {
@@ -43,9 +44,9 @@ const ShareMediaPreview: React.FC<ShareMediaPreviewProps> = ({ kind, media, post
   return (
     <div className="relative flex h-[44vh] min-h-[240px] max-h-[480px] md:h-[62vh] md:max-h-[600px] w-full items-center justify-center">
       {ready && isVideo && (
-        <button type="button" onClick={() => setExpanded(true)} className={CLICKABLE} aria-label="Play full size">
-          <video key={ready.url} src={ready.url} className={MEDIA_CLASS} autoPlay loop muted playsInline aria-label={label} />
-        </button>
+        <div className="flex h-full max-w-full items-center justify-center">
+          <ShareVideoPlayer url={ready.url} label={label} mediaClass={MEDIA_CLASS} onExpand={() => setExpanded(true)} />
+        </div>
       )}
       {showLive && <LiveCanvas canvas={liveCanvas} />}
       {!showLive && stillUrl && (ready ? (
@@ -62,9 +63,9 @@ const ShareMediaPreview: React.FC<ShareMediaPreviewProps> = ({ kind, media, post
       )}
 
       {isVideo && media.status !== 'generating' && !ready && poster && (
-        <span className="pointer-events-none absolute inset-x-0 bottom-1 mx-auto flex w-fit items-center gap-1.5 rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold shadow-brutal-sm">
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-          The video ends on this frame
+        <span className="pointer-events-none absolute inset-x-0 bottom-1 mx-auto flex w-fit items-center rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold shadow-brutal-sm">
+          
+          Final frame preview
         </span>
       )}
       {isVideo && media.status === 'generating' && progress && (
@@ -73,7 +74,7 @@ const ShareMediaPreview: React.FC<ShareMediaPreviewProps> = ({ kind, media, post
           Recording {Math.floor(progress.elapsedMs / 1000)}s of {Math.ceil(progress.totalMs / 1000)}s
         </div>
       )}
-      {ready && (
+      {ready && !isVideo && (
         <button
           type="button"
           onClick={() => setExpanded(true)}
