@@ -55,7 +55,7 @@ const ShareMediaPreview: React.FC<ShareMediaPreviewProps> = ({ kind, media, post
         </button>
       ) : (
         <div className="flex h-full max-w-full items-center justify-center">
-          <img src={stillUrl} alt={isVideo ? `Last frame of ${label}` : label} className={MEDIA_CLASS} />
+          <img src={stillUrl} alt={isVideo ? `Last frame of ${label}` : label} className={`${MEDIA_CLASS} ${isVideo ? 'opacity-40' : ''}`} />
         </div>
       ))}
       {!showLive && !stillUrl && !ready && media.status !== 'error' && (
@@ -63,9 +63,9 @@ const ShareMediaPreview: React.FC<ShareMediaPreviewProps> = ({ kind, media, post
       )}
 
       {isVideo && media.status !== 'generating' && !ready && poster && (
-        <span className="pointer-events-none absolute inset-x-0 bottom-1 mx-auto flex w-fit items-center rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold shadow-brutal-sm">
-          
-          Final frame preview
+        <span className="pointer-events-none absolute inset-x-0 top-[64%] mx-auto flex w-fit max-w-[90%] -translate-y-1/2 flex-col items-center gap-1 rounded-lg border-[3px] border-ink bg-white px-4 py-3 text-center shadow-brutal">
+          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          <span className="text-sm font-bold leading-tight">Tap “Create video” to record your reel</span>
         </span>
       )}
       {isVideo && media.status === 'generating' && progress && (
