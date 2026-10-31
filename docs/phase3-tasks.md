@@ -46,12 +46,11 @@ T-shirt, 11oz mug, 18×24in poster via Printful + Stripe.
 
 ## Pending (external setup only)
 
-- [ ] **Set Vercel env vars** — confirm in Vercel dashboard → Settings → Environment Variables:
-  - `PRINTFUL_API_KEY`
-  - `STRIPE_SECRET_KEY`
-  - `STRIPE_WEBHOOK_SECRET`
+- [x] **Set Vercel env vars** — Stripe, Printful, Resend keys set (Oct 2026). Full list: docs/accounts-setup.md
+- [x] **Customer emails** — Stripe receipts, Resend order confirmation (webhook → `api/_lib/orderEmail.ts`), Printful shipment notifications
+- [ ] **Live test order** with `PRINTFUL_DRAFT_ONLY=true` → refund in Stripe, delete Printful draft, then remove `PRINTFUL_DRAFT_ONLY`
 
-- [ ] **Register Stripe webhook** — Stripe dashboard → Developers → Webhooks → Add endpoint:
+- [x] **Register Stripe webhook** — Stripe dashboard → Developers → Webhooks → Add endpoint:
   - URL: `https://periodicnames.com/api/stripe/webhook`
   - Event: `checkout.session.completed`
   - Copy signing secret → use as `STRIPE_WEBHOOK_SECRET` above

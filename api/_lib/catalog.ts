@@ -1,11 +1,37 @@
 export const TSHIRT_PRODUCT_ID = 71;
 
-export const TSHIRT_VARIANT_IDS: ReadonlySet<number> = new Set([
-  4011, 4012, 4013, 4014,
-  4016, 4017, 4018, 4019,
-  4111, 4112, 4113, 4114,
-  6948, 6949, 6950, 6951,
-]);
+export interface ShirtVariant {
+  color: string;
+  colorHex: string;
+  size: string;
+}
+
+const SHIRT_COLORS: Record<string, string> = {
+  White: '#FFFFFF',
+  Black: '#1a1a1a',
+  Navy: '#1a2a4a',
+  'Athletic Heather': '#cececc',
+};
+
+const VARIANT_COLORS: [string, number[]][] = [
+  ['White', [4011, 4012, 4013, 4014]],
+  ['Black', [4016, 4017, 4018, 4019]],
+  ['Navy', [4111, 4112, 4113, 4114]],
+  ['Athletic Heather', [6948, 6949, 6950, 6951]],
+];
+
+const SIZES = ['S', 'M', 'L', 'XL'];
+
+const TSHIRT_VARIANTS: ReadonlyMap<number, ShirtVariant> = new Map(
+  VARIANT_COLORS.flatMap(([color, ids]) =>
+    ids.map((id, i): [number, ShirtVariant] => [id, { color, colorHex: SHIRT_COLORS[color], size: SIZES[i] }])),
+);
+
+export const TSHIRT_VARIANT_IDS: ReadonlySet<number> = new Set(TSHIRT_VARIANTS.keys());
+
+export function shirtVariant(variantId: number): ShirtVariant | null {
+  return TSHIRT_VARIANTS.get(variantId) ?? null;
+}
 
 const LIST_PRICE_USD = 29.99;
 

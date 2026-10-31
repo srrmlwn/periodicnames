@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { parsePrintPosition } from '../_lib/printPosition';
 import { alertOwner } from '../_lib/alert';
+import { shirtVariant } from '../_lib/catalog';
+import { sendOrderConfirmation } from '../_lib/orderEmail';
 
 export const config = { api: { bodyParser: false } };
 
@@ -227,6 +229,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     await alertOwner('PAID order could not be placed with Printful (Stripe will retry)', { ...alertDetails, externalId, error: String(err) });
     res.status(500).json({ error: 'Order creation failed' });
     return;
+  }
+
+  if (customerEmail) {
+    const metadata = session.metadata as Record<string, string>;
+    const sent = await sendOrderConfirmation(customerEmail, {
+      name: metadata.name || 'Your name',
+      caption: metadata.caption ?? '',
+      shirt: shirtVariant(Number(metadata.variant_id)),
+      amountCents: session.amount_total,
+      designUrl: metadata.design_url,
+    }, externalId);
+    log(sent ? 'order confirmation email sent' : 'order confirmation email NOT sent', { externalId });
+  } else {
+    log('no customer email — skipping order confirmation');
   }
 
   res.status(200).json({ received: true });

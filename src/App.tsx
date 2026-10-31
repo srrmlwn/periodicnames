@@ -157,7 +157,7 @@ function App() {
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
-          Order placed — you'll get a shipping confirmation soon!
+          Order placed! Check your email for your confirmation.
           <button onClick={() => setOrderSuccess(false)} aria-label="Dismiss" className="nb-focus ml-auto shrink-0 rounded p-0.5 hover:bg-ink/10">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

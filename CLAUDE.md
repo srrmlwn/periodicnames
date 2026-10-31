@@ -179,10 +179,12 @@ src/components/
 
 api/_lib/                 — shared server helpers (underscore dir = not a route)
   printPosition.ts      — parsePrintPosition(): validates {width,height,top,left} inside the 1800×2400 frame; used by mockup, checkout, webhook, draft-order
-  catalog.ts            — TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, chargePriceUsd() — the ONLY source of the charged price ($29.99; VITE_PRICE_OVERRIDE_USD honoured only when VERCEL_ENV !== 'production')
+  catalog.ts            — TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, shirtVariant(id) → {color, colorHex, size}, chargePriceUsd() — the ONLY source of the charged price ($29.99; VITE_PRICE_OVERRIDE_USD honoured only when VERCEL_ENV !== 'production')
   designUrl.ts          — isOwnDesignUrl(): only https *.public.blob.vercel-storage.com/print-designs/* accepted by checkout and mockup
   textFilter.ts         — the content filter itself (lives here so the server can import it as CommonJS; src/utils/textFilter.ts re-exports it for the browser)
-  alert.ts              — alertOwner(): logs + emails the owner via Resend (RESEND_API_KEY, ALERT_EMAIL, optional ALERT_FROM) when a paid order can't be placed
+  email.ts              — sendEmail() via Resend (RESEND_API_KEY); from EMAIL_FROM (default `Periodic Names <hello@periodicnames.com>`, needs the verified Resend domain), reply-to EMAIL_REPLY_TO (default SUPPORT_EMAIL hello.afterhoursapps@gmail.com); optional Idempotency-Key
+  alert.ts              — alertOwner(): logs + emails ALERT_EMAIL via sendEmail() when a paid order can't be placed
+  orderEmail.ts         — sendOrderConfirmation(): branded "headed to the printer" email (design on a shirt-coloured panel, name/caption/shirt/total, next steps, reply for help). Sent by the webhook after the Printful order is created; Idempotency-Key order-confirmation/<payment intent> so Stripe retries don't resend. Tested in orderEmail.test.ts
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG → Vercel Blob, returns { url }
   mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling
@@ -292,11 +294,8 @@ Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setu
 - Webhook hardening: Printful `external_id` = Stripe payment intent, looked up first (`GET /orders/@{id}`) so Stripe retries never duplicate an order — an existing draft is just confirmed. Any paid order that can't be placed (Printful error, missing metadata or shipping) calls alertOwner()
 - Success: `?order=success` param shows dismissable banner in App.tsx (centred via a flex wrapper — the `sticker-in` animation's transform would override a translate-based centre)
 - Testing without paying: Preview deployment + Stripe test keys + `PRINTFUL_DRAFT_ONLY=true` (webhook skips the Printful confirm). See docs/phase3-tasks.md → "Testing checkout without paying".
-- **Pending external setup only** (no code changes needed):
-  - Set `PRINTFUL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Vercel env vars
-  - Set `RESEND_API_KEY` + `ALERT_EMAIL` (Production) so failed paid orders email the owner
-  - Remove `VITE_PRICE_OVERRIDE_USD` from Production (it is ignored there now, but should not exist)
-  - Register `checkout.session.completed` webhook in Stripe dashboard → `https://periodicnames.com/api/stripe/webhook`
+- Customer emails: Stripe receipt (payment + refund receipts on in Stripe → Settings → Business → Customer emails), our Resend order confirmation (webhook), Printful shipment email with tracking (Printful store notifications). Accounts and env vars: docs/accounts-setup.md
+- **Remaining before launch:** live test order (PRINTFUL_DRAFT_ONLY=true) → refund + delete draft → remove PRINTFUL_DRAFT_ONLY → keep VITE_TEES_ENABLED=true to launch tees
 
 See `docs/phase1-tasks.md` for Phase 1–2 task checklist.
 See `docs/phase3-tasks.md` for full Phase 3 breakdown and pending setup steps.
