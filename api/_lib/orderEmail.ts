@@ -7,6 +7,7 @@ export interface OrderDetails {
   shirt: ShirtVariant | null;
   amountCents: number | null;
   designUrl: string;
+  previewUrl: string | null;
 }
 
 const INK = '#111111';
@@ -70,6 +71,15 @@ function detailRow(label: string, value: string): string {
   </tr>`;
 }
 
+function productImage(order: OrderDetails, panel: string): string {
+  if (order.previewUrl) {
+    return `<img src="${escapeHtml(order.previewUrl)}" alt="Your ${escapeHtml(order.name)} t-shirt" width="472" style="display:block;width:100%;max-width:472px;height:auto;border:3px solid ${INK};border-radius:10px;">`;
+  }
+  return `<div style="background:${panel};border:3px solid ${INK};border-radius:10px;padding:20px;text-align:center;">
+            <img src="${escapeHtml(order.designUrl)}" alt="Your ${escapeHtml(order.name)} design" width="280" style="display:inline-block;max-width:100%;height:auto;border:0;">
+          </div>`;
+}
+
 export function renderOrderHtml(order: OrderDetails): string {
   const shirt = shirtLabel(order.shirt);
   const amount = formatAmount(order.amountCents);
@@ -101,9 +111,7 @@ export function renderOrderHtml(order: OrderDetails): string {
           <p style="margin:0;font-size:15px;line-height:1.5;color:${INK};">We've sent your <strong>${escapeHtml(order.name)}</strong> design to the printer.</p>
         </td></tr>
         <tr><td style="padding:16px 24px;">
-          <div style="background:${panel};border:3px solid ${INK};border-radius:10px;padding:20px;text-align:center;">
-            <img src="${escapeHtml(order.designUrl)}" alt="Your ${escapeHtml(order.name)} design" width="280" style="display:inline-block;max-width:100%;height:auto;border:0;">
-          </div>
+          ${productImage(order, panel)}
         </td></tr>
         <tr><td style="padding:0 24px 8px;">
           <table role="presentation" cellspacing="0" cellpadding="0" width="100%">${rows}</table>

@@ -9,6 +9,7 @@ const order: OrderDetails = {
   shirt: shirtVariant(4017),
   amountCents: 2999,
   designUrl: 'https://abc.public.blob.vercel-storage.com/print-designs/x.png',
+  previewUrl: null,
 };
 
 describe('order confirmation email', () => {
@@ -25,6 +26,14 @@ describe('order confirmation email', () => {
     }
     expect(html).toContain(order.designUrl);
     expect(html).toContain('background:#1a1a1a');
+  });
+
+  it('shows the shirt picture instead of the design panel when there is one', () => {
+    const previewUrl = 'https://abc.public.blob.vercel-storage.com/print-designs/shirt.png';
+    const html = renderOrderHtml({ ...order, previewUrl });
+    expect(html).toContain(previewUrl);
+    expect(html).not.toContain(order.designUrl);
+    expect(html).toContain('t-shirt');
   });
 
   it('omits the caption row when there is no caption', () => {

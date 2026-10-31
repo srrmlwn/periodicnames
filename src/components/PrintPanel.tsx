@@ -3,6 +3,7 @@ import type { NameResult } from '../types';
 import { PRINT_PRODUCTS, SHIRT_COLORS, findShirtVariant } from '../data/printProducts';
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { generatePrintFile } from '../utils/PrintDesignGenerator';
+import { renderShirtImage } from '../utils/shirtDrawing';
 import { isOffensiveCaption, isOffensiveName } from '../utils/textFilter';
 import type { CaptionPosition, Placement, PrintPosition } from '../utils/printLayout';
 import Modal from './Modal';
@@ -75,6 +76,17 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     return uploaded;
   };
 
+  const uploadShirtImage = async (): Promise<string | undefined> => {
+    try {
+      const blob = await renderShirtImage({ result, color, placement, caption, captionPosition });
+      const { url } = await postJson<{ url: string }>('/api/print/upload', { dataUrl: await blobToDataUrl(blob) });
+      return url;
+    } catch (err) {
+      console.error('[print] shirt preview upload failed — checkout continues without it', err);
+      return undefined;
+    }
+  };
+
   const nameBlocked = isOffensiveName(result.originalName);
   const captionBlocked = isOffensiveCaption(caption);
   const textBlocked = nameBlocked || captionBlocked;
@@ -106,7 +118,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
     setError(null);
     setBuyStatus('preparing');
     try {
-      const design = await uploadDesign();
+      const [design, previewUrl] = await Promise.all([uploadDesign(), uploadShirtImage()]);
       setBuyStatus('redirecting');
       const { checkoutUrl } = await postJson<{ checkoutUrl: string }>('/api/stripe/checkout', {
         productName: PRODUCT.name,
@@ -117,6 +129,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
         name: result.originalName,
         caption: caption.trim(),
         mockupUrl: photo?.status === 'ready' ? photo.url : undefined,
+        previewUrl,
       });
       window.location.href = checkoutUrl;
     } catch (err) {

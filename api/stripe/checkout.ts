@@ -23,12 +23,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     has_price_override: !!process.env.VITE_PRICE_OVERRIDE_USD,
   });
 
-  const { productName, variantId, productId, designUrl, mockupUrl, position: rawPosition, name, caption } = req.body as {
+  const { productName, variantId, productId, designUrl, mockupUrl, previewUrl: rawPreviewUrl, position: rawPosition, name, caption } = req.body as {
     productName?: string;
     variantId?: number;
     productId?: number;
     designUrl?: unknown;
     mockupUrl?: unknown;
+    previewUrl?: unknown;
     position?: unknown;
     name?: unknown;
     caption?: unknown;
@@ -59,7 +60,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   const effectivePrice = chargePriceUsd();
-  const productImage = typeof mockupUrl === 'string' && mockupUrl.startsWith('https://') ? mockupUrl : undefined;
+  const previewUrl = isOwnDesignUrl(rawPreviewUrl) ? rawPreviewUrl : undefined;
+  if (rawPreviewUrl !== undefined && !previewUrl) log('ignored previewUrl that is not one of our uploads', rawPreviewUrl);
+  const productImage = typeof mockupUrl === 'string' && mockupUrl.startsWith('https://') ? mockupUrl : previewUrl;
 
   log('request', { productName, variantId, productId, effectivePrice, vercelEnv: process.env.VERCEL_ENV ?? 'unset' });
 
@@ -92,6 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         name: nameText,
         caption: captionText,
         print_position: serializePrintPosition(position),
+        ...(previewUrl ? { preview_url: previewUrl } : {}),
       },
       success_url: `${origin}/?order=success`,
       cancel_url: `${origin}/`,
@@ -113,6 +117,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     variantId,
     shirt: shirtVariant(variantId as number),
     designUrl,
+    previewUrl: previewUrl ?? null,
+    productImage: productImage ?? null,
     position,
   });
   res.status(200).json({ checkoutUrl: session.url });

@@ -242,7 +242,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const metadata = session.metadata as Record<string, string>;
   const shirt = shirtVariant(Number(metadata.variant_id));
-  log('order summary', { name: metadata.name, caption: metadata.caption, variantId: metadata.variant_id, shirt, amountCents: session.amount_total });
+  log('order summary', { name: metadata.name, caption: metadata.caption, variantId: metadata.variant_id, shirt, amountCents: session.amount_total, previewUrl: metadata.preview_url ?? null });
 
   let placed: PlacedOrder;
   try {
@@ -265,6 +265,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       shirt,
       amountCents: session.amount_total,
       designUrl: metadata.design_url,
+      previewUrl: metadata.preview_url || null,
     }, externalId);
     log(emailSent ? 'order confirmation email sent' : 'order confirmation email NOT sent (see [email] lines)', { externalId });
   } else {
