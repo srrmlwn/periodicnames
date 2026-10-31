@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { parsePrintPosition, serializePrintPosition } from '../_lib/printPosition';
-import { TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, chargePriceUsd } from '../_lib/catalog';
+import { TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS, chargePriceUsd, shirtVariant } from '../_lib/catalog';
 import { isOwnDesignUrl } from '../_lib/designUrl';
 import { isOffensiveCaption, isOffensiveName } from '../_lib/textFilter';
 
@@ -97,11 +97,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       cancel_url: `${origin}/`,
     });
   } catch (err) {
-    log('stripe session creation failed', String(err));
+    const stripeErr = err as { type?: string; code?: string; message?: string; statusCode?: number };
+    log('stripe session creation failed', { type: stripeErr.type, code: stripeErr.code, statusCode: stripeErr.statusCode, message: stripeErr.message ?? String(err) });
     res.status(500).json({ error: 'Failed to create checkout session' });
     return;
   }
 
-  log('session created', { id: session.id, url: session.url });
+  log('session created', {
+    id: session.id,
+    url: session.url,
+    amountCents: session.amount_total,
+    livemode: session.livemode,
+    name: nameText,
+    caption: captionText,
+    variantId,
+    shirt: shirtVariant(variantId as number),
+    designUrl,
+    position,
+  });
   res.status(200).json({ checkoutUrl: session.url });
 }

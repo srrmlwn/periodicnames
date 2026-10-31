@@ -37,17 +37,28 @@ interface ExistingOrder {
 
 async function findOrderByExternalId(externalId: string): Promise<ExistingOrder | null> {
   const res = await fetch(`${PRINTFUL_BASE}/orders/@${encodeURIComponent(externalId)}`, { headers: printfulHeaders() });
-  if (res.status === 404) return null;
+  if (res.status === 404) {
+    log('GET /orders/@external_id ← 404 (none yet)', { externalId });
+    return null;
+  }
   const raw = await res.text();
+  log('GET /orders/@external_id ←', { status: res.status, body: raw.slice(0, 500) });
   if (!res.ok) throw new Error(`Printful order lookup failed (${res.status}): ${raw}`);
   const { result } = JSON.parse(raw) as { result: ExistingOrder };
   return { id: result.id, status: result.status };
 }
 
-async function confirmOrder(orderId: number): Promise<void> {
+type PrintfulOutcome = 'created+confirmed' | 'created+draft' | 'existing+confirmed' | 'existing+draft' | 'existing+already-confirmed';
+
+interface PlacedOrder {
+  orderId: number;
+  outcome: PrintfulOutcome;
+}
+
+async function confirmOrder(orderId: number): Promise<boolean> {
   if (process.env.PRINTFUL_DRAFT_ONLY === 'true') {
     log('PRINTFUL_DRAFT_ONLY=true — leaving order as an unconfirmed draft (not charged, not printed)', { orderId });
-    return;
+    return false;
   }
   log('confirming order', { orderId });
   const confirmRes = await fetch(`${PRINTFUL_BASE}/orders/${orderId}/confirm`, {
@@ -57,6 +68,8 @@ async function confirmOrder(orderId: number): Promise<void> {
   const confirmRaw = await confirmRes.text();
   log('POST /orders/confirm ←', { status: confirmRes.status, body: confirmRaw });
   if (!confirmRes.ok) throw new Error(`Printful order confirmation failed: ${confirmRaw}`);
+  log('order confirmed — Printful will charge the billing card and print it', { orderId });
+  return true;
 }
 
 async function createPrintfulOrder(
@@ -64,13 +77,16 @@ async function createPrintfulOrder(
   shipping: Stripe.Checkout.Session.CollectedInformation.ShippingDetails,
   customerEmail: string | null,
   externalId: string,
-): Promise<void> {
+): Promise<PlacedOrder> {
+  log('looking up existing Printful order', { externalId });
   const existing = await findOrderByExternalId(externalId);
   if (existing) {
-    log('order already exists for this payment', { externalId, ...existing });
-    if (existing.status === 'draft') await confirmOrder(existing.id);
-    return;
+    log('order already exists for this payment (Stripe retry or resend)', { externalId, ...existing });
+    if (existing.status !== 'draft') return { orderId: existing.id, outcome: 'existing+already-confirmed' };
+    const confirmed = await confirmOrder(existing.id);
+    return { orderId: existing.id, outcome: confirmed ? 'existing+confirmed' : 'existing+draft' };
   }
+  log('no existing order — creating one', { externalId });
 
   const { variant_id, design_url, print_position } = metadata;
   const position = parsePrintPosition(print_position);
@@ -117,11 +133,13 @@ async function createPrintfulOrder(
 
   const orderId = (JSON.parse(raw) as { result: { id: number } }).result.id;
   log('order created as draft', { orderId, externalId });
-  await confirmOrder(orderId);
+  const confirmed = await confirmOrder(orderId);
+  return { orderId, outcome: confirmed ? 'created+confirmed' : 'created+draft' };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
-  log('request received', { method: req.method });
+  const startedAt = Date.now();
+  log('request received', { method: req.method, vercelEnv: process.env.VERCEL_ENV ?? 'unset' });
 
   if (req.method !== 'POST') {
     log('rejected: wrong method', req.method);
@@ -139,6 +157,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     has_printful_key: !!process.env.PRINTFUL_API_KEY,
     has_store_id: !!process.env.PRINTFUL_STORE_ID,
     store_id: process.env.PRINTFUL_STORE_ID,
+    has_resend_key: !!process.env.RESEND_API_KEY,
+    has_alert_email: !!process.env.ALERT_EMAIL,
+    draft_only: process.env.PRINTFUL_DRAFT_ONLY === 'true',
     has_sig_header: !!sig,
   });
 
@@ -153,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  log('event', { type: event.type, id: event.id });
+  log('event', { type: event.type, id: event.id, livemode: event.livemode, created: new Date(event.created * 1000).toISOString() });
 
   if (event.type !== 'checkout.session.completed') {
     log('skipping unhandled event type', event.type);
@@ -170,6 +191,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('session state', {
     id: session.id,
+    payment_intent: session.payment_intent,
+    amount_total: session.amount_total,
+    currency: session.currency,
     payment_status: session.payment_status,
     status: session.status,
     has_metadata: !!session.metadata,
@@ -216,34 +240,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   log('session metadata', session.metadata);
   log('proceeding to create Printful order for session', session.id);
 
+  const metadata = session.metadata as Record<string, string>;
+  const shirt = shirtVariant(Number(metadata.variant_id));
+  log('order summary', { name: metadata.name, caption: metadata.caption, variantId: metadata.variant_id, shirt, amountCents: session.amount_total });
+
+  let placed: PlacedOrder;
   try {
-    await createPrintfulOrder(
-      session.metadata as Record<string, string>,
-      shippingDetails,
-      customerEmail,
-      externalId,
-    );
-    log('order created successfully for session', session.id);
+    placed = await createPrintfulOrder(metadata, shippingDetails, customerEmail, externalId);
+    log('Printful step done', { session: session.id, externalId, ...placed });
   } catch (err) {
     log('order creation failed', String(err));
     await alertOwner('PAID order could not be placed with Printful (Stripe will retry)', { ...alertDetails, externalId, error: String(err) });
+    log('DONE — FAILED, returning 500 so Stripe retries', { session: session.id, externalId, ms: Date.now() - startedAt });
     res.status(500).json({ error: 'Order creation failed' });
     return;
   }
 
+  let emailSent = false;
   if (customerEmail) {
-    const metadata = session.metadata as Record<string, string>;
-    const sent = await sendOrderConfirmation(customerEmail, {
+    log('sending order confirmation email', { to: customerEmail, externalId });
+    emailSent = await sendOrderConfirmation(customerEmail, {
       name: metadata.name || 'Your name',
       caption: metadata.caption ?? '',
-      shirt: shirtVariant(Number(metadata.variant_id)),
+      shirt,
       amountCents: session.amount_total,
       designUrl: metadata.design_url,
     }, externalId);
-    log(sent ? 'order confirmation email sent' : 'order confirmation email NOT sent', { externalId });
+    log(emailSent ? 'order confirmation email sent' : 'order confirmation email NOT sent (see [email] lines)', { externalId });
   } else {
     log('no customer email — skipping order confirmation');
   }
 
+  log('DONE', {
+    session: session.id,
+    externalId,
+    printfulOrderId: placed.orderId,
+    printful: placed.outcome,
+    emailSent,
+    ms: Date.now() - startedAt,
+  });
   res.status(200).json({ received: true });
 }

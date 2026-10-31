@@ -10,9 +10,10 @@ export async function alertOwner(subject: string, details: Record<string, unknow
     return;
   }
 
-  await sendEmail({
+  const sent = await sendEmail({
     to,
     subject: `[periodicnames] ${subject}`,
     text: `${subject}\n\n${body}\n\nStripe: https://dashboard.stripe.com/payments\nPrintful: https://www.printful.com/dashboard/default/orders`,
   });
+  console.error(`[ALERT] owner email ${sent ? 'sent' : 'NOT sent'}`, JSON.stringify({ to }));
 }

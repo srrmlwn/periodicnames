@@ -94,7 +94,8 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
       });
       const url = mockups[0]?.mockupUrl;
       setModelPhoto(url ? { key, status: 'ready', url } : { key, status: 'error' });
-    } catch {
+    } catch (err) {
+      console.error('[print] model photo failed', err);
       setModelPhoto({ key, status: 'error' });
     }
   };
@@ -119,6 +120,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
       });
       window.location.href = checkoutUrl;
     } catch (err) {
+      console.error('[print] checkout failed', err);
       if (err instanceof Error && err.message.includes('(422)')) {
         setBuyStatus('idle');
         setError("We can't print that text. Please change it and try again.");

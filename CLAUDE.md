@@ -295,6 +295,7 @@ Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setu
 - Success: `?order=success` param shows dismissable banner in App.tsx (centred via a flex wrapper — the `sticker-in` animation's transform would override a translate-based centre)
 - Testing without paying: Preview deployment + Stripe test keys + `PRINTFUL_DRAFT_ONLY=true` (webhook skips the Printful confirm). See docs/phase3-tasks.md → "Testing checkout without paying".
 - Customer emails: Stripe receipt (payment + refund receipts on in Stripe → Settings → Business → Customer emails), our Resend order confirmation (webhook), Printful shipment email with tracking (Printful store notifications). Accounts and env vars: docs/accounts-setup.md
+- Order logs (Vercel runtime logs): `[checkout] session created` (name, shirt, amount, design) → `[webhook]` step lines → `[webhook] DONE {session, externalId, printfulOrderId, printful: created+confirmed|created+draft|existing+…, emailSent, ms}` (or `DONE — FAILED` + `[ALERT]`) → `[email] sending/sent` with Resend's id. Browser errors log as `[print] …`
 - **Remaining before launch:** live test order (PRINTFUL_DRAFT_ONLY=true) → refund + delete draft → remove PRINTFUL_DRAFT_ONLY → keep VITE_TEES_ENABLED=true to launch tees
 
 See `docs/phase1-tasks.md` for Phase 1–2 task checklist.
