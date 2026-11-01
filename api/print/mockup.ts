@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { parsePrintPosition } from '../_lib/printPosition';
 import { isOwnDesignUrl } from '../_lib/designUrl';
+import { TSHIRT_PRODUCT_ID, TSHIRT_VARIANT_IDS } from '../_lib/catalog';
 
 const PRINTFUL_BASE = 'https://api.printful.com';
 
@@ -44,19 +45,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   log('env check', { has_printful_key: !!process.env.PRINTFUL_API_KEY, has_store_id: !!process.env.PRINTFUL_STORE_ID, store_id: process.env.PRINTFUL_STORE_ID });
 
-  const { productId, variantIds, designUrl, placement = 'front', position: rawPosition } = req.body as {
+  const { productId, variantIds, designUrl, position: rawPosition } = req.body as {
     productId?: unknown;
     variantIds?: unknown;
     designUrl?: unknown;
-    placement?: string;
     position?: unknown;
   };
+  const placement = 'front';
 
   log('request', { productId, variantIds, designUrl, placement });
 
-  if (!productId || !variantIds || !designUrl) {
-    log('rejected: missing required fields', { productId: !!productId, variantIds: !!variantIds, designUrl: !!designUrl });
-    res.status(400).json({ error: 'Missing required fields' });
+  const validVariants = Array.isArray(variantIds)
+    && variantIds.length >= 1
+    && variantIds.length <= 4
+    && variantIds.every(id => typeof id === 'number' && TSHIRT_VARIANT_IDS.has(id));
+  if (productId !== TSHIRT_PRODUCT_ID || !validVariants) {
+    log('rejected: product or variants not in catalog', { productId, variantIds });
+    res.status(400).json({ error: 'Invalid product' });
     return;
   }
 
@@ -96,14 +101,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     createRaw = await createRes.text();
   } catch (err) {
     log('create-task network error', String(err));
-    res.status(502).json({ error: 'Mockup task creation failed', detail: String(err) });
+    res.status(502).json({ error: 'Mockup task creation failed' });
     return;
   }
 
   log('create-task ←', { status: createRes.status, body: createRaw });
 
   if (!createRes.ok) {
-    res.status(502).json({ error: 'Mockup task creation failed', detail: createRaw });
+    res.status(502).json({ error: 'Mockup task creation failed' });
     return;
   }
 
@@ -112,14 +117,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     createData = JSON.parse(createRaw) as PrintfulResponse<{ task_key: string }>;
   } catch {
     log('create-task response parse error', createRaw);
-    res.status(502).json({ error: 'Mockup task response unparseable', detail: createRaw });
+    res.status(502).json({ error: 'Mockup task response unparseable' });
     return;
   }
 
   const taskKey = createData.result?.task_key;
   if (!taskKey) {
     log('no task_key in response', createRaw);
-    res.status(502).json({ error: 'No task key returned from Printful', detail: createRaw });
+    res.status(502).json({ error: 'No task key returned from Printful' });
     return;
   }
 
@@ -138,14 +143,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       pollRaw = await pollRes.text();
     } catch (err) {
       log(`poll attempt ${attempt + 1} network error`, String(err));
-      res.status(502).json({ error: 'Mockup poll failed', detail: String(err) });
+      res.status(502).json({ error: 'Mockup poll failed' });
       return;
     }
 
     log(`poll attempt ${attempt + 1} ←`, { status: pollRes.status, body: pollRaw });
 
     if (!pollRes.ok) {
-      res.status(502).json({ error: 'Mockup poll failed', detail: pollRaw });
+      res.status(502).json({ error: 'Mockup poll failed' });
       return;
     }
 
@@ -154,7 +159,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       pollData = JSON.parse(pollRaw) as PrintfulResponse<PrintfulTaskResult>;
     } catch {
       log(`poll attempt ${attempt + 1} parse error`, pollRaw);
-      res.status(502).json({ error: 'Mockup poll response unparseable', detail: pollRaw });
+      res.status(502).json({ error: 'Mockup poll response unparseable' });
       return;
     }
 
@@ -171,7 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     if (status === 'failed') {
       log('task failed', pollRaw);
-      res.status(502).json({ error: 'Mockup generation failed', detail: pollRaw });
+      res.status(502).json({ error: 'Mockup generation failed' });
       return;
     }
   }

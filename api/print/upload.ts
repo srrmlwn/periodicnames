@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
 
-const MAX_BYTES = 50 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 function log(label: string, data?: unknown) {
   console.log(`[upload] ${label}`, data !== undefined ? JSON.stringify(data) : '');
@@ -30,6 +31,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const buffer = Buffer.from(base64, 'base64');
 
   log('buffer size (bytes)', buffer.byteLength);
+
+  if (buffer.byteLength < PNG_SIGNATURE.length || !buffer.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
+    log('rejected: not a PNG file', { bytes: buffer.byteLength });
+    res.status(400).json({ error: 'Invalid file type' });
+    return;
+  }
 
   if (buffer.byteLength > MAX_BYTES) {
     log('rejected: file too large', { bytes: buffer.byteLength, maxBytes: MAX_BYTES });

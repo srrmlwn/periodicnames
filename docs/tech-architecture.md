@@ -201,7 +201,7 @@ Requires a minimal backend to keep the Printful API key secure. Full task breakd
 **Backend**: Vercel Functions (`/api/print/*`)
 - `POST /api/print/upload` — receives PNG blob, stores in Vercel Blob (public), returns URL
 - `POST /api/print/mockup` — calls Printful mockup task API, polls for result, returns mockup image URL
-- `POST /api/print/order` — creates Printful draft order, returns hosted checkout URL
+- `POST /api/stripe/checkout` — creates the Stripe Checkout session (the Printful order is placed by the Stripe webhook after payment)
 - `PRINTFUL_API_KEY` stored in Vercel environment variables; no PII touches the backend
 
 **Design generation** (`src/utils/PrintDesignGenerator.ts`):
@@ -224,7 +224,7 @@ src/components/PrintPanel.tsx      — product picker modal (full-screen overlay
 src/components/ProductMockup.tsx   — mockup preview + order CTA
 api/print/upload.ts                — Vercel Function: blob upload
 api/print/mockup.ts                — Vercel Function: Printful mockup task
-api/print/order.ts                 — Vercel Function: Printful draft order
+api/stripe/webhook.ts              — Vercel Function: places the Printful order after payment
 ```
 
 ---
