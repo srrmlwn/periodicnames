@@ -34,9 +34,9 @@ function shirtLabel(shirt: ShirtVariant | null): string | null {
 }
 
 const NEXT_STEPS = [
-  'We print and pack your tee, usually within 2–5 business days.',
-  'Printful, our print partner, emails you a tracking link when it ships.',
-  'US delivery usually takes 3–7 business days after that.',
+  'We print and pack your tee, usually within 2–5 business days. No news in between just means it\'s being made.',
+  'Once it ships, you\'ll get an email from Printful, our print partner, with a tracking link.',
+  'US delivery usually takes 3–7 business days after that. You can follow it on the tracking page.',
 ];
 
 export function orderEmailSubject(order: OrderDetails): string {
