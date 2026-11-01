@@ -208,8 +208,8 @@ function App() {
         </div>
         <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
           <p className="max-w-xl mx-auto">
-            Type any name and we spell it with chemical element symbols, using real elements wherever they fit
-            and newly discovered ones for the rest.
+            A free periodic table name generator: type any name to see your name in the periodic table, spelled
+            with chemical element symbols, using real elements wherever they fit and newly discovered ones for the rest.
           </p>
           <p>
             {TEES_ENABLED ? 'Turn your name into a custom t-shirt' : 'Share it as a reel, story or post'}
