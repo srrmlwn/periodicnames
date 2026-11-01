@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import PeriodicTable from './PeriodicTable';
+import { LEGAL_UPDATED, SUPPORT_EMAIL } from '../data/contact';
 
 const PrivacyPage: React.FC = () => (
   <div className="min-h-screen">
@@ -23,42 +24,65 @@ const PrivacyPage: React.FC = () => (
 
         <div className="nb-card px-6 py-7 sm:px-8 sm:py-8">
           <h1 className="text-3xl font-bold text-ink mb-1">Privacy Policy</h1>
-          <p className="text-xs font-bold text-muted mb-8">Last updated May 3, 2026</p>
+          <p className="text-xs font-bold text-muted mb-8">Last updated {LEGAL_UPDATED}</p>
 
-          <Section title="What we collect">
-            <p>When you place an order, we collect your name, email address, and shipping address. This information is required to fulfill and ship your order.</p>
-            <p>The name you type into the app is processed entirely in your browser and is never sent to our servers.</p>
+          <Section title="Who we are">
+            <p>Periodic Names (periodicnames.com) is run by After Hours Apps. This policy explains what we collect and why.</p>
+          </Section>
+
+          <Section title="Spelling a name">
+            <p>Spelling a name with the periodic table happens entirely in your browser. Share images and videos are also made in your browser and are only sent wherever you choose to share them.</p>
+            <p>A link to a name (for example periodicnames.com/ada) contains that name, so it reaches our hosting provider like any web address you visit.</p>
+            <p>We don't use analytics, advertising or tracking cookies. The site's font is loaded from Google Fonts, which receives your IP address when the page loads.</p>
+          </Section>
+
+          <Section title="What we collect when you order">
+            <ul>
+              <li><strong>Your design:</strong> the name and caption you entered, and your colour, size and placement choices.</li>
+              <li><strong>Your contact and shipping details:</strong> your name, email address and US shipping address, entered on Stripe's checkout page.</li>
+              <li><strong>Payment:</strong> handled entirely by Stripe. We never see or store your card details.</li>
+            </ul>
+            <p>To print your shirt we store an image of your design and a picture of your shirt at hard-to-guess web addresses that aren't listed anywhere. These are also created when you tap "See it on a model" (the design is sent to Printful to make the photo) or start checkout, even if you don't finish your order.</p>
           </Section>
 
           <Section title="How we use it">
-            <p>Your contact and shipping information is used solely to fulfill your print-on-demand order and to send you a shipping confirmation.</p>
-            <p>We do not use your information for marketing, and we do not sell or rent it to third parties.</p>
+            <p>We use your information only to make, ship and support your order: to send it to the printer, to email you an order confirmation, to let Printful email you shipping updates, and to answer you if you contact us.</p>
+            <p>We do not use your information for marketing, and we do not sell or rent it to anyone.</p>
           </Section>
 
           <Section title="Who we share it with">
-            <p>We share your order details with the following services, which are necessary to complete your purchase:</p>
+            <p>We share order details only with the services needed to complete your purchase:</p>
             <ul>
-              <li><strong>Stripe</strong> — processes your payment. Your card details go directly to Stripe and are never seen or stored by us. Stripe's privacy policy is at stripe.com/privacy.</li>
-              <li><strong>Printful</strong> — prints and ships your order. Printful receives your name, email, and shipping address. Printful's privacy policy is at printful.com/policies/privacy.</li>
+              <li><strong>Stripe</strong> processes your payment and sends your receipt. See stripe.com/privacy.</li>
+              <li><strong>Printful</strong> prints and ships your order and receives your design, name, email and shipping address. See printful.com/policies/privacy.</li>
+              <li><strong>Resend</strong> delivers our order confirmation email. See resend.com/legal/privacy-policy.</li>
+              <li><strong>Vercel</strong> hosts the site, stores your design images, and keeps short-lived service logs that can include order details. See vercel.com/legal/privacy-policy.</li>
+              <li><strong>Google</strong> hosts our support inbox (Gmail), so emails you send us are stored there.</li>
             </ul>
-            <p>No other third parties receive your personal information.</p>
           </Section>
 
-          <Section title="Payment security">
-            <p>All payment processing is handled by Stripe, a PCI-DSS Level 1 certified provider. We never store your payment card details.</p>
-            <p>All data in transit is encrypted via HTTPS/TLS.</p>
+          <Section title="Security">
+            <p>All data in transit is encrypted via HTTPS/TLS. Payment processing is handled by Stripe, a PCI-DSS Level 1 certified provider.</p>
           </Section>
 
           <Section title="Data retention">
-            <p>Order records are retained for as long as necessary to fulfil the order and comply with accounting obligations. You may contact us to request deletion of your personal data once your order is complete.</p>
+            <p>We keep order records for as long as needed to fulfil and support your order and to meet tax and accounting obligations. Service logs are deleted automatically within days. You can ask us to delete your personal data once your order is complete, except where we must keep it by law.</p>
+          </Section>
+
+          <Section title="Children">
+            <p>Ordering is for adults 18 and over. Many people make shirts with their children's names; we use those names only to print the order.</p>
           </Section>
 
           <Section title="Your rights">
-            <p>You may request access to, correction of, or deletion of any personal data we hold about you. To make a request, email us at the address below.</p>
+            <p>You may request access to, correction of, or deletion of the personal data we hold about you. Email us at the address below and we'll respond within 30 days.</p>
+          </Section>
+
+          <Section title="Changes">
+            <p>If we change this policy, for example by adding analytics, we will update this page and the date above.</p>
           </Section>
 
           <Section title="Contact">
-            <p>Questions about this policy? Email <a href="mailto:periodicnames.com@gmail.com" className="text-ink font-bold underline decoration-2 underline-offset-2">periodicnames.com@gmail.com</a>.</p>
+            <p>Questions about this policy? Email <a href={`mailto:${SUPPORT_EMAIL}`} className="text-ink font-bold underline decoration-2 underline-offset-2">{SUPPORT_EMAIL}</a>.</p>
           </Section>
         </div>
       </main>

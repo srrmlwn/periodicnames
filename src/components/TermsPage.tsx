@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import PeriodicTable from './PeriodicTable';
+import { LEGAL_UPDATED, SUPPORT_EMAIL } from '../data/contact';
 
 const TermsPage: React.FC = () => (
   <div className="min-h-screen">
@@ -23,47 +24,63 @@ const TermsPage: React.FC = () => (
 
         <div className="nb-card px-6 py-7 sm:px-8 sm:py-8">
           <h1 className="text-3xl font-bold text-ink mb-1">Terms of Service</h1>
-          <p className="text-xs font-bold text-muted mb-8">Last updated May 3, 2026</p>
+          <p className="text-xs font-bold text-muted mb-8">Last updated {LEGAL_UPDATED}</p>
+
+          <Section title="Who we are">
+            <p>Periodic Names (periodicnames.com) is run by After Hours Apps. "We" and "us" in these terms means After Hours Apps.</p>
+          </Section>
 
           <Section title="What you're buying">
-            <p>Periodic Names sells custom print-on-demand t-shirts featuring your name spelled out with periodic table element tiles. Each item is printed to order by Printful and shipped directly to you.</p>
+            <p>Periodic Names sells custom print-on-demand t-shirts with your name spelled out in periodic table element tiles. Each shirt is printed to order by our print partner, Printful, and shipped directly to you.</p>
+            <p>Where a name can't be spelled with real elements, we fill the gaps with made-up "newly discovered" elements marked NEW. These are part of the fun, not real chemistry.</p>
             <p>By placing an order you confirm you are at least 18 years old and are authorised to use the payment method provided.</p>
           </Section>
 
-          <Section title="Pricing and payment">
-            <p>All prices are in US dollars and include the cost of printing. Shipping costs and any applicable taxes are calculated at checkout.</p>
-            <p>Payments are processed securely by Stripe. We never store your card details.</p>
+          <Section title="Your design">
+            <p>You choose the name, caption, colour, size and placement. Please check them carefully before you pay: we print exactly what you see in the preview, including any spelling mistakes.</p>
+            <p>You must have the right to use any text you add. We may refuse or cancel, with a full refund, any order whose text we consider offensive or infringing.</p>
+            <p>Colours on screen and in previews are approximate; printed colours can vary slightly.</p>
           </Section>
 
-          <Section title="Refunds and returns">
-            <p>Because every item is made to order and personalised, <strong>all sales are final</strong>. We do not accept returns or offer refunds except in the following cases:</p>
-            <ul>
-              <li>The item arrives damaged or defective.</li>
-              <li>The wrong item or size was shipped.</li>
-            </ul>
-            <p>If your order has a problem, email us within 14 days of delivery with a photo and we will arrange a replacement or refund at no cost to you.</p>
+          <Section title="Pricing and payment">
+            <p>All prices are in US dollars. The price shown at checkout is the total you pay and includes standard shipping within the United States.</p>
+            <p>Payments are processed securely by Stripe. We never see or store your card details.</p>
           </Section>
 
           <Section title="Shipping and delivery">
-            <p>Orders are fulfilled and shipped by Printful. Production typically takes 2–5 business days, followed by shipping time depending on your location and the shipping method selected at checkout.</p>
-            <p>Delivery estimates are not guarantees. We are not liable for delays caused by carriers, customs, or events outside our control.</p>
+            <p>We currently ship to US addresses only. Your order goes to print as soon as payment is confirmed. Production usually takes 2–5 business days, and US delivery usually takes a further 3–7 business days. Printful emails you a tracking link when your order ships.</p>
+            <p>Delivery estimates are not guarantees. We are not liable for delays caused by carriers or events outside our control.</p>
+          </Section>
+
+          <Section title="Cancellations">
+            <p>Because printing starts quickly, we can only cancel an order that hasn't entered production. If you need to cancel or change an order, reply to your confirmation email straight away and we'll do our best.</p>
+          </Section>
+
+          <Section title="Refunds and returns">
+            <p>Because every item is made to order and personalised, <strong>all sales are final</strong>. We do not accept returns or offer refunds for a change of mind or a wrong size chosen, except in the following cases:</p>
+            <ul>
+              <li>The item arrives damaged, defective or misprinted.</li>
+              <li>The item doesn't match the design and options you ordered.</li>
+              <li>The order never arrives.</li>
+            </ul>
+            <p>If your order has a problem, email us within 14 days of delivery (or of the expected delivery date, for a lost order) with your order details and a photo, and we will arrange a replacement or refund at no cost to you.</p>
           </Section>
 
           <Section title="Intellectual property">
-            <p>The Periodic Names app, element tile designs, and any generated artwork are owned by Periodic Names. By placing an order you receive a personal, non-commercial licence to use the printed item.</p>
-            <p>You may not reproduce, resell, or use Periodic Names designs for commercial purposes without written permission.</p>
+            <p>The Periodic Names app, element tile designs, and any generated artwork are owned by After Hours Apps. By placing an order you receive a personal, non-commercial licence to use the printed item.</p>
+            <p>You may not reproduce, resell, or use Periodic Names designs for commercial purposes without written permission. Images and videos you create with the share feature are yours to post on social media.</p>
           </Section>
 
           <Section title="Limitation of liability">
-            <p>To the fullest extent permitted by law, Periodic Names is not liable for any indirect, incidental, or consequential damages arising from your use of the site or purchase of products. Our total liability for any claim is limited to the amount you paid for the order in question.</p>
+            <p>To the fullest extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from your use of the site or purchase of products. Our total liability for any claim is limited to the amount you paid for the order in question.</p>
           </Section>
 
           <Section title="Changes to these terms">
-            <p>We may update these terms from time to time. The current version is always at periodicnames.com/tos.html. Continued use of the site after changes constitutes acceptance of the new terms.</p>
+            <p>We may update these terms from time to time. The current version is always at periodicnames.com/tos.html, and the terms in force when you placed an order apply to that order.</p>
           </Section>
 
           <Section title="Contact">
-            <p>Questions? Email <a href="mailto:periodicnames.com@gmail.com" className="text-ink font-bold underline decoration-2 underline-offset-2">periodicnames.com@gmail.com</a>.</p>
+            <p>Questions or a problem with an order? Email <a href={`mailto:${SUPPORT_EMAIL}`} className="text-ink font-bold underline decoration-2 underline-offset-2">{SUPPORT_EMAIL}</a>, or simply reply to your order confirmation email.</p>
           </Section>
         </div>
       </main>

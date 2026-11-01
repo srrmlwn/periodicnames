@@ -45,6 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     ({ url } = await put(filename, buffer, {
       access: 'public',
       contentType: 'image/png',
+      addRandomSuffix: true,
     }));
   } catch (err) {
     log('blob upload failed', String(err));
