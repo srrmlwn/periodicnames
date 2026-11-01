@@ -7,6 +7,7 @@ import { matchNameToElements } from './utils/elementMatcher';
 import { getTileColors } from './utils/colorSchemes';
 import { TEES_ENABLED } from './data/printProducts';
 import type { NameResult } from './types';
+import { track } from './utils/analytics';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
 
@@ -73,11 +74,12 @@ function App() {
   useEffect(() => {
     if (initialized.current || !urlName) return;
     initialized.current = true;
-    handleNameSubmit(urlName);
+    handleNameSubmit(urlName, 'link');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (orderSuccess) {
+      track('order_success_viewed');
       history.replaceState(null, '', window.location.pathname);
     }
   }, [orderSuccess]);
@@ -100,12 +102,19 @@ function App() {
     resultRef.current.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'end' });
   }, [animationPhase]);
 
-  const handleNameSubmit = (name: string) => {
+  const handleNameSubmit = (name: string, source: 'typed' | 'link' = 'typed') => {
     history.pushState(null, '', '/' + nameToSlug(name));
     document.title = `${name.trim()} in periodic table elements | Periodic Names`;
     stopReveal();
     const nameResult = matchNameToElements(name);
     const total = nameResult.orderedElements.length;
+    track('name_spelled', {
+      source,
+      tiles: total,
+      real_elements: nameResult.realElementsCount,
+      new_elements: total - nameResult.realElementsCount,
+      letters: name.replace(/[^a-z]/gi, '').length,
+    });
 
     setResult(nameResult);
     setRevealedCount(0);

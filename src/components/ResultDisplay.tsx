@@ -7,6 +7,7 @@ import { NEW_RIBBON_LABEL } from '../utils/colorSchemes';
 import { getFunStatsLine } from '../utils/funStats';
 import { primeShareAudio } from '../utils/shareAudio';
 import { TEES_ENABLED } from '../data/printProducts';
+import { track } from '../utils/analytics';
 import type { NameResult } from '../types';
 
 interface ResultDisplayProps {
@@ -51,6 +52,11 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
   const openShare = () => {
     primeShareAudio();
     setIsShareModalOpen(true);
+  };
+
+  const openTeeDesigner = () => {
+    track('tee_designer_opened', { tiles: result.orderedElements.length });
+    setIsPrintPanelOpen(true);
   };
 
   const layout = createElementLayout(result);
@@ -115,7 +121,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isVisible, reveal
               Share
             </button>
             {TEES_ENABLED ? (
-              <button onClick={() => setIsPrintPanelOpen(true)} className="nb-btn bg-pop-yellow">
+              <button onClick={openTeeDesigner} className="nb-btn bg-pop-yellow">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

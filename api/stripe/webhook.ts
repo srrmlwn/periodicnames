@@ -4,6 +4,7 @@ import { parsePrintPosition } from '../_lib/printPosition';
 import { alertOwner } from '../_lib/alert';
 import { shirtVariant } from '../_lib/catalog';
 import { sendOrderConfirmation } from '../_lib/orderEmail';
+import { captureServerEvent } from '../_lib/analytics';
 
 export const config = { api: { bodyParser: false } };
 
@@ -270,6 +271,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     log(emailSent ? 'order confirmation email sent' : 'order confirmation email NOT sent (see [email] lines)', { externalId });
   } else {
     log('no customer email — skipping order confirmation');
+  }
+
+  if (!placed.outcome.startsWith('existing')) {
+    await captureServerEvent('order_paid', externalId, {
+      revenue: (session.amount_total ?? 0) / 100,
+      currency: session.currency ?? 'usd',
+      color: shirt?.color ?? null,
+      size: shirt?.size ?? null,
+      has_caption: Boolean(metadata.caption),
+      printful: placed.outcome,
+      email_sent: emailSent,
+    });
   }
 
   log('DONE', {

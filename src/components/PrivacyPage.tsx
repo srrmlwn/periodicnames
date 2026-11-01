@@ -33,7 +33,8 @@ const PrivacyPage: React.FC = () => (
           <Section title="Spelling a name">
             <p>Spelling a name with the periodic table happens entirely in your browser. Share images and videos are also made in your browser and are only sent wherever you choose to share them.</p>
             <p>A link to a name (for example periodicnames.com/ada) contains that name, so it reaches our hosting provider like any web address you visit.</p>
-            <p>We don't use analytics, advertising or tracking cookies. The site's font is loaded from Google Fonts, which receives your IP address when the page loads.</p>
+            <p>We use PostHog for anonymous, cookieless analytics: which pages are visited and which features are used, for example that a name was spelled, a share video was made or the shirt designer was opened. We never send the names you type (name links are recorded as /[name]), PostHog sets no cookies and stores nothing in your browser, and IP addresses are discarded. We don't use advertising or tracking cookies.</p>
+            <p>The site's font is loaded from Google Fonts, which receives your IP address when the page loads.</p>
           </Section>
 
           <Section title="What we collect when you order">
@@ -56,6 +57,7 @@ const PrivacyPage: React.FC = () => (
               <li><strong>Stripe</strong> processes your payment and sends your receipt. See stripe.com/privacy.</li>
               <li><strong>Printful</strong> prints and ships your order and receives your design, name, email and shipping address. See printful.com/policies/privacy.</li>
               <li><strong>Resend</strong> delivers our order confirmation email. See resend.com/legal/privacy-policy.</li>
+              <li><strong>PostHog</strong> receives anonymous usage events, including that an order was paid (amount, shirt colour and size, but no name, email or address). See posthog.com/privacy.</li>
               <li><strong>Vercel</strong> hosts the site, stores your design images, and keeps short-lived service logs that can include order details. See vercel.com/legal/privacy-policy.</li>
               <li><strong>Google</strong> hosts our support inbox (Gmail), so emails you send us are stored there.</li>
             </ul>
@@ -78,7 +80,7 @@ const PrivacyPage: React.FC = () => (
           </Section>
 
           <Section title="Changes">
-            <p>If we change this policy, for example by adding analytics, we will update this page and the date above.</p>
+            <p>If we change this policy, we will update this page and the date above.</p>
           </Section>
 
           <Section title="Contact">

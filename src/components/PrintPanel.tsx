@@ -4,6 +4,7 @@ import { PRINT_PRODUCTS, SHIRT_COLORS, findShirtVariant } from '../data/printPro
 import type { ShirtColor, ShirtSize } from '../data/printProducts';
 import { generatePrintFile } from '../utils/PrintDesignGenerator';
 import { renderShirtImage } from '../utils/shirtDrawing';
+import { track } from '../utils/analytics';
 import { isOffensiveCaption, isOffensiveName } from '../utils/textFilter';
 import type { CaptionPosition, Placement, PrintPosition } from '../utils/printLayout';
 import Modal from './Modal';
@@ -92,6 +93,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const textBlocked = nameBlocked || captionBlocked;
 
   const showOnModel = async () => {
+    track('tee_model_photo_requested', { color: color.name, placement });
     const key = photoKey;
     setModelPhoto({ key, status: 'loading' });
     try {
@@ -115,6 +117,7 @@ const PrintPanel: React.FC<PrintPanelProps> = ({ isOpen, onClose, result }) => {
   const buy = async () => {
     const variant = size ? findShirtVariant(color, size) : undefined;
     if (!variant || textBlocked) return;
+    track('tee_buy_clicked', { color: color.name, size: size ?? '', placement, has_caption: caption.trim().length > 0, model_photo: photo?.status === 'ready' });
     setError(null);
     setBuyStatus('preparing');
     try {

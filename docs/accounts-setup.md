@@ -31,6 +31,13 @@ No secrets in this file — keys live only in Vercel env vars.
 - Sends: customer order confirmation (`api/_lib/orderEmail.ts`) and owner alerts when a paid order can't be placed (`api/_lib/alert.ts`)
 - From: `EMAIL_FROM` (default `Periodic Names <hello@periodicnames.com>` — needs the domain Verified); reply-to: `EMAIL_REPLY_TO` (default hello.afterhoursapps@gmail.com)
 
+## PostHog (analytics)
+
+- Organization "srrmlwn" (personal login, not yet the brand email); one project per app — "Grade this" (643800) and "Periodic Names" (702937)
+- Periodic Names project: cookieless (stateful server hash), IPs anonymised, autocapture off, session recording off, timezone America/Los_Angeles
+- Project API key is public by design and lives in code (`src/utils/analytics.ts`, `api/_lib/analytics.ts`) — no env var
+- Names are never sent: every URL property is rewritten to `/[name]` before sending
+
 ## Vercel env vars (Production)
 
 | Name | Type | Purpose |
