@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import PrivacyPage from './components/PrivacyPage.tsx'
 import TermsPage from './components/TermsPage.tsx'
+import PopularNamesPage from './components/PopularNamesPage.tsx'
 import './index.css'
 import { initAnalytics } from './utils/analytics'
 
@@ -13,6 +14,8 @@ if (path === '/privacy.html') {
   root = <PrivacyPage />;
 } else if (path === '/tos.html') {
   root = <TermsPage />;
+} else if (path === '/names' || path === '/names/') {
+  root = <PopularNamesPage />;
 } else {
   root = <App />;
 }

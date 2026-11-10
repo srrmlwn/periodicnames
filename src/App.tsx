@@ -8,6 +8,8 @@ import { getTileColors } from './utils/colorSchemes';
 import { TEES_ENABLED } from './data/printProducts';
 import type { NameResult } from './types';
 import { track } from './utils/analytics';
+import NameFactsSection from './components/NameFactsSection';
+import { findPopularName } from './data/popularNames';
 
 type AnimationPhase = 'input' | 'revealing' | 'done';
 
@@ -150,6 +152,8 @@ function App() {
     setInputKey(k => k + 1);
   };
 
+  const popularName = result ? findPopularName(result.originalName) : undefined;
+
   const litColors = new Map<string, string>();
   if (result) {
     const colors = getTileColors(result);
@@ -205,6 +209,7 @@ function App() {
             isDone={animationPhase === 'done'}
           />
           </div>
+          {popularName && animationPhase !== 'input' && <NameFactsSection name={popularName} />}
         </div>
         <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
           <p className="max-w-xl mx-auto">
@@ -221,6 +226,8 @@ function App() {
             <a href="/privacy.html" className="underline decoration-2 underline-offset-2 hover:text-ink">Privacy Policy</a>
             <span className="mx-2">·</span>
             <a href="/tos.html" className="underline decoration-2 underline-offset-2 hover:text-ink">Terms of Service</a>
+            <span className="mx-2">·</span>
+            <a href="/names" className="underline decoration-2 underline-offset-2 hover:text-ink">Popular names</a>
           </p>
         </footer>
       </div>
