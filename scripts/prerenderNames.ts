@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { Plugin } from 'vite';
 import { POPULAR_BOY_NAMES, POPULAR_GIRL_NAMES, POPULAR_NAMES, POPULAR_NAMES_YEAR, popularNameSlug } from '../src/data/popularNames';
-import { buildNameFacts, missingLetterNote, nameFactsSummary } from '../src/utils/nameFacts';
+import { buildNameFacts, missingLetterNote, nameFactsSummaryLines } from '../src/utils/nameFacts';
 
 const SITE = 'https://periodicnames.com';
 
@@ -57,7 +57,7 @@ function namePage(name: string): PageMeta {
   const body =
     `<main class="mx-auto max-w-xl px-6 py-10 text-ink">` +
     `<h1 class="text-2xl font-bold mb-2">${esc(name)} in periodic table elements</h1>` +
-    `<p class="mb-3">${esc(nameFactsSummary(facts))}</p>` +
+    `<div class="mb-3">${nameFactsSummaryLines(facts).map(l => `<p>${esc(l)}</p>`).join('')}</div>` +
     `<h2 class="text-lg font-bold mb-2">The elements in ${esc(name)}</h2>` +
     `<ul class="mb-4">${items}</ul>` +
     `<p>More names: ${facts.related.map(link).join(', ')} · <a href="/names">All popular names</a> · <a href="/">Spell any name</a></p>` +

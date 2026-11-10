@@ -188,6 +188,7 @@ function App() {
             key={inputKey}
             onSubmit={handleNameSubmit}
             hasResult={animationPhase !== 'input'}
+            shownName={result?.originalName ?? ''}
             onRefresh={handleRefresh}
             initialValue={inputKey === 0 ? urlName : ''}
           />

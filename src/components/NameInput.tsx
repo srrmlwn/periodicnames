@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface NameInputProps {
   onSubmit: (name: string) => void;
   hasResult?: boolean;
+  shownName?: string;
   onRefresh?: () => void;
   initialValue?: string;
 }
@@ -27,7 +28,7 @@ function nameSizeClass(length: number): string {
   return 'text-lg';
 }
 
-const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRefresh, initialValue = '' }) => {
+const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, shownName = '', onRefresh, initialValue = '' }) => {
   const [name, setName] = useState(initialValue);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [narrow, setNarrow] = useState(() => window.matchMedia(NARROW_QUERY).matches);
@@ -46,6 +47,9 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
     }, 2500);
     return () => clearInterval(id);
   }, [name]);
+
+  const typed = name.trim().toLowerCase();
+  const showNew = hasResult && (!typed || typed === shownName.trim().toLowerCase());
 
   const cta = PLACEHOLDER_CTAS[placeholderIdx];
   const placeholder = name ? '' : narrow ? cta.charAt(0).toUpperCase() + cta.slice(1) : `Your name — ${cta}`;
@@ -76,7 +80,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             aria-label="Your name"
             className={`flex-1 min-w-0 px-4 py-3 ${nameSizeClass(name.length)} font-bold text-ink bg-transparent focus:outline-none placeholder:font-medium placeholder:text-muted/60 placeholder:text-base`}
           />
-          {hasResult ? (
+          {showNew ? (
             <button
               type="button"
               onClick={onRefresh}
@@ -102,7 +106,7 @@ const NameInput: React.FC<NameInputProps> = ({ onSubmit, hasResult = false, onRe
             </button>
           )}
         </div>
-        {name.length >= MAX_CHARS - 6 && !hasResult && (
+        {name.length >= MAX_CHARS - 6 && !showNew && (
           <span className={`absolute left-1 -bottom-6 text-xs font-bold ${name.length >= MAX_CHARS ? 'text-pop-coral' : 'text-muted'}`}>
             {name.length}/{MAX_CHARS}
           </span>

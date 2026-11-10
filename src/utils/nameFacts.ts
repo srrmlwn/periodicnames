@@ -44,13 +44,16 @@ export function buildNameFacts(name: string): NameFacts {
   };
 }
 
-export function nameFactsSummary(facts: NameFacts): string {
-  const spelled = facts.symbols.join(' · ');
-  if (facts.realCount === facts.total) {
-    return `${facts.name} can be spelled entirely with real elements: ${spelled}.`;
+export function nameFactsSummaryLines(facts: NameFacts): string[] {
+  const lines = [facts.symbols.join(' · ')];
+  const newCount = facts.total - facts.realCount;
+  if (newCount === 0) {
+    lines.push(`All ${facts.total} tiles are real elements.`);
+  } else {
+    lines.push(`${facts.realCount} of ${facts.total} tiles are real elements.`);
+    lines.push(newCount === 1 ? '1 is a newly discovered element.' : `${newCount} are newly discovered elements.`);
   }
-  const rest = facts.total - facts.realCount === 1 ? 'the other is a newly discovered one' : 'the rest are newly discovered ones';
-  return `${facts.name} is spelled ${spelled}: ${facts.realCount} of ${facts.total} tiles are real elements, and ${rest}.`;
+  return lines;
 }
 
 export function missingLetterNote(symbol: string): string {
