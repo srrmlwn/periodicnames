@@ -9,10 +9,10 @@ interface NameFactsSectionProps {
 const NameFactsSection: React.FC<NameFactsSectionProps> = ({ name }) => {
   const facts = buildNameFacts(name);
   return (
-    <section className="w-full max-w-xl mx-auto nb-card px-5 py-5 sm:px-6 text-sm text-ink">
-      <h2 className="text-lg font-bold mb-2">The elements in {name}</h2>
-      <p className="mb-3 text-muted font-medium">{nameFactsSummary(facts)}</p>
-      <ul className="space-y-1.5 mb-4">
+    <section className="facts-fade-in w-full max-w-md mx-auto mt-4 rounded-xl border-2 border-ink/15 bg-white/60 px-4 py-4 sm:px-5 text-[13px] leading-snug text-ink/80">
+      <h2 className="text-base font-bold text-ink mb-1.5">The elements in {name}</h2>
+      <p className="mb-2.5 text-muted font-medium">{nameFactsSummary(facts)}</p>
+      <ul className={facts.related.length > 0 ? 'space-y-1.5 mb-4' : 'space-y-1.5'}>
         {facts.lines.map(line => (
           <li key={line.symbol}>
             <span className="font-bold">{line.symbol}</span>

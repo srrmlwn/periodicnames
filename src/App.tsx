@@ -152,7 +152,7 @@ function App() {
     setInputKey(k => k + 1);
   };
 
-  const popularName = result ? findPopularName(result.originalName) : undefined;
+  const factsName = result ? findPopularName(result.originalName) ?? result.originalName.trim() : '';
 
   const litColors = new Map<string, string>();
   if (result) {
@@ -209,7 +209,7 @@ function App() {
             isDone={animationPhase === 'done'}
           />
           </div>
-          {popularName && animationPhase !== 'input' && <NameFactsSection name={popularName} />}
+          {factsName && animationPhase === 'done' && <NameFactsSection name={factsName} />}
         </div>
         <footer className="mt-auto px-4 py-5 text-center text-sm font-medium text-muted space-y-1.5">
           <p className="max-w-xl mx-auto">
