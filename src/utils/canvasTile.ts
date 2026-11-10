@@ -2,6 +2,9 @@ import type { Element } from '../data/elements';
 import { getAllElements } from '../data/elements';
 import type { ElementRenderItem } from './elementRenderer';
 import { BRAND, FONT_FAMILY, NEW_RIBBON_LABEL, getCategoryColor } from './colorSchemes';
+import { fakeAtomicNumber } from '../data/fakeElements';
+
+export { fakeAtomicNumber };
 
 // [symbol, row (0-8), col (0-17)]; rows 7-8 are lanthanides/actinides with a half-cell gap below row 6
 export const ELEMENT_POSITIONS: [string, number, number][] = [
@@ -53,13 +56,6 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number):
   return t + '…';
 }
 
-const FIRST_UNDISCOVERED_NUMBER = 119;
-const UNDISCOVERED_RANGE = 81;
-
-export function fakeAtomicNumber(name: string): number {
-  const sum = [...name].reduce((total, c) => total + c.charCodeAt(0), 0);
-  return FIRST_UNDISCOVERED_NUMBER + (sum % UNDISCOVERED_RANGE);
-}
 
 function drawNewRibbon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, radius: number): void {
   const offset = size * 0.2;

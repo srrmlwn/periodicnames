@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { Resvg } from '@resvg/resvg-js';
-import { matchNameToElements } from '../../src/utils/elementMatcher';
-import { BRAND, NEW_RIBBON_LABEL, getTileColors } from '../../src/utils/colorSchemes';
-import { fakeAtomicNumber } from '../../src/utils/canvasTile';
+import { matchNameToElements } from './spelling/elementMatcher';
+import { BRAND, NEW_RIBBON_LABEL, getTileColors } from './spelling/colorSchemes';
+import { fakeAtomicNumber } from './spelling/fakeElements';
 import { isOffensiveName } from './textFilter';
 
 export const OG_WIDTH = 1200;

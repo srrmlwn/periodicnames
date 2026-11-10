@@ -140,6 +140,8 @@ git worktree remove ../periodicnames-<task>
 ### Data and Utils
 
 ```
+Spelling core lives in `api/_lib/spelling/` (elements, fakeElements incl. fakeAtomicNumber, elementMatcher, colorSchemes) so the CommonJS link-preview functions can use it — Vercel runs api/ as CommonJS and cannot require files under src/ (root package.json is "type": "module"). The src/ paths below are one-line `export *` re-exports; edit the api/_lib/spelling files. Same pattern as textFilter.
+
 src/data/
   elements.ts          — 118 real elements, getAllElements()
   fakeElements.ts      — invented elements, getFakeElementBySymbol(symbol)
