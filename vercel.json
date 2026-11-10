@@ -4,6 +4,17 @@
   "buildCommand": "tsc -b && vite build",
   "rewrites": [
     {
+      "source": "/:name((?!api$)[^/.]+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Slackbot|Discordbot|WhatsApp|TelegramBot|LinkedInBot|Pinterest|redditbot|Embedly|SkypeUriPreview|Iframely|Bluesky|Mastodon|vkShare|Snapchat).*"
+        }
+      ],
+      "destination": "/api/name-page?name=:name"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/"
     }
@@ -11,6 +22,9 @@
   "functions": {
     "api/stripe/webhook.ts": {
       "maxDuration": 30
+    },
+    "api/og.ts": {
+      "includeFiles": "api/_lib/fonts/**"
     }
   },
   "headers": [
