@@ -189,11 +189,21 @@ api/_lib/                 — shared server helpers (underscore dir = not a rout
   analytics.ts          — captureServerEvent(): PostHog /capture/ from the server, production only, no person profile; the webhook sends order_paid (revenue, colour, size, has_caption, printful outcome — never name/email/address)
   email.ts              — sendEmail() via Resend (RESEND_API_KEY); from EMAIL_FROM (default `Periodic Names <hello@periodicnames.com>`, needs the verified Resend domain), reply-to EMAIL_REPLY_TO (default SUPPORT_EMAIL hello.afterhoursapps@gmail.com); optional Idempotency-Key
   alert.ts              — alertOwner(): logs + emails ALERT_EMAIL via sendEmail() when a paid order can't be placed
+  printful.ts           — PRINTFUL_BASE, printfulHeaders(), getPrintfulOrder(id | external id), listPrintfulOrders(status), orderStage() (received/printing/shipped/problem/canceled), shipmentShippedAt()
+  orderLink.ts          — orderStatusUrl(externalId): `/order?id=<pi>&key=<HMAC(ORDER_LINK_SECRET)>`; isValidOrderLinkKey(); null when the secret is unset
+  shippedEmail.ts       — sendShippedEmail(): branded "has shipped" email (carrier, tracking number, Track button, order page link; "replacement" wording for reshipments). Idempotency-Key order-shipped/<shipmentId>. Tested in shippedEmail.test.ts
+  shipmentNotify.ts     — notifyShipments(order, shipmentId?): emails each tracked shipment once (Vercel Blob marker order-emails/shipped-<id>.json), name + picture from the Stripe session (payment intent = external_id); alerts the owner if there's no email or the send fails
   orderEmail.ts         — sendOrderConfirmation(): branded "headed to the printer" email (the shirt close-up from metadata preview_url — an image, so Gmail dark mode can't recolour it; falls back to the design on a shirt-coloured panel, name/caption/shirt/total, next steps, reply for help). Sent by the webhook after the Printful order is created; Idempotency-Key order-confirmation/<payment intent> so Stripe retries don't resend. Tested in orderEmail.test.ts
 api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   upload.ts             — POST /api/print/upload: base64 PNG (PNG signature checked, ≤4MB) → Vercel Blob (addRandomSuffix, so design URLs aren't guessable), returns { url }
   mockup.ts             — POST /api/print/mockup: Printful mockup generator task + polling. productId must be TSHIRT_PRODUCT_ID and variantIds catalog IDs (productId goes into the Printful URL path, so unvalidated input could reach other Printful endpoints with our token); placement fixed to front; Printful error bodies are not returned to the client
   tsconfig.json         — separate tsconfig for api/ (commonjs target)
+api/printful/
+  webhook.ts            — POST /api/printful/webhook?token=PRINTFUL_WEBHOOK_SECRET: Printful events (unsigned, so token-checked, store-checked, and the order is re-fetched). package_shipped → notifyShipments; failed/on hold/canceled/returned → alertOwner. Register with scripts/printfulWebhook.mjs
+  reconcile.ts          — daily Vercel cron (CRON_SECRET): sends shipping emails missed by the webhook (orders updated in the last 10 days) and alerts on orders stuck 7+ days
+api/order/
+  status.ts             — GET /api/order/status?id&key: signed-link order lookup → { stage, placedAt, shirt, shipments[] } (no name/address/email), no-store + noindex
+src/components/OrderStatusPage.tsx — `/order` route (main.tsx): Received → Printing → Shipped steps, tracking cards, hold/canceled notice. analytics keeps the path but strips id/key
 ```
 
 - `getFakeElementBySymbol(symbol, exclude?)` returns a random variant per letter, avoiding names in the optional `exclude` set — always use this, never `.find()`. Pass a shared `Set<string>` across the full name match to prevent duplicate variants for repeated letters.
@@ -307,7 +317,7 @@ Phase 3 — Print on Demand (**t-shirt flow code complete, pending external setu
 - Legal pages (Oct 31 2026 rewrite): run by After Hours Apps; price includes US standard shipping, US only; all sales final except damaged/misprinted/wrong/lost (14 days); cancellations only before production; Privacy lists Stripe, Printful, Resend, PostHog (cookieless, names never sent), Vercel, Google (Fonts + Gmail)
 - Security (Oct 31 2026 review, docs/security-review.md): headers in vercel.json (nosniff, X-Frame-Options DENY + frame-ancestors 'none', Referrer-Policy, Permissions-Policy); removed unused /api/print/order and /api/print/draft-order; undici patched
 - Order picture: at Buy, PrintPanel uploads renderShirtImage() alongside the print file (failure is non-blocking); checkout stores it as Stripe metadata `preview_url` and uses it as the Stripe checkout product image unless a Printful model photo was loaded
-- Customer emails: Stripe receipt (payment + refund receipts on in Stripe → Settings → Business → Customer emails), our Resend order confirmation (webhook), Printful shipment email with tracking (Printful store notifications). Accounts and env vars: docs/accounts-setup.md
+- Customer emails: Stripe receipt (payment + refund receipts on in Stripe → Settings → Business → Customer emails), our Resend order confirmation (Stripe webhook), our Resend "has shipped" email with tracking (Printful webhook + daily reconcile cron — Printful itself never emails customers of API stores; found Nov 2026 when a real order arrived with no shipping email). Both emails link to the signed `/order` page. Accounts and env vars: docs/accounts-setup.md
 - Order logs (Vercel runtime logs): `[checkout] session created` (name, shirt, amount, design) → `[webhook]` step lines → `[webhook] DONE {session, externalId, printfulOrderId, printful: created+confirmed|created+draft|existing+…, emailSent, ms}` (or `DONE — FAILED` + `[ALERT]`) → `[email] sending/sent` with Resend's id. Browser errors log as `[print] …`
 - **Remaining before launch:** live test order (PRINTFUL_DRAFT_ONLY=true) → refund + delete draft → remove PRINTFUL_DRAFT_ONLY → keep VITE_TEES_ENABLED=true to launch tees
 

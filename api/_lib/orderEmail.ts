@@ -8,15 +8,16 @@ export interface OrderDetails {
   amountCents: number | null;
   designUrl: string;
   previewUrl: string | null;
+  statusUrl?: string | null;
 }
 
-const INK = '#111111';
-const MIST = '#EEF3FA';
-const YELLOW = '#FFD23F';
-const MUTED = '#4A5468';
-const FONT = "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif";
+export const INK = '#111111';
+export const MIST = '#EEF3FA';
+export const YELLOW = '#FFD23F';
+export const MUTED = '#4A5468';
+export const FONT = "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif";
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -29,13 +30,13 @@ function formatAmount(cents: number | null): string | null {
   return cents === null ? null : `$${(cents / 100).toFixed(2)}`;
 }
 
-function shirtLabel(shirt: ShirtVariant | null): string | null {
+export function shirtLabel(shirt: ShirtVariant | null): string | null {
   return shirt ? `${shirt.color} · ${shirt.size}` : null;
 }
 
 const NEXT_STEPS = [
   'We print and pack your tee, usually within 2–5 business days. No news in between just means it\'s being made.',
-  'Once it ships, you\'ll get an email from Printful, our print partner, with a tracking link.',
+  'Once it ships, we\'ll email you a tracking link.',
   'US delivery usually takes 3–7 business days after that. You can follow it on the tracking page.',
 ];
 
@@ -57,6 +58,7 @@ export function renderOrderText(order: OrderDetails): string {
     'What happens next',
     ...NEXT_STEPS.map(step => `- ${step}`),
     '',
+    ...(order.statusUrl ? [`Check your order any time: ${order.statusUrl}`, ''] : []),
     'Questions or a problem with your order? Just reply to this email.',
     '',
     'Periodic Names · periodicnames.com',
@@ -64,7 +66,11 @@ export function renderOrderText(order: OrderDetails): string {
   return lines.join('\n');
 }
 
-function detailRow(label: string, value: string): string {
+export function ctaButton(href: string, label: string): string {
+  return `<a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 20px;background:${YELLOW};border:3px solid ${INK};border-radius:10px;box-shadow:3px 3px 0 ${INK};color:${INK};font-size:16px;font-weight:700;text-decoration:none;">${escapeHtml(label)}</a>`;
+}
+
+export function detailRow(label: string, value: string): string {
   return `<tr>
     <td style="padding:6px 0;color:${MUTED};font-size:14px;width:90px;vertical-align:top;">${label}</td>
     <td style="padding:6px 0;color:${INK};font-size:15px;font-weight:700;">${escapeHtml(value)}</td>
@@ -120,6 +126,9 @@ export function renderOrderHtml(order: OrderDetails): string {
           <h2 style="margin:0 0 6px;font-size:17px;color:${INK};">What happens next</h2>
           <table role="presentation" cellspacing="0" cellpadding="0" width="100%">${steps}</table>
         </td></tr>
+        ${order.statusUrl ? `<tr><td style="padding:8px 24px 0;">
+          ${ctaButton(order.statusUrl, 'Check your order')}
+        </td></tr>` : ''}
         <tr><td style="padding:16px 24px 24px;">
           <p style="margin:0;font-size:15px;line-height:1.5;color:${INK};">Questions or a problem with your order? Just reply to this email.</p>
         </td></tr>

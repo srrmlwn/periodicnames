@@ -19,9 +19,18 @@
       "destination": "/"
     }
   ],
+  "crons": [
+    { "path": "/api/printful/reconcile", "schedule": "17 16 * * *" }
+  ],
   "functions": {
     "api/stripe/webhook.ts": {
       "maxDuration": 30
+    },
+    "api/printful/webhook.ts": {
+      "maxDuration": 30
+    },
+    "api/printful/reconcile.ts": {
+      "maxDuration": 60
     },
     "api/og.ts": {
       "includeFiles": "api/_lib/fonts/**"

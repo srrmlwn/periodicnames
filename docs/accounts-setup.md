@@ -21,14 +21,15 @@ No secrets in this file — keys live only in Vercel env vars.
 - Private token scopes: manage orders, manage files, manage webhooks → `PRINTFUL_API_KEY`; store id → `PRINTFUL_STORE_ID`
 - Billing card on file (charged only when an order is confirmed)
 - Branding: packing-slip thank-you message, tracking-page logo
-- Customer notifications: shipment emails with tracking **on** (our webhook sends the customer email with each order)
+- Customer notifications: Printful does **not** email customers for API/manual stores. We send the shipping email ourselves from Printful webhooks (below)
+- Webhook: `package_shipped`, `package_returned`, `order_failed`, `order_canceled`, `order_put_hold` → `https://periodicnames.com/api/printful/webhook?token=<PRINTFUL_WEBHOOK_SECRET>`. Printful webhooks aren't signed, so the token in the URL is the auth, and the handler re-fetches the order from Printful instead of trusting the payload. Register/inspect with `node scripts/printfulWebhook.mjs register|show` (needs `PRINTFUL_API_KEY`, `PRINTFUL_STORE_ID`, `PRINTFUL_WEBHOOK_SECRET` in the shell). One webhook URL per store — `register` replaces it
 - `PRINTFUL_DRAFT_ONLY=true` leaves orders as unconfirmed drafts (testing only — remove for launch)
 
 ## Resend (email)
 
 - Account under hello.afterhoursapps@gmail.com; domain **periodicnames.com** added for **sending only** (receiving off — it would take the root MX and Resend has no inbox)
 - API key: sending access → `RESEND_API_KEY`
-- Sends: customer order confirmation (`api/_lib/orderEmail.ts`) and owner alerts when a paid order can't be placed (`api/_lib/alert.ts`)
+- Sends: customer order confirmation (`api/_lib/orderEmail.ts`), customer shipping email with tracking (`api/_lib/shippedEmail.ts`), and owner alerts (`api/_lib/alert.ts`): paid order can't be placed; Printful order failed / on hold / canceled / package returned; shipped order with no email or a failed send; orders stuck 7+ days
 - From: `EMAIL_FROM` (default `Periodic Names <hello@periodicnames.com>` — needs the domain Verified); reply-to: `EMAIL_REPLY_TO` (default hello.afterhoursapps@gmail.com)
 
 ## PostHog (analytics)
@@ -52,6 +53,9 @@ No secrets in this file — keys live only in Vercel env vars.
 | `VITE_TEES_ENABLED` | Config (public) | `true` shows the tee flow on production |
 | `PRINTFUL_DRAFT_ONLY` | — | `true` only while testing |
 | `EMAIL_FROM` / `EMAIL_REPLY_TO` | optional | override sender / reply-to |
+| `PRINTFUL_WEBHOOK_SECRET` | Sensitive | Random string; the `?token=` on the Printful webhook URL |
+| `ORDER_LINK_SECRET` | Sensitive | Random string; signs `/order?id=…&key=…` links (no links in emails without it) |
+| `CRON_SECRET` | Sensitive | Random string; Vercel sends it to the daily `/api/printful/reconcile` cron |
 
 `VITE_PRICE_OVERRIDE_USD` must not exist in Production (ignored there anyway). The project has "Automatically expose System Environment Variables" on (`VERCEL_ENV` is used for the price guard).
 
@@ -59,4 +63,7 @@ No secrets in this file — keys live only in Vercel env vars.
 
 1. Payment → Stripe receipt
 2. Printful order created → our "headed to the printer" confirmation (Resend)
-3. Shipped → Printful shipment email with tracking
+3. Shipped → our "has shipped" email with carrier, tracking link and order page (Resend, from the Printful `package_shipped` webhook). Sent once per shipment: a marker blob `order-emails/shipped-<shipmentId>.json` records it, plus Resend Idempotency-Key `order-shipped/<shipmentId>`
+4. Any time → order page `periodicnames.com/order?id=<payment intent>&key=<hmac>` (linked from both emails) shows Received → Printing → Shipped and tracking, read live from Printful (`api/order/status.ts`)
+
+Safety net: Vercel cron `/api/printful/reconcile` (daily 16:17 UTC) re-checks fulfilled/partial orders updated in the last 10 days and sends any shipping email a missed webhook should have sent; it also alerts the owner about orders still pending/in process/on hold/failed after 7 days (repeats daily until resolved).

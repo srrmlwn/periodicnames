@@ -5,18 +5,10 @@ import { alertOwner } from '../_lib/alert';
 import { shirtVariant } from '../_lib/catalog';
 import { sendOrderConfirmation } from '../_lib/orderEmail';
 import { captureServerEvent } from '../_lib/analytics';
+import { PRINTFUL_BASE, printfulHeaders } from '../_lib/printful';
+import { orderStatusUrl } from '../_lib/orderLink';
 
 export const config = { api: { bodyParser: false } };
-
-const PRINTFUL_BASE = 'https://api.printful.com';
-
-function printfulHeaders(): Record<string, string> {
-  return {
-    Authorization: `Bearer ${process.env.PRINTFUL_API_KEY}`,
-    'X-PF-Store-Id': process.env.PRINTFUL_STORE_ID ?? '',
-    'Content-Type': 'application/json',
-  };
-}
 
 function log(label: string, data?: unknown) {
   console.log(`[webhook] ${label}`, data !== undefined ? JSON.stringify(data) : '');
@@ -267,6 +259,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       amountCents: session.amount_total,
       designUrl: metadata.design_url,
       previewUrl: metadata.preview_url || null,
+      statusUrl: orderStatusUrl(externalId),
     }, externalId);
     log(emailSent ? 'order confirmation email sent' : 'order confirmation email NOT sent (see [email] lines)', { externalId });
   } else {

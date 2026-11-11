@@ -47,7 +47,7 @@ const PrivacyPage: React.FC = () => (
           </Section>
 
           <Section title="How we use it">
-            <p>We use your information only to make, ship and support your order: to send it to the printer, to email you an order confirmation, to let Printful email you shipping updates, and to answer you if you contact us.</p>
+            <p>We use your information only to make, ship and support your order: to send it to the printer, to email you an order confirmation and shipping updates with tracking, and to answer you if you contact us.</p>
             <p>We do not use your information for marketing, and we do not sell or rent it to anyone.</p>
           </Section>
 
@@ -56,7 +56,7 @@ const PrivacyPage: React.FC = () => (
             <ul>
               <li><strong>Stripe</strong> processes your payment and sends your receipt. See stripe.com/privacy.</li>
               <li><strong>Printful</strong> prints and ships your order and receives your design, name, email and shipping address. See printful.com/policies/privacy.</li>
-              <li><strong>Resend</strong> delivers our order confirmation email. See resend.com/legal/privacy-policy.</li>
+              <li><strong>Resend</strong> delivers our order confirmation and shipping emails. See resend.com/legal/privacy-policy.</li>
               <li><strong>PostHog</strong> receives anonymous usage events, including that an order was paid (amount, shirt colour and size, but no name, email or address). See posthog.com/privacy.</li>
               <li><strong>Vercel</strong> hosts the site, stores your design images, and keeps short-lived service logs that can include order details. See vercel.com/legal/privacy-policy.</li>
               <li><strong>Google</strong> hosts our support inbox (Gmail), so emails you send us are stored there.</li>
