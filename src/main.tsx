@@ -6,6 +6,7 @@ import TermsPage from './components/TermsPage.tsx'
 import PopularNamesPage from './components/PopularNamesPage.tsx'
 import './index.css'
 import { initAnalytics } from './utils/analytics'
+import { injectSpeedInsights } from '@vercel/speed-insights'
 
 const path = window.location.pathname;
 
@@ -22,6 +23,8 @@ if (path === '/privacy.html') {
 
 if (document.readyState === 'complete') initAnalytics();
 else window.addEventListener('load', initAnalytics, { once: true });
+
+injectSpeedInsights();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
