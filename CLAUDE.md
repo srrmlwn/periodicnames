@@ -200,7 +200,7 @@ api/print/              — Vercel Serverless Functions (CommonJS, @vercel/node)
   tsconfig.json         — separate tsconfig for api/ (commonjs target)
 api/printful/
   webhook.ts            — POST /api/printful/webhook?token=PRINTFUL_WEBHOOK_SECRET: Printful events (unsigned, so token-checked, store-checked, and the order is re-fetched). package_shipped → notifyShipments; failed/on hold/canceled/returned → alertOwner. Register with scripts/printfulWebhook.mjs
-  reconcile.ts          — daily Vercel cron (CRON_SECRET): sends shipping emails missed by the webhook (orders updated in the last 10 days) and alerts on orders stuck 7+ days
+  reconcile.ts          — daily Vercel cron (CRON_SECRET): sends shipping emails missed by the webhook (shipments from the last 2 days only, so a catch-up email never lands after delivery) and alerts on orders stuck 7+ days
 api/order/
   status.ts             — GET /api/order/status?id&key: signed-link order lookup → { stage, placedAt, shirt, shipments[] } (no name/address/email), no-store + noindex
 src/components/OrderStatusPage.tsx — `/order` route (main.tsx): Received → Printing → Shipped steps, tracking cards, hold/canceled notice. analytics keeps the path but strips id/key

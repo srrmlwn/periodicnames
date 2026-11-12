@@ -4,7 +4,7 @@ import { getPrintfulOrder, listPrintfulOrders, shipmentShippedAt } from '../_lib
 import { notifyShipments } from '../_lib/shipmentNotify';
 import { alertOwner } from '../_lib/alert';
 
-const LOOKBACK_MS = 10 * 24 * 60 * 60 * 1000;
+const LOOKBACK_MS = 2 * 24 * 60 * 60 * 1000;
 const STUCK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function log(label: string, data?: unknown) {
@@ -35,8 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         const order = await getPrintfulOrder(listed.id);
         if (!order) continue;
         const recent = order.shipments.filter(s => {
-          const shippedAt = shipmentShippedAt(s);
-          return shippedAt === null || now - shippedAt <= LOOKBACK_MS;
+          const shippedAt = shipmentShippedAt(s) ?? order.updated * 1000;
+          return now - shippedAt <= LOOKBACK_MS;
         });
         if (recent.length === 0) continue;
         const results: Record<number, string> = {};
